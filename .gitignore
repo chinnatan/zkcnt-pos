@@ -1,0 +1,7 @@
+# PocketBase data (Database & Backups)
+backend/dev/pb_data/
+backend/prod/pb_data/
+
+# Temporary files
+*.log
+tmp/
