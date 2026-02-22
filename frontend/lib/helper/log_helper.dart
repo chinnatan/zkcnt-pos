@@ -22,9 +22,9 @@ class LogHelper {
     }
   }
 
-  static void e(String message) {
+  static void e(String message, {dynamic error, StackTrace? stackTrace}) {
     if (AppConfig.isDev()) {
-      _logger.e(message);
+      _logger.e(message, error: error, stackTrace: stackTrace);
     }
   }
 

@@ -1,6 +1,7 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:loader_overlay/loader_overlay.dart';
+import 'package:zkcnt_pos_app/app/app_config.dart';
 import 'package:zkcnt_pos_app/core/route/mobile_route.dart';
 import 'package:zkcnt_pos_app/theme/theme.dart';
 import 'package:zkcnt_pos_app/theme/util.dart';
@@ -44,7 +45,7 @@ class _MainMobileState extends State<MainMobile> {
     MaterialTheme theme = MaterialTheme(textTheme);
 
     return MaterialApp.router(
-      debugShowCheckedModeBanner: false,
+      debugShowCheckedModeBanner: AppConfig.isDev(),
       title: "zKCNT POS",
       theme: brightness == Brightness.light ? theme.light() : theme.dark(),
       routerConfig: MobileRouteConfig.init(),

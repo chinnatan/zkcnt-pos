@@ -62,4 +62,9 @@ class DimensionConst {
   static const int flex3 = 3;
   static const int flex4 = 4;
   static const int flex5 = 5;
+  static const int flex6 = 6;
+  static const int flex7 = 7;
+  static const int flex8 = 8;
+  static const int flex9 = 9;
+  static const int flex10 = 10;
 }

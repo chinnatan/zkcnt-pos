@@ -1,5 +1,6 @@
 import 'package:go_router/go_router.dart';
-import 'package:zkcnt_pos_app/feature/ui/sign_in_screen.dart';
+import 'package:zkcnt_pos_app/feature/sign_in/ui/sign_in_screen.dart';
+import 'package:zkcnt_pos_app/feature/sign_up/ui/sign_up_screen.dart';
 
 class MobileRoute {
   final String name;
@@ -16,6 +17,10 @@ class MobileRouteBuilder {
   static MobileRoute signIn() {
     return MobileRoute(name: 'signIn', path: '/sign-in');
   }
+
+  static MobileRoute signUp() {
+    return MobileRoute(name: 'signUp', path: '/sign-up');
+  }
 }
 
 final _routes = [
@@ -28,6 +33,11 @@ final _routes = [
     name: MobileRouteBuilder.signIn().name,
     path: MobileRouteBuilder.signIn().path,
     builder: (context, state) => SignInScreen(),
+  ),
+  GoRoute(
+    name: MobileRouteBuilder.signUp().name,
+    path: MobileRouteBuilder.signUp().path,
+    builder: (context, state) => SignUpScreen(),
   ),
 ];
 

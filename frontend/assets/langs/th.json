@@ -5,5 +5,15 @@
     "email": "อีเมล์",
     "password": "รหัสผ่าน",
     "btn_sign_in": "ลงชื่อเข้าใช้"
+  },
+  "sign_up": {
+    "title": "สมัครสมาชิก",
+    "email": "อีเมล์",
+    "email_required": "กรุณาระบุอีเมล์",
+    "password": "รหัสผ่าน",
+    "password_required": "กรุณาระบุรหัสผ่าน",
+    "confirm_password": "ยืนยันรหัสผ่าน",
+    "btn_sign_up": "สมัครสมาชิก",
+    "confirm_password_required": "กรุณาระบุรหัสผ่านอีกครั้ง"
   }
 }

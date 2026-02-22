@@ -5,5 +5,15 @@
     "email": "Email",
     "password": "Password",
     "btn_sign_in": "Sign In"
+  },
+  "sign_up": {
+    "title": "Sign Up",
+    "email": "Email",
+    "email_required": "Please enter your email",
+    "password_required": "Please enter your password",
+    "password": "Password",
+    "confirm_password": "Confirm Password",
+    "btn_sign_up": "Sign Up",
+    "confirm_password_required": "Please confirm your password"
   }
 }
