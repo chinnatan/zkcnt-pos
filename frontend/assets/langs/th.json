@@ -1,0 +1,9 @@
+{
+  "app_name": "zKCNT POS",
+  "sign_in": {
+    "title": "เข้าสู่ระบบ",
+    "email": "อีเมล์",
+    "password": "รหัสผ่าน",
+    "btn_sign_in": "ลงชื่อเข้าใช้"
+  }
+}
