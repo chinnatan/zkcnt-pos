@@ -5,6 +5,13 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "zKCNT POS Web (main_dev)",
+            "request": "launch",
+            "type": "dart",
+            "program": "lib/main_dev.dart",
+            "args": ["-d", "chrome","--web-port", "8080"],
+        },
+        {
             "name": "zKCNT POS Mobile (main_dev)",
             "request": "launch",
             "type": "dart",

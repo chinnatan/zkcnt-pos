@@ -1,7 +1,9 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:zkcnt_pos_app/core/constant/dimension_const.dart';
 import 'package:zkcnt_pos_app/core/constant/locale_key_const.dart';
+import 'package:zkcnt_pos_app/core/route/mobile_route.dart';
 
 class SignInScreen extends StatefulWidget {
   const SignInScreen({super.key});
@@ -29,6 +31,23 @@ class _SignInScreenState extends State<SignInScreen> {
     );
   }
 
+  Widget _buildSignInButton() {
+    return ElevatedButton(
+      onPressed: () {},
+      child: Text(LocaleKeyConst.signInBtnSignIn.tr()),
+    );
+  }
+
+  Widget _buildSignUpButton() {
+    return TextButton.icon(
+      onPressed: () {
+        context.goNamed(MobileRouteBuilder.signUp().name);
+      },
+      icon: Icon(Icons.person_add),
+      label: Text(LocaleKeyConst.signUpBtnSignUp.tr()),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -43,10 +62,9 @@ class _SignInScreenState extends State<SignInScreen> {
                 SizedBox(height: DimensionConst.wh16),
                 _buildPasswordField(),
                 SizedBox(height: DimensionConst.wh16),
-                ElevatedButton(
-                  onPressed: () {},
-                  child: Text(LocaleKeyConst.signInBtnSignIn.tr()),
-                ),
+                _buildSignInButton(),
+                SizedBox(height: DimensionConst.wh16),
+                _buildSignUpButton(),
               ],
             ),
           ),
