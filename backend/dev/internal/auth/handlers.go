@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net/http"
 	auth_dto "zkcnt-pos-api/internal/auth/dto"
+	"zkcnt-pos-api/pkg"
 
 	"github.com/pocketbase/pocketbase"
 	"github.com/pocketbase/pocketbase/core"
@@ -81,5 +82,5 @@ func (h *AuthHandler) SignUp(ctx *core.RequestEvent) error {
 		return err
 	}
 
-	return ctx.JSON(http.StatusOK, map[string]string{"message": "Sign up success"})
+	return pkg.SendSuccessResponse(ctx, nil)
 }
