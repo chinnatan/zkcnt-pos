@@ -1,5 +1,7 @@
 import 'package:zkcnt_pos_app/core/exception/http_exception.dart';
 import 'package:zkcnt_pos_app/core/network/dto/user/sign_up_dto.dart';
+import 'package:zkcnt_pos_app/core/network/dto/user/sign_up_store_dto.dart';
+import 'package:zkcnt_pos_app/core/network/dto/user/sign_up_user_dto.dart';
 import 'package:zkcnt_pos_app/core/network/impl/user_service_impl.dart';
 import 'package:zkcnt_pos_app/feature/sign_up/data/model/sign_up_model.dart';
 import 'package:zkcnt_pos_app/feature/sign_up/data/model/user_model.dart';
@@ -11,10 +13,17 @@ class UserRemoteDatasource {
     try {
       final response = await service.signUp(
         SignUpDto(
-          email: payload.email,
-          name: payload.name,
-          password: payload.password,
-          passwordConfirm: payload.passwordConfirm,
+          user: SignUpUserDto(
+            email: payload.user.email,
+            name: payload.user.name,
+            password: payload.user.password,
+            passwordConfirm: payload.user.passwordConfirm,
+          ),
+          store: SignUpStoreDto(
+            name: payload.store.name,
+            address: payload.store.address,
+            createdId: payload.store.createdId,
+          ),
         ),
       );
 

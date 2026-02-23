@@ -8,12 +8,20 @@
   },
   "sign_up": {
     "title": "สมัครสมาชิก",
+    "name": "ชื่อ",
+    "name_required": "กรุณาระบุชื่อ",
     "email": "อีเมล์",
     "email_required": "กรุณาระบุอีเมล์",
     "password": "รหัสผ่าน",
     "password_required": "กรุณาระบุรหัสผ่าน",
     "confirm_password": "ยืนยันรหัสผ่าน",
     "btn_sign_up": "สมัครสมาชิก",
-    "confirm_password_required": "กรุณาระบุรหัสผ่านอีกครั้ง"
+    "confirm_password_required": "กรุณาระบุรหัสผ่านอีกครั้ง",
+    "store_info": "ข้อมูลร้านค้า",
+    "store_name": "ชื่อร้านค้า",
+    "store_name_required": "กรุณาระบุชื่อร้านค้า",
+    "store_address": "ที่อยู่",
+    "store_address_required": "กรุณาระบุที่อยู่",
+    "sign_up_success": "สมัครสมาชิกสำเร็จ"
   }
 }

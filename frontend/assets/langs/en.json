@@ -8,12 +8,20 @@
   },
   "sign_up": {
     "title": "Sign Up",
+    "name": "Name",
+    "name_required": "Please enter your name",
     "email": "Email",
     "email_required": "Please enter your email",
     "password_required": "Please enter your password",
     "password": "Password",
     "confirm_password": "Confirm Password",
     "btn_sign_up": "Sign Up",
-    "confirm_password_required": "Please confirm your password"
+    "confirm_password_required": "Please confirm your password",
+    "store_info": "Store Info",
+    "store_name": "Store Name",
+    "store_name_required": "Please enter your store name",
+    "store_address": "Store Address",
+    "store_address_required": "Please enter your store address",
+    "sign_up_success": "Sign up success"
   }
 }

@@ -1,6 +1,8 @@
 import 'package:zkcnt_pos_app/core/exception/http_exception.dart';
 import 'package:zkcnt_pos_app/feature/sign_up/data/datasource/user_remote_datasource.dart';
 import 'package:zkcnt_pos_app/feature/sign_up/data/model/sign_up_model.dart';
+import 'package:zkcnt_pos_app/feature/sign_up/data/model/sign_up_store_model.dart';
+import 'package:zkcnt_pos_app/feature/sign_up/data/model/sign_up_user_model.dart';
 import 'package:zkcnt_pos_app/feature/sign_up/domain/entity/sign_up_entity.dart';
 import 'package:zkcnt_pos_app/feature/sign_up/domain/entity/user_entity.dart';
 import 'package:zkcnt_pos_app/feature/sign_up/domain/repository/user_repository.dart';
@@ -15,10 +17,17 @@ class UserRepositoryImpl implements UserRepository {
     try {
       final response = await datasource.signUp(
         SignUpModel(
-          email: payload.email,
-          name: payload.name,
-          password: payload.password,
-          passwordConfirm: payload.passwordConfirm,
+          user: SignUpUserModel(
+            email: payload.user.email,
+            name: payload.user.name,
+            password: payload.user.password,
+            passwordConfirm: payload.user.passwordConfirm,
+          ),
+          store: SignUpStoreModel(
+            name: payload.store.name,
+            address: payload.store.address,
+            createdId: payload.store.createdId,
+          ),
         ),
       );
       return UserEntity(
