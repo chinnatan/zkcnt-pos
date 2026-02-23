@@ -15,7 +15,7 @@ func main() {
 		g := e.Router.Group("/api/v1")
 
 		auth.RegisterRoutes(app, g.Group("/auth"))
-		return nil
+		return e.Next()
 	})
 
 	if err := app.Start(); err != nil {
