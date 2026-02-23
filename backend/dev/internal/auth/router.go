@@ -11,6 +11,6 @@ func RegisterRoutes(app *pocketbase.PocketBase, group *router.RouterGroup[*core.
 	handler := NewAuthHandler(app)
 
 	// ผูก Route กับ Method ใน Handler
-	group.POST("/login", handler.Login)
+	group.GET("/login", handler.Login)
 	group.POST("/signup", handler.SignUp)
 }
