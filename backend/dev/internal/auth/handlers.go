@@ -76,11 +76,20 @@ func (h *AuthHandler) SignUp(ctx *core.RequestEvent) error {
 			h.app.Logger().Error("ไม่สามารถบันทึก record ใน collection stores ได้", "error", err)
 			return ctx.InternalServerError("ไม่สามารถสร้างบัญชีได้ กรุณาติดต่อผู้ดูแลระบบ", err)
 		}
-		return nil
+
+		return pkg.SendSuccessResponse(ctx, auth_dto.User{
+			ID:           record.Id,
+			Email:        record.GetString("email"),
+			Name:         record.GetString("name"),
+			Role:         record.GetString("role"),
+			StoreID:      storeRecord.Id,
+			StoreName:    storeRecord.GetString("name"),
+			StoreAddress: storeRecord.GetString("address"),
+		})
 	}); err != nil {
 		h.app.Logger().Error("ไม่สามารถสร้างบัญชีได้ กรุณาติดต่อผู้ดูแลระบบ", "error", err)
 		return err
 	}
 
-	return pkg.SendSuccessResponse(ctx, nil)
+	return nil
 }
