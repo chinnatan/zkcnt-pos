@@ -47,12 +47,12 @@ RUN flutter build web \
 # ============================================================
 FROM nginx:stable-alpine-slim
 
-# WORKDIR /etc/nginx/
-
-# COPY nginx.conf nginx.conf
-
 WORKDIR /usr/share/nginx/html
 
+# Copy Flutter web build output
 COPY --from=builder /app/build/web /usr/share/nginx/html
+
+# Copy assets เข้า nginx โดยตรง (กันกรณี build ไม่ได้ใส่ assets ครบหรือ path ผิด)
+COPY --from=builder /app/assets /usr/share/nginx/html/assets
 
 EXPOSE 80
