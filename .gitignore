@@ -5,3 +5,5 @@ backend/prod/pb_data/
 # Temporary files
 *.log
 tmp/
+.DS_Store
+build
