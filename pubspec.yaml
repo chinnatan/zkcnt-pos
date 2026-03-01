@@ -52,6 +52,8 @@ dependencies:
   toastification: ^3.0.3
   dio: ^5.9.1
   retrofit: ^4.9.2
+  shared_preferences: ^2.5.4
+  path: ^1.9.1
 
 dev_dependencies:
   flutter_test:

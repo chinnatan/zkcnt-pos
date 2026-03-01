@@ -41,7 +41,7 @@ class SignUpBloc extends Bloc<SignUpEvent, SignUpState> {
   ) async {
     emit(SignUpLoading());
     try {
-      final userEntity = await signUpUsecase(event.signUpEntity);
+      final _ = await signUpUsecase(event.signUpEntity);
       emit(SignUpSuccess());
     } on HTTPException catch (e) {
       emit(SignUpFailure(message: e.message));

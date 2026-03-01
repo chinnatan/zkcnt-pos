@@ -5,6 +5,9 @@ class LocaleKeyConst {
   static const String signInEmail = 'sign_in.email';
   static const String signInPassword = 'sign_in.password';
   static const String signInBtnSignIn = 'sign_in.btn_sign_in';
+  static const String signInEmailRequired = 'sign_in.email_required';
+  static const String signInPasswordRequired = 'sign_in.password_required';
+  static const String signInSuccess = 'sign_in.sign_in_success';
   // Sign Up
   static const String signUpTitle = 'sign_up.title';
   static const String signUpName = 'sign_up.name';

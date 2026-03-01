@@ -9,7 +9,7 @@
             "request": "launch",
             "type": "dart",
             "program": "lib/main_local.dart",
-            "args": ["-d", "chrome","--web-port", "8080"],
+            "args": ["-d", "chrome","--web-port", "8080", "--web-header=Cross-Origin-Opener-Policy=same-origin", "--web-header=Cross-Origin-Embedder-Policy=require-corp"],
         },
         {
             "name": "zKCNT POS Web (main_dev)",

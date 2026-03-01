@@ -4,7 +4,10 @@
     "title": "Sign In",
     "email": "Email",
     "password": "Password",
-    "btn_sign_in": "Sign In"
+    "btn_sign_in": "Sign In",
+    "email_required": "Please enter your email",
+    "password_required": "Please enter your password",
+    "sign_in_success": "Sign in success"
   },
   "sign_up": {
     "title": "Sign Up",

@@ -4,7 +4,10 @@
     "title": "เข้าสู่ระบบ",
     "email": "อีเมล์",
     "password": "รหัสผ่าน",
-    "btn_sign_in": "ลงชื่อเข้าใช้"
+    "btn_sign_in": "ลงชื่อเข้าใช้",
+    "email_required": "กรุณาระบุอีเมล์",
+    "password_required": "กรุณาระบุรหัสผ่าน",
+    "sign_in_success": "เข้าสู่ระบบสำเร็จ"
   },
   "sign_up": {
     "title": "สมัครสมาชิก",
