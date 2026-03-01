@@ -7,3 +7,4 @@ backend/prod/pb_data/
 tmp/
 .DS_Store
 build
+.dart_tool
