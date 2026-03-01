@@ -33,7 +33,6 @@ RUN flutter pub get
 COPY lib ./lib
 COPY web ./web
 COPY assets ./assets
-COPY firebase.json ./
 
 # Build with optimizations
 RUN flutter build web \
