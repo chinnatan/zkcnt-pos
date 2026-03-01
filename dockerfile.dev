@@ -47,9 +47,9 @@ RUN flutter build web \
 # ============================================================
 FROM nginx:stable-alpine-slim
 
-WORKDIR /etc/nginx/
+# WORKDIR /etc/nginx/
 
-COPY nginx.conf nginx.conf
+# COPY nginx.conf nginx.conf
 
 WORKDIR /usr/share/nginx/html
 
