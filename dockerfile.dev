@@ -1,0 +1,59 @@
+# ============================================================
+# Builder: ลด RAM โดยใช้ shallow clone, precache เฉพาะ web,
+# และจำกัด Dart VM heap (ปรับได้ตามเครื่อง)
+# ============================================================
+FROM debian:bookworm-slim AS builder
+
+WORKDIR /app
+
+# ติดตั้งเฉพาะที่จำเป็น + ลบ cache ใน layer เดียว (ลดขนาด image)
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends curl git unzip xz-utils ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+    # Shallow clone เฉพาะ stable (ไม่ดึง history = ใช้ RAM/disk น้อยกว่า clone เต็มมาก)
+ARG FLUTTER_VERSION=stable
+RUN git clone --depth 1 --branch ${FLUTTER_VERSION} --single-branch \
+    https://github.com/flutter/flutter.git
+
+ENV PATH="./flutter/bin:${PATH}"
+
+# ดาวน์โหลดเฉพาะ engine สำหรับ web (ไม่ดึง Android/iOS = ลด disk + RAM ตอน precache)
+RUN flutter precache --web
+
+# จำกัด heap ของ Dart ตอน build (หน่วย MB) - ปรับตาม RAM เครื่อง ถ้า build ไม่ผ่านให้เพิ่ม
+ENV DART_VM_OPTIONS="--old_gen_heap_size=2048"
+
+# Copy dependency files first for better caching
+COPY pubspec.yaml ./
+
+RUN flutter pub get
+
+# Copy only necessary files for build
+COPY lib ./lib
+COPY web ./web
+COPY assets ./assets
+COPY firebase.json ./
+
+# Build with optimizations
+RUN flutter build web \
+    --target=lib/main_dev.dart \
+    --no-tree-shake-icons \
+    --release \
+    --no-wasm-dry-run \
+    --source-maps
+    
+# ============================================================
+# Runtime: ใช้เฉพาะ nginx + static files (กิน RAM น้อยมาก)
+# ============================================================
+FROM nginx:stable-alpine-slim
+
+WORKDIR /etc/nginx/
+
+COPY nginx.conf nginx.conf
+
+WORKDIR /usr/share/nginx/html
+
+COPY --from=builder /app/build/web /usr/share/nginx/html
+
+EXPOSE 80

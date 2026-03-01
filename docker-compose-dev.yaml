@@ -1,0 +1,14 @@
+services:
+  qms-web:
+    container_name: qms-web
+    build:
+      context: .
+      dockerfile: dockerfile.dev
+    restart: always
+    ports:
+      - "3001:80"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
