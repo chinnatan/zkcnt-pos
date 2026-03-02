@@ -4,6 +4,8 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:loader_overlay/loader_overlay.dart';
+import 'package:responsive_breakpoints/breakpoints/material_ui_breakpoint.dart';
+import 'package:responsive_breakpoints/extensions_theme.dart';
 import 'package:toastification/toastification.dart';
 import 'package:zkcnt_pos_app/app/app_config.dart';
 import 'package:zkcnt_pos_app/core/route/mobile_route.dart';

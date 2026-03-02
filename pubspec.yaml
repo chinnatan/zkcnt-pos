@@ -54,6 +54,8 @@ dependencies:
   retrofit: ^4.9.2
   shared_preferences: ^2.5.4
   path: ^1.9.1
+  responsive_breakpoints: ^1.0.1
+  responsiveness: ^1.2.8
 
 dev_dependencies:
   flutter_test:

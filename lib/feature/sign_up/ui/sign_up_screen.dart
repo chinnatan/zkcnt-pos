@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:loader_overlay/loader_overlay.dart';
+import 'package:responsiveness/responsiveness.dart';
 import 'package:zkcnt_pos_app/core/constant/dimension_const.dart';
 import 'package:zkcnt_pos_app/core/constant/locale_key_const.dart';
 import 'package:zkcnt_pos_app/core/route/mobile_route.dart';
@@ -50,9 +51,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
           },
           icon: Icon(Icons.arrow_back),
         ),
-        Text(
-          LocaleKeyConst.signUpTitle.tr(),
-          style: Theme.of(context).textTheme.titleLarge,
+        Expanded(
+          child: Text(
+            LocaleKeyConst.signUpTitle.tr(),
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
         ),
       ],
     );
@@ -246,9 +249,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
       children: [
         Row(
           children: [
-            Text(
-              LocaleKeyConst.signUpStoreInfo.tr(),
-              style: Theme.of(context).textTheme.titleMedium,
+            Expanded(
+              child: Text(
+                LocaleKeyConst.signUpStoreInfo.tr(),
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
             ),
           ],
         ),
@@ -260,41 +265,52 @@ class _SignUpScreenState extends State<SignUpScreen> {
     );
   }
 
-  Widget _buildContainer() {
+  Widget _buildChildContainer() {
+    return Expanded(
+      flex: DimensionConst.flex2,
+      child: Column(
+        children: [
+          Card.outlined(
+            shape: RoundedRectangleBorder(
+              side: BorderSide(color: Theme.of(context).colorScheme.outline),
+              borderRadius: BorderRadius.circular(DimensionConst.wh16),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(DimensionConst.wh16),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  _buildGeneralForm(),
+                  SizedBox(height: DimensionConst.wh16),
+                  _buildStoreInfo(),
+                  SizedBox(height: DimensionConst.wh16),
+                  _buildSignUpButton(),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMobileContainer() {
+    return Expanded(
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [_buildChildContainer()],
+      ),
+    );
+  }
+
+  Widget _buildDefaultContainer() {
     return Expanded(
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Spacer(),
-          Flexible(
-            flex: DimensionConst.flex1,
-            child: Column(
-              children: [
-                Card.outlined(
-                  shape: RoundedRectangleBorder(
-                    side: BorderSide(
-                      color: Theme.of(context).colorScheme.outline,
-                    ),
-                    borderRadius: BorderRadius.circular(DimensionConst.wh16),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(DimensionConst.wh16),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        _buildGeneralForm(),
-                        SizedBox(height: DimensionConst.wh16),
-                        _buildStoreInfo(),
-                        SizedBox(height: DimensionConst.wh16),
-                        _buildSignUpButton(),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Spacer(),
+          Flexible(flex: DimensionConst.flex1, child: Container()),
+          _buildChildContainer(),
+          Flexible(flex: DimensionConst.flex1, child: Container()),
         ],
       ),
     );
@@ -337,7 +353,17 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       child: Form(
                         key: formKey,
                         autovalidateMode: AutovalidateMode.onUserInteraction,
-                        child: Row(children: [_buildContainer()]),
+                        child: Row(
+                          children: [
+                            ResponsiveChild(
+                              xs: _buildMobileContainer(),
+                              md: _buildDefaultContainer(),
+                              lg: _buildDefaultContainer(),
+                              xl: _buildDefaultContainer(),
+                              xxl: _buildDefaultContainer(),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ],

@@ -2,6 +2,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:zkcnt_pos_app/core/exception/http_exception.dart';
 import 'package:zkcnt_pos_app/feature/sign_up/domain/entity/sign_up_entity.dart';
 import 'package:zkcnt_pos_app/feature/sign_up/domain/usecase/sign_up_usecase.dart';
+import 'package:zkcnt_pos_app/helper/log_helper.dart';
 
 part 'sign_up_event.dart';
 part 'sign_up_state.dart';

@@ -24,7 +24,8 @@ class _UserService implements UserService {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
     final _headers = <String, dynamic>{};
-    const Map<String, dynamic>? _data = null;
+    final _data = <String, dynamic>{};
+    _data.addAll(payload.toJson());
     final _options = _setStreamType<GlobalResponse<dynamic>>(
       Options(method: 'POST', headers: _headers, extra: _extra)
           .compose(
