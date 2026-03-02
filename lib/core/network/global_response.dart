@@ -4,15 +4,10 @@ part 'global_response.g.dart';
 
 @JsonSerializable(genericArgumentFactories: true)
 class GlobalResponse<T> {
-  final int status;
   final String? message;
   final T? data;
 
-  GlobalResponse({
-    required this.status,
-    required this.message,
-    required this.data,
-  });
+  GlobalResponse({required this.message, required this.data});
 
   factory GlobalResponse.fromJson(
     Map<String, dynamic> json,

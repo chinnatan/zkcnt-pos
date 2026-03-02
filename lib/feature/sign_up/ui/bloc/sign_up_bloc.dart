@@ -47,6 +47,7 @@ class SignUpBloc extends Bloc<SignUpEvent, SignUpState> {
     } on HTTPException catch (e) {
       emit(SignUpFailure(message: e.message));
     } catch (e) {
+      LogHelper.e(e.toString(), error: e, stackTrace: StackTrace.current);
       emit(SignUpFailure(message: e.toString()));
     }
   }

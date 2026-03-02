@@ -1,17 +1,15 @@
+import 'package:dio/dio.dart';
 import 'package:zkcnt_pos_app/core/exception/http_exception.dart';
 import 'package:zkcnt_pos_app/core/network/dio/dio_client.dart';
 import 'package:zkcnt_pos_app/core/network/dto/user/sign_up_dto.dart';
-import 'package:zkcnt_pos_app/core/network/dto/user/user_dto.dart';
 import 'package:zkcnt_pos_app/feature/sign_up/data/model/sign_up_model.dart';
 import 'package:zkcnt_pos_app/feature/sign_up/data/model/user_model.dart';
-import 'package:zkcnt_pos_app/helper/log_helper.dart';
 
 class UserRemoteDatasource {
   final service = DioClient().userService;
 
   Future<UserModel> signUp(SignUpModel payload) async {
     try {
-      LogHelper.i(payload.toJson().toString());
       final response = await service.signUp(
         SignUpDto(
           name: payload.name,
@@ -23,19 +21,20 @@ class UserRemoteDatasource {
         ),
       );
 
-      final dto = UserDto.fromJson(response.data);
-
       return UserModel(
-        id: dto.id,
-        email: dto.email,
-        name: dto.name,
-        role: dto.role,
-        storeId: dto.storeId,
-        storeName: dto.storeName,
-        storeAddress: dto.storeAddress,
+        id: response.data?.id ?? '',
+        email: response.data?.email ?? '',
+        name: response.data?.name ?? '',
+        role: response.data?.role ?? '',
+        storeId: response.data?.storeId ?? '',
+        storeName: response.data?.storeName ?? '',
+        storeAddress: response.data?.storeAddress ?? '',
       );
-    } on HTTPException {
-      rethrow;
+    } on DioException catch (e) {
+      throw HTTPException(
+        e.response?.statusCode ?? 500,
+        e.response?.data['message'] ?? 'An unknown error occurred',
+      );
     }
   }
 }

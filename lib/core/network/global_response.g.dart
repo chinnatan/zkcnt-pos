@@ -10,7 +10,6 @@ GlobalResponse<T> _$GlobalResponseFromJson<T>(
   Map<String, dynamic> json,
   T Function(Object? json) fromJsonT,
 ) => GlobalResponse<T>(
-  status: (json['status'] as num).toInt(),
   message: json['message'] as String?,
   data: _$nullableGenericFromJson(json['data'], fromJsonT),
 );
@@ -19,7 +18,6 @@ Map<String, dynamic> _$GlobalResponseToJson<T>(
   GlobalResponse<T> instance,
   Object? Function(T value) toJsonT,
 ) => <String, dynamic>{
-  'status': instance.status,
   'message': instance.message,
   'data': _$nullableGenericToJson(instance.data, toJsonT),
 };

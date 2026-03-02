@@ -20,13 +20,13 @@ class _UserService implements UserService {
   final ParseErrorLogger? errorLogger;
 
   @override
-  Future<GlobalResponse<dynamic>> signUp(SignUpDto payload) async {
+  Future<GlobalResponse<UserDto>> signUp(SignUpDto payload) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
     final _headers = <String, dynamic>{};
     final _data = <String, dynamic>{};
     _data.addAll(payload.toJson());
-    final _options = _setStreamType<GlobalResponse<dynamic>>(
+    final _options = _setStreamType<GlobalResponse<UserDto>>(
       Options(method: 'POST', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
@@ -37,11 +37,11 @@ class _UserService implements UserService {
           .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
     );
     final _result = await _dio.fetch<Map<String, dynamic>>(_options);
-    late GlobalResponse<dynamic> _value;
+    late GlobalResponse<UserDto> _value;
     try {
-      _value = GlobalResponse<dynamic>.fromJson(
+      _value = GlobalResponse<UserDto>.fromJson(
         _result.data!,
-        (json) => json as dynamic,
+        (json) => UserDto.fromJson(json as Map<String, dynamic>),
       );
     } on Object catch (e, s) {
       errorLogger?.logError(e, s, _options, response: _result);
