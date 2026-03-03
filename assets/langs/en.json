@@ -26,5 +26,14 @@
     "store_address": "Store Address",
     "store_address_required": "Please enter your store address",
     "sign_up_success": "Sign up success"
+  },
+  "side_menu": {
+    "home": "Home",
+    "products": "Products",
+    "orders": "Orders",
+    "customers": "Customers",
+    "reports": "Reports",
+    "settings": "Settings",
+    "logout": "Logout"
   }
 }

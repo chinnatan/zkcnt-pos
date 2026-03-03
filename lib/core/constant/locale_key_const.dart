@@ -1,6 +1,7 @@
 class LocaleKeyConst {
   static const String appName = 'app_name';
-  // Sign In
+
+  /// Sign In
   static const String signInTitle = 'sign_in.title';
   static const String signInEmail = 'sign_in.email';
   static const String signInPassword = 'sign_in.password';
@@ -8,7 +9,8 @@ class LocaleKeyConst {
   static const String signInEmailRequired = 'sign_in.email_required';
   static const String signInPasswordRequired = 'sign_in.password_required';
   static const String signInSuccess = 'sign_in.sign_in_success';
-  // Sign Up
+
+  /// Sign Up
   static const String signUpTitle = 'sign_up.title';
   static const String signUpName = 'sign_up.name';
   static const String signUpNameRequired = 'sign_up.name_required';
@@ -27,4 +29,13 @@ class LocaleKeyConst {
   static const String signUpStoreAddressRequired =
       'sign_up.store_address_required';
   static const String signUpSignUpSuccess = 'sign_up.sign_up_success';
+
+  /// Side Menu
+  static const String sideMenuHome = 'side_menu.home';
+  static const String sideMenuProducts = 'side_menu.products';
+  static const String sideMenuOrders = 'side_menu.orders';
+  static const String sideMenuCustomers = 'side_menu.customers';
+  static const String sideMenuReports = 'side_menu.reports';
+  static const String sideMenuSettings = 'side_menu.settings';
+  static const String sideMenuLogout = 'side_menu.logout';
 }

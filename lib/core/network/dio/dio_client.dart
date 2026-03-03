@@ -23,7 +23,7 @@ class DioClient {
           extra: {'withCredentials': true},
         ),
       ) {
-    if (AppConfig.isDev()) {
+    if (AppConfig.isLocal() || AppConfig.isDev()) {
       _dio.interceptors.add(
         LogInterceptor(
           request: true,

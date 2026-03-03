@@ -26,5 +26,14 @@
     "store_address": "ที่อยู่",
     "store_address_required": "กรุณาระบุที่อยู่",
     "sign_up_success": "สมัครสมาชิกสำเร็จ"
+  },
+  "side_menu": {
+    "home": "หน้าหลัก",
+    "products": "สินค้า",
+    "orders": "รายการสั่งซื้อ",
+    "customers": "ลูกค้า",
+    "reports": "รายงาน",
+    "settings": "ตั้งค่า",
+    "logout": "ออกจากระบบ"
   }
 }

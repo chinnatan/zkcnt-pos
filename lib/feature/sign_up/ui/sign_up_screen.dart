@@ -6,7 +6,7 @@ import 'package:loader_overlay/loader_overlay.dart';
 import 'package:responsiveness/responsiveness.dart';
 import 'package:zkcnt_pos_app/core/constant/dimension_const.dart';
 import 'package:zkcnt_pos_app/core/constant/locale_key_const.dart';
-import 'package:zkcnt_pos_app/core/route/mobile_route.dart';
+import 'package:zkcnt_pos_app/core/route/route.dart';
 import 'package:zkcnt_pos_app/feature/sign_up/domain/entity/sign_up_entity.dart';
 import 'package:zkcnt_pos_app/feature/sign_up/ui/bloc/sign_up_bloc.dart';
 import 'package:zkcnt_pos_app/helper/notify_helper.dart';
@@ -47,7 +47,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
       children: [
         IconButton(
           onPressed: () {
-            context.goNamed(MobileRouteBuilder.signIn().name);
+            context.goNamed(DefaultRouteBuilder.signIn().name);
           },
           icon: Icon(Icons.arrow_back),
         ),
@@ -330,7 +330,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   context,
                   LocaleKeyConst.signUpSignUpSuccess.tr(),
                 );
-                context.goNamed(MobileRouteBuilder.signIn().name);
+                context.goNamed(DefaultRouteBuilder.signIn().name);
               } else if (state is SignUpFailure) {
                 NotifyHelper.instance.showError(context, state.message);
               }

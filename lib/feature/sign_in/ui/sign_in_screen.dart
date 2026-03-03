@@ -3,9 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:loader_overlay/loader_overlay.dart';
+import 'package:responsiveness/responsiveness.dart';
 import 'package:zkcnt_pos_app/core/constant/dimension_const.dart';
 import 'package:zkcnt_pos_app/core/constant/locale_key_const.dart';
-import 'package:zkcnt_pos_app/core/route/mobile_route.dart';
+import 'package:zkcnt_pos_app/core/route/route.dart';
 import 'package:zkcnt_pos_app/feature/sign_in/ui/bloc/sign_in_bloc.dart';
 import 'package:zkcnt_pos_app/helper/notify_helper.dart';
 
@@ -64,7 +65,7 @@ class _SignInScreenState extends State<SignInScreen> {
   }
 
   Widget _buildSignInButton() {
-    return ElevatedButton(
+    return FilledButton(
       onPressed: () {
         if (formKey.currentState?.validate() ?? false) {
           context.read<SignInBloc>().add(
@@ -82,52 +83,72 @@ class _SignInScreenState extends State<SignInScreen> {
   Widget _buildSignUpButton() {
     return TextButton.icon(
       onPressed: () {
-        context.goNamed(MobileRouteBuilder.signUp().name);
+        context.goNamed(DefaultRouteBuilder.signUp().name);
       },
       icon: Icon(Icons.person_add),
       label: Text(LocaleKeyConst.signUpBtnSignUp.tr()),
     );
   }
 
-  Widget _buildContainer() {
+  Widget _buildDefaultContainer() {
+    return Expanded(
+      child: Column(
+        children: [
+          Card.outlined(
+            shape: RoundedRectangleBorder(
+              side: BorderSide(color: Theme.of(context).colorScheme.outline),
+              borderRadius: BorderRadius.circular(DimensionConst.wh16),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(DimensionConst.wh16),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  _buildEmailField(),
+                  SizedBox(height: DimensionConst.wh16),
+                  _buildPasswordField(),
+                  SizedBox(height: DimensionConst.wh16),
+                  _buildSignInButton(),
+                  SizedBox(height: DimensionConst.wh16),
+                  _buildSignUpButton(),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildWebContainer() {
     return Expanded(
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Spacer(),
-          Flexible(
-            flex: DimensionConst.flex1,
-            child: Column(
-              children: [
-                Card.outlined(
-                  shape: RoundedRectangleBorder(
-                    side: BorderSide(
-                      color: Theme.of(context).colorScheme.outline,
-                    ),
-                    borderRadius: BorderRadius.circular(DimensionConst.wh16),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(DimensionConst.wh16),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        _buildEmailField(),
-                        SizedBox(height: DimensionConst.wh16),
-                        _buildPasswordField(),
-                        SizedBox(height: DimensionConst.wh16),
-                        _buildSignInButton(),
-                        SizedBox(height: DimensionConst.wh16),
-                        _buildSignUpButton(),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Spacer(),
+          Flexible(flex: DimensionConst.flex1, child: Container()),
+          _buildDefaultContainer(),
+          Flexible(flex: DimensionConst.flex1, child: Container()),
         ],
       ),
+    );
+  }
+
+  Widget _buildMobileContainer() {
+    return Expanded(
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [_buildDefaultContainer()],
+      ),
+    );
+  }
+
+  Widget _buildResponsiveContainer() {
+    return ResponsiveChild(
+      xs: _buildMobileContainer(),
+      md: _buildWebContainer(),
+      lg: _buildWebContainer(),
+      xl: _buildWebContainer(),
+      xxl: _buildWebContainer(),
     );
   }
 
@@ -145,7 +166,7 @@ class _SignInScreenState extends State<SignInScreen> {
                   context,
                   LocaleKeyConst.signInSuccess.tr(),
                 );
-                context.goNamed(MobileRouteBuilder.home().name);
+                context.goNamed(DefaultRouteBuilder.home().name);
               } else if (state is SignInFailure) {
                 NotifyHelper.instance.showError(context, state.message);
               }
@@ -168,7 +189,7 @@ class _SignInScreenState extends State<SignInScreen> {
                       child: Form(
                         key: formKey,
                         autovalidateMode: AutovalidateMode.onUserInteraction,
-                        child: Row(children: [_buildContainer()]),
+                        child: Row(children: [_buildResponsiveContainer()]),
                       ),
                     ),
                   ],

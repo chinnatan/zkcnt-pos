@@ -8,7 +8,7 @@ import 'package:responsive_breakpoints/breakpoints/material_ui_breakpoint.dart';
 import 'package:responsive_breakpoints/extensions_theme.dart';
 import 'package:toastification/toastification.dart';
 import 'package:zkcnt_pos_app/app/app_config.dart';
-import 'package:zkcnt_pos_app/core/route/mobile_route.dart';
+import 'package:zkcnt_pos_app/core/route/route.dart';
 import 'package:zkcnt_pos_app/theme/theme.dart';
 import 'package:zkcnt_pos_app/theme/util.dart';
 
@@ -60,7 +60,7 @@ class _MainWebState extends State<MainWeb> {
       debugShowCheckedModeBanner: AppConfig.isDev(),
       title: "zKCNT POS",
       theme: brightness == Brightness.light ? theme.light() : theme.dark(),
-      routerConfig: MobileRouteConfig.init(),
+      routerConfig: DefaultRouteConfig.init(),
       supportedLocales: context.supportedLocales,
       locale: context.locale,
       localizationsDelegates: context.localizationDelegates,
@@ -89,7 +89,7 @@ class _MainMobileState extends State<MainMobile> {
       debugShowCheckedModeBanner: AppConfig.isDev(),
       title: "zKCNT POS",
       theme: brightness == Brightness.light ? theme.light() : theme.dark(),
-      routerConfig: MobileRouteConfig.init(),
+      routerConfig: DefaultRouteConfig.init(),
       supportedLocales: context.supportedLocales,
       locale: context.locale,
       localizationsDelegates: context.localizationDelegates,

@@ -1,5 +1,8 @@
+import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/widgets.dart';
 import 'package:go_router/go_router.dart';
 import 'package:zkcnt_pos_app/core/constant/local_db_const.dart';
+import 'package:zkcnt_pos_app/core/constant/locale_key_const.dart';
 import 'package:zkcnt_pos_app/core/pocketbase_impl/user_pocketbase_impl.dart';
 import 'package:zkcnt_pos_app/feature/main/ui/main_screen.dart';
 import 'package:zkcnt_pos_app/feature/sign_in/data/datasource/user_pocketbase_remote_datasource.dart';
@@ -15,28 +18,28 @@ import 'package:zkcnt_pos_app/feature/sign_up/ui/sign_up_screen.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:zkcnt_pos_app/helper/pocket_base_helper.dart';
 
-class MobileRoute {
+class DefaultRoute {
   final String name;
   final String path;
 
-  MobileRoute({required this.name, required this.path});
+  DefaultRoute({required this.name, required this.path});
 }
 
-class MobileRouteBuilder {
-  static MobileRoute home() {
-    return MobileRoute(name: 'home', path: '/');
+class DefaultRouteBuilder {
+  static DefaultRoute home() {
+    return DefaultRoute(name: 'home', path: '/');
   }
 
-  static MobileRoute signIn() {
-    return MobileRoute(name: 'signIn', path: '/sign-in');
+  static DefaultRoute signIn() {
+    return DefaultRoute(name: 'signIn', path: '/sign-in');
   }
 
-  static MobileRoute signUp() {
-    return MobileRoute(name: 'signUp', path: '/sign-up');
+  static DefaultRoute signUp() {
+    return DefaultRoute(name: 'signUp', path: '/sign-up');
   }
 }
 
-class MobileRouteGuard {
+class DefaultRouteGuard {
   static bool isAuthenticated() {
     final pb = PocketBaseHelper.instance.pb;
     return pb.authStore.isValid;
@@ -59,14 +62,20 @@ class MobileRouteGuard {
 }
 
 final _routes = [
-  GoRoute(
-    name: MobileRouteBuilder.home().name,
-    path: MobileRouteBuilder.home().path,
-    builder: (context, state) => MainScreen(),
+  ShellRoute(
+    builder: (context, state, child) =>
+        MainScreen(title: LocaleKeyConst.appName.tr(), child: child),
+    routes: [
+      GoRoute(
+        name: DefaultRouteBuilder.home().name,
+        path: DefaultRouteBuilder.home().path,
+        builder: (context, state) => Text(LocaleKeyConst.sideMenuHome.tr()),
+      ),
+    ],
   ),
   GoRoute(
-    name: MobileRouteBuilder.signIn().name,
-    path: MobileRouteBuilder.signIn().path,
+    name: DefaultRouteBuilder.signIn().name,
+    path: DefaultRouteBuilder.signIn().path,
     builder: (context, state) => BlocProvider(
       create: (context) => SignInBloc(
         signInUsecase: SignInUsecase(
@@ -81,8 +90,8 @@ final _routes = [
     ),
   ),
   GoRoute(
-    name: MobileRouteBuilder.signUp().name,
-    path: MobileRouteBuilder.signUp().path,
+    name: DefaultRouteBuilder.signUp().name,
+    path: DefaultRouteBuilder.signUp().path,
     builder: (context, state) => BlocProvider(
       create: (context) => SignUpBloc(
         signUpUsecase: SignUpUsecase(
@@ -96,25 +105,25 @@ final _routes = [
   ),
 ];
 
-final _protectedRoutes = [MobileRouteBuilder.home().name];
+final _protectedRoutes = [DefaultRouteBuilder.home().name];
 
-class MobileRouteConfig {
+class DefaultRouteConfig {
   static GoRouter init() {
     return GoRouter(
-      initialLocation: MobileRouteGuard.isAuthenticated()
-          ? MobileRouteBuilder.home().path
-          : MobileRouteBuilder.signIn().path,
+      initialLocation: DefaultRouteGuard.isAuthenticated()
+          ? DefaultRouteBuilder.home().path
+          : DefaultRouteBuilder.signIn().path,
       routes: _routes,
       redirect: (context, state) async {
         if (_protectedRoutes.contains(state.name)) {
-          if (MobileRouteGuard.isAuthenticated()) {
-            return MobileRouteBuilder.home().path;
+          if (DefaultRouteGuard.isAuthenticated()) {
+            return DefaultRouteBuilder.home().path;
           } else {
-            final isRefreshed = await MobileRouteGuard.refreshAuth();
+            final isRefreshed = await DefaultRouteGuard.refreshAuth();
             if (isRefreshed) {
-              return MobileRouteBuilder.home().path;
+              return DefaultRouteBuilder.home().path;
             } else {
-              return MobileRouteBuilder.signIn().path;
+              return DefaultRouteBuilder.signIn().path;
             }
           }
         }
