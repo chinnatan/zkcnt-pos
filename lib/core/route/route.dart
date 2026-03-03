@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:zkcnt_pos_app/core/constant/local_db_const.dart';
 import 'package:zkcnt_pos_app/core/constant/locale_key_const.dart';
 import 'package:zkcnt_pos_app/core/pocketbase_impl/user_pocketbase_impl.dart';
+import 'package:zkcnt_pos_app/feature/main/ui/bloc/side_menu_bloc.dart';
 import 'package:zkcnt_pos_app/feature/main/ui/main_screen.dart';
 import 'package:zkcnt_pos_app/feature/sign_in/data/datasource/user_pocketbase_remote_datasource.dart';
 import 'package:zkcnt_pos_app/feature/sign_in/data/repository/user_pocketbase_repository_impl.dart';
@@ -63,8 +64,10 @@ class DefaultRouteGuard {
 
 final _routes = [
   ShellRoute(
-    builder: (context, state, child) =>
-        MainScreen(title: LocaleKeyConst.appName.tr(), child: child),
+    builder: (context, state, child) => MultiBlocProvider(
+      providers: [BlocProvider(create: (context) => SideMenuBloc())],
+      child: MainScreen(title: LocaleKeyConst.appName.tr(), child: child),
+    ),
     routes: [
       GoRoute(
         name: DefaultRouteBuilder.home().name,

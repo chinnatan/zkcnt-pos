@@ -32,10 +32,9 @@ class LocaleKeyConst {
 
   /// Side Menu
   static const String sideMenuHome = 'side_menu.home';
+  static const String sideMenuPos = 'side_menu.pos';
   static const String sideMenuProducts = 'side_menu.products';
   static const String sideMenuOrders = 'side_menu.orders';
-  static const String sideMenuCustomers = 'side_menu.customers';
-  static const String sideMenuReports = 'side_menu.reports';
-  static const String sideMenuSettings = 'side_menu.settings';
+  static const String sideMenuEmployees = 'side_menu.employees';
   static const String sideMenuLogout = 'side_menu.logout';
 }

@@ -25,11 +25,15 @@ class LocalStorageHelper {
     await prefs.setString(key, jsonEncode(value));
   }
 
-  Future<dynamic> getString(String key) async {
+  dynamic getString(String key) {
     final value = prefs.getString(key);
     if (value == null) {
       return null;
     }
     return jsonDecode(value);
+  }
+
+  Future<void> clearAll() async {
+    await prefs.clear();
   }
 }

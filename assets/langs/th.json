@@ -29,10 +29,10 @@
   },
   "side_menu": {
     "home": "หน้าหลัก",
+    "pos":"การขาย",
     "products": "สินค้า",
     "orders": "รายการสั่งซื้อ",
-    "customers": "ลูกค้า",
-    "reports": "รายงาน",
+    "employees": "พนักงาน",
     "settings": "ตั้งค่า",
     "logout": "ออกจากระบบ"
   }

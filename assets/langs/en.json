@@ -29,11 +29,10 @@
   },
   "side_menu": {
     "home": "Home",
+    "pos": "POS",
     "products": "Products",
     "orders": "Orders",
-    "customers": "Customers",
-    "reports": "Reports",
-    "settings": "Settings",
+    "employees": "Employees",
     "logout": "Logout"
   }
 }

@@ -1,10 +1,11 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:zkcnt_pos_app/core/constant/dimension_const.dart';
 import 'package:zkcnt_pos_app/core/constant/locale_key_const.dart';
-import 'package:zkcnt_pos_app/core/route/route.dart';
-import 'package:zkcnt_pos_app/helper/pocket_base_helper.dart';
+import 'package:zkcnt_pos_app/core/dto/user/user_info_dto.dart';
+import 'package:zkcnt_pos_app/feature/main/ui/bloc/side_menu_bloc.dart';
+import 'package:zkcnt_pos_app/helper/app_helper.dart';
 
 class SideMenuWidget extends StatefulWidget {
   const SideMenuWidget({super.key});
@@ -15,6 +16,15 @@ class SideMenuWidget extends StatefulWidget {
 
 class _SideMenuWidgetState extends State<SideMenuWidget> {
   final ScrollController scrollController = ScrollController();
+
+  /// Variable
+  late UserInfoDTO userInfo;
+
+  @override
+  void initState() {
+    userInfo = AppHelper.getUserInfo();
+    super.initState();
+  }
 
   @override
   void dispose() {
@@ -51,6 +61,19 @@ class _SideMenuWidgetState extends State<SideMenuWidget> {
           onTap: () {},
           icon: Icons.home,
         ),
+        if (AppHelper.isAdmin()) _buildMenuForAdmin(),
+      ],
+    );
+  }
+
+  Widget _buildMenuForAdmin() {
+    return Column(
+      children: [
+        SideMenuItem(
+          title: LocaleKeyConst.sideMenuPos.tr(),
+          onTap: () {},
+          icon: Icons.shopping_cart,
+        ),
         SideMenuItem(
           title: LocaleKeyConst.sideMenuProducts.tr(),
           onTap: () {},
@@ -62,19 +85,9 @@ class _SideMenuWidgetState extends State<SideMenuWidget> {
           icon: Icons.shopping_cart,
         ),
         SideMenuItem(
-          title: LocaleKeyConst.sideMenuCustomers.tr(),
+          title: LocaleKeyConst.sideMenuEmployees.tr(),
           onTap: () {},
           icon: Icons.person,
-        ),
-        SideMenuItem(
-          title: LocaleKeyConst.sideMenuReports.tr(),
-          onTap: () {},
-          icon: Icons.report,
-        ),
-        SideMenuItem(
-          title: LocaleKeyConst.sideMenuSettings.tr(),
-          onTap: () {},
-          icon: Icons.settings,
         ),
       ],
     );
@@ -83,8 +96,7 @@ class _SideMenuWidgetState extends State<SideMenuWidget> {
   Widget _buildLogoutButton() {
     return OutlinedButton(
       onPressed: () {
-        PocketBaseHelper.instance.pb.authStore.clear();
-        context.goNamed(DefaultRouteBuilder.signIn().name);
+        context.read<SideMenuBloc>().add(SideMenuLogoutEvent());
       },
       child: Text(LocaleKeyConst.sideMenuLogout.tr()),
     );
@@ -101,7 +113,24 @@ class _SideMenuWidgetState extends State<SideMenuWidget> {
         padding: EdgeInsets.all(DimensionConst.wh16),
         child: Column(
           children: [
-            Row(children: [Text('User Info')]),
+            Row(
+              children: [
+                Text(
+                  userInfo.role,
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                ),
+              ],
+            ),
+            Row(
+              children: [
+                Text(
+                  userInfo.name,
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+              ],
+            ),
           ],
         ),
       ),
