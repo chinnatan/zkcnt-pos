@@ -1,3 +1,5 @@
+import 'package:drift/drift.dart';
+import 'package:drift_flutter/drift_flutter.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -20,10 +22,19 @@ void main() async {
 
   // Load the schema from your assets
   final schema = await rootBundle.loadString(LocalDBConst.schema);
+  final executor = driftDatabase(
+    name: LocalDBConst.databaseName,
+    web: DriftWebOptions(
+      sqlite3Wasm: Uri.parse(LocalDBConst.sqlite3Wasm),
+      driftWorker: Uri.parse(LocalDBConst.driftWorker),
+    ),
+  );
   // initialize pocketbase with schema
   PocketBaseHelper.init(
-    pocketBase: $PocketBase.database(AppConfig.instance.baseUrl)
-      ..cacheSchema(schema),
+    pocketBase: $PocketBase.database(
+      AppConfig.instance.baseUrl,
+      connection: DatabaseConnection(executor),
+    )..cacheSchema(schema),
   );
 
   /// init notify helper

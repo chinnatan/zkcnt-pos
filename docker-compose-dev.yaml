@@ -1,6 +1,6 @@
 services:
-  qms-web:
-    container_name: qms-web
+  pos-web:
+    container_name: pos-web
     build:
       context: .
       dockerfile: dockerfile.dev

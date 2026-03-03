@@ -35,7 +35,6 @@ COPY . .
 # Build with optimizations
 RUN flutter build web \
     --target=lib/main_dev.dart \
-    --no-tree-shake-icons \
     --release \
     --no-wasm-dry-run \
     --source-maps
