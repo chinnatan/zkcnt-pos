@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:pocketbase_drift/pocketbase_drift.dart';
 import 'package:zkcnt_pos_app/core/constant/local_db_const.dart';
 import 'package:zkcnt_pos_app/core/constant/locale_key_const.dart';
+import 'package:zkcnt_pos_app/core/notifier/auth_notifier.dart';
 import 'package:zkcnt_pos_app/core/pocketbase_impl/dto/user/user_info_record_pb_dto.dart';
 import 'package:zkcnt_pos_app/core/pocketbase_impl/user_pocketbase_impl.dart';
 import 'package:zkcnt_pos_app/feature/main/ui/bloc/side_menu_bloc.dart';
@@ -22,6 +23,7 @@ import 'package:zkcnt_pos_app/feature/sign_up/ui/bloc/sign_up_bloc.dart';
 import 'package:zkcnt_pos_app/feature/sign_up/ui/sign_up_screen.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:zkcnt_pos_app/helper/app_helper.dart';
+import 'package:zkcnt_pos_app/helper/log_helper.dart';
 import 'package:zkcnt_pos_app/helper/pocket_base_helper.dart';
 
 class DefaultRoute {
@@ -122,25 +124,32 @@ final _routes = [
 final _protectedRoutes = [DefaultRouteBuilder.home().name];
 
 class DefaultRouteConfig {
-  static GoRouter init() {
+  static GoRouter init(AuthNotifier authNotifier) {
     return GoRouter(
-      initialLocation: DefaultRouteGuard.isAuthenticated()
+      initialLocation: authNotifier.isAuthenticated
           ? DefaultRouteBuilder.home().path
           : DefaultRouteBuilder.signIn().path,
       routes: _routes,
+      refreshListenable: authNotifier,
       redirect: (context, state) async {
-        if (_protectedRoutes.contains(state.name)) {
-          if (DefaultRouteGuard.isAuthenticated()) {
-            return DefaultRouteBuilder.home().path;
-          } else {
-            final isRefreshed = await DefaultRouteGuard.refreshAuth();
-            if (isRefreshed) {
-              return DefaultRouteBuilder.home().path;
-            } else {
-              return DefaultRouteBuilder.signIn().path;
-            }
-          }
+        /// if not authenticated, redirect to sign in
+        if (!authNotifier.isAuthenticated &&
+            _protectedRoutes.contains(state.name)) {
+          return DefaultRouteBuilder.signIn().path;
         }
+
+        /// if authenticated, redirect to home
+        if (authNotifier.isAuthenticated &&
+            !_protectedRoutes.contains(state.name)) {
+          return DefaultRouteBuilder.home().path;
+        }
+
+        /// if authenticated, redirect to the requested path
+        if (authNotifier.isAuthenticated &&
+            _protectedRoutes.contains(state.name)) {
+          return state.fullPath ?? DefaultRouteBuilder.home().path;
+        }
+
         return null;
       },
     );
