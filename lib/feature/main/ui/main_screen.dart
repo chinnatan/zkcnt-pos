@@ -29,7 +29,16 @@ class _MainScreenState extends State<MainScreen> {
     return Scaffold(
       drawer: SideMenuWidget(),
       appBar: ScreenSizeHelper.isMobile(context)
-          ? AppBar(title: Text(widget.title))
+          ? AppBar(
+              title: BlocBuilder<SideMenuBloc, SideMenuState>(
+                builder: (context, state) {
+                  if (state is SideMenuNavigateSuccess) {
+                    return Text(state.currentTitle);
+                  }
+                  return Text(widget.title);
+                },
+              ),
+            )
           : null,
       body: SafeArea(
         child: MultiBlocListener(

@@ -1,9 +1,11 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:zkcnt_pos_app/core/constant/dimension_const.dart';
 import 'package:zkcnt_pos_app/core/constant/locale_key_const.dart';
 import 'package:zkcnt_pos_app/core/dto/user/user_info_dto.dart';
+import 'package:zkcnt_pos_app/core/route/route.dart';
 import 'package:zkcnt_pos_app/feature/main/ui/bloc/side_menu_bloc.dart';
 import 'package:zkcnt_pos_app/helper/app_helper.dart';
 
@@ -60,6 +62,7 @@ class _SideMenuWidgetState extends State<SideMenuWidget> {
           title: LocaleKeyConst.sideMenuHome.tr(),
           onTap: () {},
           icon: Icons.home,
+          route: DefaultRouteBuilder.home(),
         ),
         if (AppHelper.isAdmin()) _buildMenuForAdmin(),
       ],
@@ -72,6 +75,7 @@ class _SideMenuWidgetState extends State<SideMenuWidget> {
         SideMenuItem(
           title: LocaleKeyConst.sideMenuPos.tr(),
           onTap: () {},
+          route: DefaultRouteBuilder.sale(),
           icon: Icons.shopping_cart,
         ),
         SideMenuItem(
@@ -170,21 +174,42 @@ class SideMenuItem extends StatelessWidget {
     required this.title,
     required this.onTap,
     required this.icon,
+    this.route,
   });
 
   final String title;
   final VoidCallback onTap;
   final IconData icon;
-
+  final DefaultRoute? route;
   @override
   Widget build(BuildContext context) {
-    return ListTile(
-      title: Text(title),
-      onTap: onTap,
-      leading: Icon(icon),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(DimensionConst.wh16),
-      ),
+    return BlocBuilder<SideMenuBloc, SideMenuState>(
+      builder: (context, state) {
+        final isActive =
+            context.read<SideMenuBloc>().currentRoute.path ==
+            (route?.path ?? '');
+
+        return ListTile(
+          title: Text(title),
+          onTap: () {
+            context.read<SideMenuBloc>().add(
+              SideMenuNavigateEvent(
+                title: title,
+                route: route ?? DefaultRouteBuilder.home(),
+              ),
+            );
+            context.goNamed(route?.name ?? DefaultRouteBuilder.home().name);
+            Scaffold.of(context).closeDrawer();
+          },
+          leading: Icon(icon),
+          selected: isActive,
+          selectedTileColor: Theme.of(context).colorScheme.primary,
+          selectedColor: Theme.of(context).colorScheme.onPrimary,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(DimensionConst.wh16),
+          ),
+        );
+      },
     );
   }
 }

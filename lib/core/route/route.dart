@@ -1,16 +1,13 @@
-import 'dart:convert';
-
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/widgets.dart';
 import 'package:go_router/go_router.dart';
-import 'package:pocketbase_drift/pocketbase_drift.dart';
 import 'package:zkcnt_pos_app/core/constant/local_db_const.dart';
 import 'package:zkcnt_pos_app/core/constant/locale_key_const.dart';
 import 'package:zkcnt_pos_app/core/notifier/auth_notifier.dart';
-import 'package:zkcnt_pos_app/core/pocketbase_impl/dto/user/user_info_record_pb_dto.dart';
 import 'package:zkcnt_pos_app/core/pocketbase_impl/user_pocketbase_impl.dart';
 import 'package:zkcnt_pos_app/feature/main/ui/bloc/side_menu_bloc.dart';
 import 'package:zkcnt_pos_app/feature/main/ui/main_screen.dart';
+import 'package:zkcnt_pos_app/feature/sale/ui/sale_screen.dart';
 import 'package:zkcnt_pos_app/feature/sign_in/data/datasource/user_pocketbase_remote_datasource.dart';
 import 'package:zkcnt_pos_app/feature/sign_in/data/repository/user_pocketbase_repository_impl.dart';
 import 'package:zkcnt_pos_app/feature/sign_in/domain/usecase/sign_in_usecase.dart';
@@ -23,7 +20,6 @@ import 'package:zkcnt_pos_app/feature/sign_up/ui/bloc/sign_up_bloc.dart';
 import 'package:zkcnt_pos_app/feature/sign_up/ui/sign_up_screen.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:zkcnt_pos_app/helper/app_helper.dart';
-import 'package:zkcnt_pos_app/helper/log_helper.dart';
 import 'package:zkcnt_pos_app/helper/pocket_base_helper.dart';
 
 class DefaultRoute {
@@ -44,6 +40,10 @@ class DefaultRouteBuilder {
 
   static DefaultRoute signUp() {
     return DefaultRoute(name: 'signUp', path: '/sign-up');
+  }
+
+  static DefaultRoute sale() {
+    return DefaultRoute(name: 'sale', path: '/sale');
   }
 }
 
@@ -87,6 +87,11 @@ final _routes = [
         path: DefaultRouteBuilder.home().path,
         builder: (context, state) => Text(LocaleKeyConst.sideMenuHome.tr()),
       ),
+      GoRoute(
+        name: DefaultRouteBuilder.sale().name,
+        path: DefaultRouteBuilder.sale().path,
+        builder: (context, state) => SaleScreen(),
+      ),
     ],
   ),
   GoRoute(
@@ -121,10 +126,13 @@ final _routes = [
   ),
 ];
 
-final _protectedRoutes = [DefaultRouteBuilder.home().name];
-
 class DefaultRouteConfig {
   static GoRouter init(AuthNotifier authNotifier) {
+    final List<String> protectedRoutes = [
+      DefaultRouteBuilder.home().path,
+      DefaultRouteBuilder.sale().path,
+    ];
+
     return GoRouter(
       initialLocation: authNotifier.isAuthenticated
           ? DefaultRouteBuilder.home().path
@@ -132,21 +140,21 @@ class DefaultRouteConfig {
       routes: _routes,
       refreshListenable: authNotifier,
       redirect: (context, state) async {
+        final isProtected = protectedRoutes.contains(state.fullPath);
+
         /// if not authenticated, redirect to sign in
         if (!authNotifier.isAuthenticated &&
-            _protectedRoutes.contains(state.name)) {
+            protectedRoutes.contains(state.fullPath)) {
           return DefaultRouteBuilder.signIn().path;
         }
 
-        /// if authenticated, redirect to home
-        if (authNotifier.isAuthenticated &&
-            !_protectedRoutes.contains(state.name)) {
+        /// if authenticated and not protected, redirect to home
+        if (authNotifier.isAuthenticated && !isProtected) {
           return DefaultRouteBuilder.home().path;
         }
 
         /// if authenticated, redirect to the requested path
-        if (authNotifier.isAuthenticated &&
-            _protectedRoutes.contains(state.name)) {
+        if (authNotifier.isAuthenticated && isProtected) {
           return state.fullPath ?? DefaultRouteBuilder.home().path;
         }
 
