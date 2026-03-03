@@ -18,7 +18,7 @@ class _SideMenuWidgetState extends State<SideMenuWidget> {
   final ScrollController scrollController = ScrollController();
 
   /// Variable
-  late UserInfoDTO userInfo;
+  late UserInfoDTO? userInfo;
 
   @override
   void initState() {
@@ -116,7 +116,7 @@ class _SideMenuWidgetState extends State<SideMenuWidget> {
             Row(
               children: [
                 Text(
-                  userInfo.role,
+                  userInfo?.role ?? '',
                   style: Theme.of(context).textTheme.labelSmall?.copyWith(
                     color: Theme.of(context).colorScheme.primary,
                   ),
@@ -126,7 +126,7 @@ class _SideMenuWidgetState extends State<SideMenuWidget> {
             Row(
               children: [
                 Text(
-                  userInfo.name,
+                  userInfo?.name ?? '',
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
               ],

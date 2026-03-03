@@ -1,8 +1,12 @@
+import 'dart:convert';
+
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/widgets.dart';
 import 'package:go_router/go_router.dart';
+import 'package:pocketbase_drift/pocketbase_drift.dart';
 import 'package:zkcnt_pos_app/core/constant/local_db_const.dart';
 import 'package:zkcnt_pos_app/core/constant/locale_key_const.dart';
+import 'package:zkcnt_pos_app/core/pocketbase_impl/dto/user/user_info_record_pb_dto.dart';
 import 'package:zkcnt_pos_app/core/pocketbase_impl/user_pocketbase_impl.dart';
 import 'package:zkcnt_pos_app/feature/main/ui/bloc/side_menu_bloc.dart';
 import 'package:zkcnt_pos_app/feature/main/ui/main_screen.dart';
@@ -17,6 +21,7 @@ import 'package:zkcnt_pos_app/feature/sign_up/domain/usecase/sign_up_usecase.dar
 import 'package:zkcnt_pos_app/feature/sign_up/ui/bloc/sign_up_bloc.dart';
 import 'package:zkcnt_pos_app/feature/sign_up/ui/sign_up_screen.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:zkcnt_pos_app/helper/app_helper.dart';
 import 'package:zkcnt_pos_app/helper/pocket_base_helper.dart';
 
 class DefaultRoute {
@@ -43,6 +48,12 @@ class DefaultRouteBuilder {
 class DefaultRouteGuard {
   static bool isAuthenticated() {
     final pb = PocketBaseHelper.instance.pb;
+    final user = AppHelper.getUserInfo();
+    if (user != null) {
+      pb.authStore.save(user.token, null);
+    } else {
+      pb.authStore.clear();
+    }
     return pb.authStore.isValid;
   }
 
