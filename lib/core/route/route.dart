@@ -141,20 +141,21 @@ class DefaultRouteConfig {
       refreshListenable: authNotifier,
       redirect: (context, state) async {
         final isProtected = protectedRoutes.contains(state.fullPath);
+        final isAuthenticated =
+            authNotifier.isAuthenticated || DefaultRouteGuard.isAuthenticated();
 
         /// if not authenticated, redirect to sign in
-        if (!authNotifier.isAuthenticated &&
-            protectedRoutes.contains(state.fullPath)) {
+        if (!isAuthenticated && protectedRoutes.contains(state.fullPath)) {
           return DefaultRouteBuilder.signIn().path;
         }
 
         /// if authenticated and not protected, redirect to home
-        if (authNotifier.isAuthenticated && !isProtected) {
+        if (isAuthenticated && !isProtected) {
           return DefaultRouteBuilder.home().path;
         }
 
         /// if authenticated, redirect to the requested path
-        if (authNotifier.isAuthenticated && isProtected) {
+        if (isAuthenticated && isProtected) {
           return state.fullPath ?? DefaultRouteBuilder.home().path;
         }
 
