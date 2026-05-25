@@ -25,3 +25,6 @@ backend/pb_data/
 # Misc
 *.log
 .vite/
+
+# npm (switched to bun)
+package-lock.json

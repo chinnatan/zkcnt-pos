@@ -14,9 +14,9 @@ services:
       - pos-network
 
   frontend:
-    image: node:22-alpine
+    image: oven/bun:1-alpine
     working_dir: /app
-    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
+    command: sh -c "bun install && bun run dev -- --host 0.0.0.0"
     ports:
       - "3000:3000"
     volumes:

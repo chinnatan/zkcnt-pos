@@ -4,7 +4,7 @@
 
 ## Tech Stack
 
-- **Frontend**: Nuxt 3 (Vue 3) + Tailwind CSS v4
+- **Frontend**: Nuxt 3 (Vue 3) + Tailwind CSS v4 + Bun runtime
 - **Local Database**: Dexie.js (IndexedDB)
 - **Backend**: PocketBase v0.38
 - **PWA**: @vite-pwa/nuxt
@@ -33,8 +33,8 @@
 ```bash
 # Frontend
 cd frontend
-npm install
-npm run dev
+bun install
+bun run dev
 
 # PocketBase (download from https://pocketbase.io)
 cd backend
