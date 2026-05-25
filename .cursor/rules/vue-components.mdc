@@ -1,0 +1,37 @@
+---
+description: Vue component conventions for POS frontend
+globs: "frontend/app/**/*.vue"
+---
+
+# Vue Component Standards
+
+## Template Structure
+- Use `<template>` then `<script setup lang="ts">` order
+- No `<style>` blocks — use Tailwind utility classes exclusively
+- Use semantic HTML elements where appropriate
+
+## Script Setup
+- Always use `<script setup lang="ts">`
+- Import types with `import type { X } from "~/lib/types"`
+- Use `definePageMeta({ middleware: "auth" })` on all authenticated pages
+- Composables are auto-imported — no need to import `useAuth`, `useStore`, etc.
+
+## Tailwind CSS
+- Use Tailwind v4 classes (no config file needed)
+- Custom colors defined in `@theme`: `primary-50` through `primary-950`, `success-500`, `warning-500`, `danger-500`
+- Responsive: mobile-first with `sm:`, `md:`, `lg:` breakpoints
+- Common patterns:
+  - Cards: `rounded-xl bg-white p-5 shadow-sm`
+  - Inputs: `rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20`
+  - Primary buttons: `rounded-lg bg-primary-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-primary-700`
+  - Status badges: `rounded-full px-2 py-0.5 text-xs font-medium`
+
+## Modals
+- Use `<Teleport to="body">` for modals
+- Backdrop: `fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4`
+- Close on backdrop click: `@click.self="showModal = false"`
+
+## Data Loading
+- Fetch data in `onMounted()` hook
+- Show loading spinner while fetching
+- Handle empty states gracefully
