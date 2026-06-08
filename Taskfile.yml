@@ -91,6 +91,7 @@ tasks:
   prod:
     desc: Run production stack in Docker (detached)
     cmds:
+      - "{{.PROD_COMPOSE}} down --remove-orphans"
       - "{{.PROD_COMPOSE}} up -d --build"
 
   prod:down:
