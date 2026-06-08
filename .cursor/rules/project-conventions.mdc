@@ -10,6 +10,16 @@ alwaysApply: true
 - Local DB: Dexie.js (IndexedDB wrapper)
 - Backend: PocketBase v0.38 (SQLite-backed, single binary)
 - Containerization: Docker with separate dev/prod compose files
+- Task Runner: go-task (`Taskfile.yml` at project root)
+- Package Manager: Bun (`bun.lock`, not npm)
+
+## Development Workflow
+- Use `task` commands to run the project — prefer `task local` for daily dev
+- Frontend: always use **Bun** (`bun install`, `bun run dev`, `bun run build`) — never npm
+- Local mode: PocketBase in Docker + Bun frontend on host (`task local`)
+- Full Docker dev: `task dev` | Production: `task prod`
+- When adding a new Docker Compose service, update `Taskfile.yml` accordingly
+- Lockfile: commit `bun.lock`, do not commit `package-lock.json`
 
 ## Architecture: Offline-First + Multi-Tenant
 

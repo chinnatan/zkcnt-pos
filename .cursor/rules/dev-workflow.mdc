@@ -1,0 +1,46 @@
+---
+description: Development workflow using Taskfile, Bun, and Docker for local/dev/prod
+globs: Taskfile.yml,docker-compose*.yml
+alwaysApply: false
+---
+
+# Development Workflow
+
+## Running the Project
+
+Always prefer `task` commands over raw docker/bun commands in docs and scripts.
+
+| Mode | Command | When to use |
+|------|---------|-------------|
+| Local (hybrid) | `task local` | Daily development — fast hot reload |
+| Dev (full Docker) | `task dev` | When Bun is not installed on host |
+| Prod | `task prod` | Production deployment testing |
+
+### URLs
+- Frontend: http://localhost:3000
+- PocketBase Admin: http://localhost:8090/_/
+- Production (via Nginx): http://localhost (port 80)
+
+## Taskfile Conventions
+
+- All run/stop/log tasks live in [Taskfile.yml](../../Taskfile.yml) at project root
+- Use `vars` for compose file paths — do not duplicate compose commands inline
+- New services added to `docker-compose.dev.yml` or `docker-compose.prod.yml` MUST get corresponding tasks (start, stop, logs)
+- Interactive tasks (`local`, `dev`, `dev:logs`, `prod:logs`) use `interactive: true`
+
+## Bun Conventions
+
+- Package manager: Bun only (`bun install`, `bun run dev`, `bun run build`)
+- Lockfile: `frontend/bun.lock` — never generate or commit `package-lock.json`
+- Frontend Dockerfile uses `oven/bun:1-alpine`
+
+## Docker Compose Files
+
+- `docker-compose.dev.yml` — development (PocketBase + optional frontend container)
+- `docker-compose.prod.yml` — production (PocketBase + built frontend + Nginx)
+- `docker-compose.yml` — base/shared service definitions
+
+## Documentation
+
+- When updating setup instructions, update [README.md](../../README.md) Task Commands table
+- Do not hardcode `docker compose -f ...` in new docs — reference task names instead

@@ -20,6 +20,12 @@ export default defineNuxtConfig({
     compatibilityVersion: 4,
   },
 
+  // Avoid Vite pre-transform error for dead #app-manifest import
+  // https://github.com/nuxt/nuxt/issues/30461
+  experimental: {
+    appManifest: false,
+  },
+
   app: {
     head: {
       title: "zKCNT POS",

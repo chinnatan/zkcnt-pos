@@ -13,7 +13,7 @@
   "dependencies": {
     "@vite-pwa/nuxt": "^1.1.1",
     "dexie": "^4.0.11",
-    "nuxt": "^3.17.4",
+    "nuxt": "3.21.2",
     "pocketbase": "^0.25.2",
     "vue": "^3.5.16",
     "vue-router": "^4.5.1"
