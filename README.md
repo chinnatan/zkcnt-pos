@@ -112,11 +112,11 @@ CI/CD ใช้ GitHub Actions: **CI** รันบน cloud ทุก push/PR, 
 ### One-time setup บน Pi
 
 ```bash
-# 1. Clone repo
-git clone https://github.com/chinnatan/zkcnt-pos.git ~/apps/zkcnt-pos
-cd ~/apps/zkcnt-pos
+# 1. Clone repo (repo root = โฟลเดอร์ที่มี docker-compose.prod.yml)
+git clone https://github.com/chinnatan/zkcnt-pos.git ~/Desktop/zkcnt-pos
+cd ~/Desktop/zkcnt-pos
 
-# 2. สร้าง .env (ไม่ commit)
+# 2. สร้าง .env ที่ repo root (ไม่ใช่ใน subdirectory)
 cp .env.example .env
 # แก้ POCKETBASE_URL เป็น IP/domain ของ Pi เช่น http://192.168.1.50
 
@@ -129,13 +129,13 @@ docker compose -f docker-compose.prod.yml up -d --build
 ### ติดตั้ง GitHub Actions runner (Docker)
 
 ```bash
-cd ~/apps/zkcnt-pos
+cd ~/Desktop/zkcnt-pos
 
-# GitHub → Settings → Actions → Runners → New self-hosted runner → copy token
-RUNNER_TOKEN=<token> docker compose -f docker-compose.runner.yml up -d
+# DEPLOY_DIR ต้องชี้ไป repo root เดียวกับที่มี .env และ docker-compose.prod.yml
+DEPLOY_DIR=$PWD RUNNER_TOKEN=<token> docker compose -f docker-compose.runner.yml up -d
 ```
 
-Runner mount `/var/run/docker.sock` และ deploy directory (`~/apps/zkcnt-pos` → `/deploy`) เพื่อรัน `docker compose prod` อัตโนมัติ
+Runner mount `${DEPLOY_DIR}` → `/deploy` ใน container — workflow จะหา `/deploy/.env` และ `/deploy/docker-compose.prod.yml`
 
 ### Deploy flow
 
@@ -147,9 +147,23 @@ Runner mount `/var/run/docker.sock` และ deploy directory (`~/apps/zkcnt-po
 
 ### Troubleshooting
 
+**`/deploy/.env not found` ทั้งที่มี .env แล้ว**
+
+- `.env` ต้องอยู่ที่ **repo root** (โฟลเดอร์เดียวกับ `docker-compose.prod.yml`) ไม่ใช่ใน subdirectory เช่น `deploy/`
+- Runner ต้อง mount repo root ด้วย `DEPLOY_DIR`:
+
+```bash
+# ย้าย .env ถ้าวางผิดที่
+mv ~/Desktop/zkcnt-pos/deploy/.env ~/Desktop/zkcnt-pos/.env
+
+# restart runner ให้ mount ถูก path
+cd ~/Desktop/zkcnt-pos
+DEPLOY_DIR=$PWD docker compose -f docker-compose.runner.yml up -d --force-recreate
+```
+
 ```bash
 # ดู logs บน Pi
-cd ~/apps/zkcnt-pos
+cd ~/Desktop/zkcnt-pos
 docker compose -f docker-compose.prod.yml logs -f
 
 # ตรวจ runner

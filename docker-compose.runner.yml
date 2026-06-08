@@ -1,10 +1,13 @@
 # GitHub Actions self-hosted runner for Pi 5 deploy.
-# Run on the Pi (not part of the app stack):
 #
-#   1. GitHub → Settings → Actions → Runners → New self-hosted runner → copy token
-#   2. RUNNER_TOKEN=<token> docker compose -f docker-compose.runner.yml up -d
+# DEPLOY_DIR must be the git repo root (contains docker-compose.prod.yml AND .env).
+# Example for this project on Pi:
 #
-# Customize DEPLOY_DIR if the repo lives elsewhere on the Pi.
+#   cd ~/Desktop/zkcnt-pos
+#   cp .env.example .env   # edit POCKETBASE_URL
+#   DEPLOY_DIR=$PWD RUNNER_TOKEN=<token> docker compose -f docker-compose.runner.yml up -d
+#
+# Do NOT put .env in a subdirectory — the workflow expects /deploy/.env inside the container.
 
 services:
   github-runner:
@@ -18,7 +21,7 @@ services:
       RUNNER_WORKDIR: /deploy
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - ${DEPLOY_DIR:-./}:/deploy
+      - ${DEPLOY_DIR:?Set DEPLOY_DIR to the repo root on the Pi}:/deploy
       - runner-data:/runner
 
 volumes:

@@ -22,11 +22,24 @@ jobs:
       - name: Verify deploy directory
         run: |
           if [ ! -d /deploy ]; then
-            echo "::error::Deploy directory /deploy not found. Mount ~/Desktop/zkcnt-pos:/deploy in docker-compose.runner.yml"
+            echo "::error::Deploy directory /deploy not found."
+            echo "Set DEPLOY_DIR to your repo root when starting the runner, e.g.:"
+            echo "  DEPLOY_DIR=/home/zkcnt/Desktop/zkcnt-pos docker compose -f docker-compose.runner.yml up -d"
             exit 1
           fi
           if [ ! -f /deploy/.env ]; then
-            echo "::error::/deploy/.env not found. Create .env on the Pi host before deploying."
+            echo "::error::/deploy/.env not found inside the runner container."
+            echo "Contents of /deploy:"
+            ls -la /deploy || true
+            echo ""
+            echo "Fix: place .env in the repo root (same folder as docker-compose.prod.yml), NOT in a subdirectory."
+            echo "Then restart the runner with DEPLOY_DIR pointing at that repo root, e.g.:"
+            echo "  DEPLOY_DIR=/home/zkcnt/Desktop/zkcnt-pos docker compose -f docker-compose.runner.yml up -d --force-recreate"
+            exit 1
+          fi
+          if [ ! -f /deploy/docker-compose.prod.yml ]; then
+            echo "::error::/deploy/docker-compose.prod.yml not found — DEPLOY_DIR must be the git repo root."
+            ls -la /deploy || true
             exit 1
           fi
 
