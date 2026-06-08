@@ -3,6 +3,8 @@ import type { Product, Category } from "~/lib/types";
 
 definePageMeta({ middleware: "auth" });
 
+const { t } = useI18n();
+const { formatCurrency } = useFormat();
 const { products, categories, fetchProducts, fetchCategories, createProduct, updateProduct, deleteProduct, createCategory, updateCategory, deleteCategory, isLoading } = useProducts();
 const { activeStoreId } = useStore();
 
@@ -39,10 +41,6 @@ const categoryForm = ref({
   sort_order: 0,
   is_active: true,
 });
-
-function formatCurrency(amount: number): string {
-  return `฿${amount.toLocaleString("th-TH", { minimumFractionDigits: 2 })}`;
-}
 
 const filteredProducts = computed(() => {
   let result = products.value ?? [];
@@ -172,8 +170,8 @@ onMounted(() => {
       <!-- Header -->
       <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 class="text-2xl font-bold text-gray-900">จัดการสินค้า</h1>
-          <p class="mt-1 text-sm text-gray-500">จัดการสินค้าและหมวดหมู่ทั้งหมดของร้าน</p>
+          <h1 class="text-2xl font-bold text-gray-900">{{ t('productsPage.title') }}</h1>
+          <p class="mt-1 text-sm text-gray-500">{{ t('productsPage.subtitle') }}</p>
         </div>
         <button
           v-if="activeTab === 'products'"
@@ -181,7 +179,7 @@ onMounted(() => {
           @click="openAddProduct"
         >
           <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
-          เพิ่มสินค้า
+          {{ t('productsPage.addProduct') }}
         </button>
         <button
           v-else
@@ -189,7 +187,7 @@ onMounted(() => {
           @click="openAddCategory"
         >
           <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
-          เพิ่มหมวดหมู่
+          {{ t('productsPage.addCategory') }}
         </button>
       </div>
 
@@ -201,7 +199,7 @@ onMounted(() => {
             :class="activeTab === 'products' ? 'border-primary-600 text-primary-600' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'"
             @click="activeTab = 'products'"
           >
-            สินค้า
+            {{ t('nav.products') }}
             <span class="ml-2 rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-600">{{ (products ?? []).length }}</span>
           </button>
           <button
@@ -209,7 +207,7 @@ onMounted(() => {
             :class="activeTab === 'categories' ? 'border-primary-600 text-primary-600' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'"
             @click="activeTab = 'categories'"
           >
-            หมวดหมู่
+            {{ t('productsPage.categories') }}
             <span class="ml-2 rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-600">{{ (categories ?? []).length }}</span>
           </button>
         </nav>
@@ -229,7 +227,7 @@ onMounted(() => {
             <input
               v-model="searchQuery"
               type="text"
-              placeholder="ค้นหาสินค้า (ชื่อ, SKU)..."
+              :placeholder="t('productsPage.searchPlaceholder')"
               class="w-full rounded-lg border border-gray-300 bg-white py-2.5 pl-10 pr-4 text-sm shadow-sm transition focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
             />
           </div>
@@ -237,7 +235,7 @@ onMounted(() => {
             v-model="selectedCategoryId"
             class="rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm shadow-sm transition focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 sm:w-56"
           >
-            <option :value="null">หมวดหมู่ทั้งหมด</option>
+            <option :value="null">{{ t('productsPage.allCategories') }}</option>
             <option v-for="cat in categories" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
           </select>
         </div>
@@ -247,13 +245,13 @@ onMounted(() => {
           <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">
               <tr>
-                <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">สินค้า</th>
-                <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">SKU</th>
-                <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">หมวดหมู่</th>
-                <th class="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">ราคา</th>
-                <th class="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">ต้นทุน</th>
-                <th class="px-6 py-3 text-center text-xs font-semibold uppercase tracking-wider text-gray-500">สถานะ</th>
-                <th class="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">จัดการ</th>
+                <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">{{ t('productsPage.productCol') }}</th>
+                <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">{{ t('common.sku') }}</th>
+                <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">{{ t('common.category') }}</th>
+                <th class="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">{{ t('common.price') }}</th>
+                <th class="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">{{ t('common.cost') }}</th>
+                <th class="px-6 py-3 text-center text-xs font-semibold uppercase tracking-wider text-gray-500">{{ t('common.status') }}</th>
+                <th class="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">{{ t('productsPage.manage') }}</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-gray-100">
@@ -278,21 +276,21 @@ onMounted(() => {
                     class="inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium"
                     :class="product.is_active ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'"
                   >
-                    {{ product.is_active ? "ใช้งาน" : "ปิดใช้งาน" }}
+                    {{ product.is_active ? t('common.enabledShort') : t('common.disabledShort') }}
                   </span>
                 </td>
                 <td class="whitespace-nowrap px-6 py-4 text-right">
                   <div class="flex items-center justify-end gap-2">
                     <button
                       class="rounded-lg p-1.5 text-gray-400 transition hover:bg-gray-100 hover:text-primary-600"
-                      title="แก้ไข"
+                      :title="t('common.edit')"
                       @click="openEditProduct(product)"
                     >
                       <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
                     </button>
                     <button
                       class="rounded-lg p-1.5 text-gray-400 transition hover:bg-red-50 hover:text-red-600"
-                      title="ลบ"
+                      :title="t('common.delete')"
                       @click="confirmDeleteProduct(product)"
                     >
                       <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
@@ -303,8 +301,8 @@ onMounted(() => {
               <tr v-if="filteredProducts.length === 0">
                 <td colspan="7" class="px-6 py-16 text-center">
                   <svg class="mx-auto h-12 w-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
-                  <p class="mt-3 text-sm font-medium text-gray-500">ไม่พบสินค้า</p>
-                  <p class="mt-1 text-xs text-gray-400">ลองเปลี่ยนคำค้นหาหรือตัวกรอง</p>
+                  <p class="mt-3 text-sm font-medium text-gray-500">{{ t('productsPage.noProducts') }}</p>
+                  <p class="mt-1 text-xs text-gray-400">{{ t('productsPage.noProductsHint') }}</p>
                 </td>
               </tr>
             </tbody>
@@ -315,7 +313,7 @@ onMounted(() => {
         <div class="flex flex-col gap-3 md:hidden">
           <div v-if="filteredProducts.length === 0" class="rounded-xl bg-white p-8 text-center shadow-sm">
             <svg class="mx-auto h-12 w-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
-            <p class="mt-3 text-sm font-medium text-gray-500">ไม่พบสินค้า</p>
+            <p class="mt-3 text-sm font-medium text-gray-500">{{ t('productsPage.noProducts') }}</p>
           </div>
           <div v-for="product in filteredProducts" :key="product.id" class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
             <div class="flex items-start justify-between">
@@ -325,31 +323,31 @@ onMounted(() => {
                 </div>
                 <div>
                   <div class="text-sm font-medium text-gray-900">{{ product.name }}</div>
-                  <div class="text-xs text-gray-400">{{ product.sku || "ไม่มี SKU" }}</div>
+                  <div class="text-xs text-gray-400">{{ product.sku || t('common.noSku') }}</div>
                 </div>
               </div>
               <span
                 class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium"
                 :class="product.is_active ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'"
               >
-                {{ product.is_active ? "ใช้งาน" : "ปิด" }}
+                {{ product.is_active ? t('common.enabledShort') : t('common.disabledShort') }}
               </span>
             </div>
             <div class="mt-3 grid grid-cols-2 gap-2 text-sm">
               <div>
-                <span class="text-gray-400">ราคา</span>
+                <span class="text-gray-400">{{ t('common.price') }}</span>
                 <p class="font-medium text-gray-900">{{ formatCurrency(product.price) }}</p>
               </div>
               <div>
-                <span class="text-gray-400">ต้นทุน</span>
+                <span class="text-gray-400">{{ t('common.cost') }}</span>
                 <p class="text-gray-600">{{ formatCurrency(product.cost ?? 0) }}</p>
               </div>
               <div>
-                <span class="text-gray-400">หมวดหมู่</span>
+                <span class="text-gray-400">{{ t('common.category') }}</span>
                 <p class="text-gray-600">{{ getCategoryName(product.category) }}</p>
               </div>
               <div>
-                <span class="text-gray-400">หน่วย</span>
+                <span class="text-gray-400">{{ t('common.unit') }}</span>
                 <p class="text-gray-600">{{ product.unit || "-" }}</p>
               </div>
             </div>
@@ -359,14 +357,14 @@ onMounted(() => {
                 @click="openEditProduct(product)"
               >
                 <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
-                แก้ไข
+                {{ t('common.edit') }}
               </button>
               <button
                 class="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium text-red-600 transition hover:bg-red-50"
                 @click="confirmDeleteProduct(product)"
               >
                 <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                ลบ
+                {{ t('common.delete') }}
               </button>
             </div>
           </div>
@@ -379,11 +377,11 @@ onMounted(() => {
           <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">
               <tr>
-                <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">ชื่อหมวดหมู่</th>
-                <th class="hidden px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 sm:table-cell">คำอธิบาย</th>
-                <th class="px-6 py-3 text-center text-xs font-semibold uppercase tracking-wider text-gray-500">ลำดับ</th>
-                <th class="px-6 py-3 text-center text-xs font-semibold uppercase tracking-wider text-gray-500">สถานะ</th>
-                <th class="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">จัดการ</th>
+                <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">{{ t('productsPage.categoryName') }}</th>
+                <th class="hidden px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 sm:table-cell">{{ t('common.description') }}</th>
+                <th class="px-6 py-3 text-center text-xs font-semibold uppercase tracking-wider text-gray-500">{{ t('common.sortOrder') }}</th>
+                <th class="px-6 py-3 text-center text-xs font-semibold uppercase tracking-wider text-gray-500">{{ t('common.status') }}</th>
+                <th class="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">{{ t('productsPage.manage') }}</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-gray-100">
@@ -396,21 +394,21 @@ onMounted(() => {
                     class="inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium"
                     :class="cat.is_active ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'"
                   >
-                    {{ cat.is_active ? "ใช้งาน" : "ปิดใช้งาน" }}
+                    {{ cat.is_active ? t('common.active') : t('common.inactive') }}
                   </span>
                 </td>
                 <td class="whitespace-nowrap px-6 py-4 text-right">
                   <div class="flex items-center justify-end gap-2">
                     <button
                       class="rounded-lg p-1.5 text-gray-400 transition hover:bg-gray-100 hover:text-primary-600"
-                      title="แก้ไข"
+                      :title="t('common.edit')"
                       @click="openEditCategory(cat)"
                     >
                       <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
                     </button>
                     <button
                       class="rounded-lg p-1.5 text-gray-400 transition hover:bg-red-50 hover:text-red-600"
-                      title="ลบ"
+                      :title="t('common.delete')"
                       @click="confirmDeleteCategory(cat)"
                     >
                       <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
@@ -421,8 +419,8 @@ onMounted(() => {
               <tr v-if="(categories ?? []).length === 0">
                 <td colspan="5" class="px-6 py-16 text-center">
                   <svg class="mx-auto h-12 w-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z" /></svg>
-                  <p class="mt-3 text-sm font-medium text-gray-500">ยังไม่มีหมวดหมู่</p>
-                  <button class="mt-2 text-sm font-medium text-primary-600 hover:text-primary-700" @click="openAddCategory">เพิ่มหมวดหมู่แรก</button>
+                  <p class="mt-3 text-sm font-medium text-gray-500">{{ t('productsPage.noCategories') }}</p>
+                  <button class="mt-2 text-sm font-medium text-primary-600 hover:text-primary-700" @click="openAddCategory">{{ t('productsPage.addFirstCategory') }}</button>
                 </td>
               </tr>
             </tbody>
@@ -452,36 +450,36 @@ onMounted(() => {
           >
             <div v-if="showProductModal" class="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl">
               <div class="mb-5 flex items-center justify-between">
-                <h2 class="text-lg font-semibold text-gray-900">{{ editingProduct ? "แก้ไขสินค้า" : "เพิ่มสินค้าใหม่" }}</h2>
+                <h2 class="text-lg font-semibold text-gray-900">{{ editingProduct ? t('productsPage.editProduct') : t('productsPage.addNewProduct') }}</h2>
                 <button class="rounded-lg p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600" @click="showProductModal = false">
                   <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
                 </button>
               </div>
               <form class="space-y-4" @submit.prevent="handleSaveProduct">
                 <div>
-                  <label class="mb-1 block text-sm font-medium text-gray-700">ชื่อสินค้า <span class="text-red-500">*</span></label>
+                  <label class="mb-1 block text-sm font-medium text-gray-700">{{ t('productsPage.productName') }} <span class="text-red-500">*</span></label>
                   <input v-model="productForm.name" type="text" required class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm transition focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20" />
                 </div>
                 <div class="grid grid-cols-2 gap-4">
                   <div>
-                    <label class="mb-1 block text-sm font-medium text-gray-700">SKU</label>
+                    <label class="mb-1 block text-sm font-medium text-gray-700">{{ t('common.sku') }}</label>
                     <input v-model="productForm.sku" type="text" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm transition focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20" />
                   </div>
                   <div>
-                    <label class="mb-1 block text-sm font-medium text-gray-700">บาร์โค้ด</label>
+                    <label class="mb-1 block text-sm font-medium text-gray-700">{{ t('common.barcode') }}</label>
                     <input v-model="productForm.barcode" type="text" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm transition focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20" />
                   </div>
                 </div>
                 <div class="grid grid-cols-2 gap-4">
                   <div>
-                    <label class="mb-1 block text-sm font-medium text-gray-700">ราคา <span class="text-red-500">*</span></label>
+                    <label class="mb-1 block text-sm font-medium text-gray-700">{{ t('common.price') }} <span class="text-red-500">*</span></label>
                     <div class="relative">
                       <span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400">฿</span>
                       <input v-model.number="productForm.price" type="number" step="0.01" min="0" required class="w-full rounded-lg border border-gray-300 py-2 pl-8 pr-3 text-sm transition focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20" />
                     </div>
                   </div>
                   <div>
-                    <label class="mb-1 block text-sm font-medium text-gray-700">ต้นทุน</label>
+                    <label class="mb-1 block text-sm font-medium text-gray-700">{{ t('common.cost') }}</label>
                     <div class="relative">
                       <span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400">฿</span>
                       <input v-model.number="productForm.cost" type="number" step="0.01" min="0" class="w-full rounded-lg border border-gray-300 py-2 pl-8 pr-3 text-sm transition focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20" />
@@ -490,19 +488,19 @@ onMounted(() => {
                 </div>
                 <div class="grid grid-cols-2 gap-4">
                   <div>
-                    <label class="mb-1 block text-sm font-medium text-gray-700">หมวดหมู่</label>
+                    <label class="mb-1 block text-sm font-medium text-gray-700">{{ t('common.category') }}</label>
                     <select v-model="productForm.category" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm transition focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20">
-                      <option value="">ไม่ระบุ</option>
+                      <option value="">{{ t('common.unspecified') }}</option>
                       <option v-for="cat in categories" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
                     </select>
                   </div>
                   <div>
-                    <label class="mb-1 block text-sm font-medium text-gray-700">หน่วย</label>
-                    <input v-model="productForm.unit" type="text" placeholder="ชิ้น, กก., ..." class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm transition focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20" />
+                    <label class="mb-1 block text-sm font-medium text-gray-700">{{ t('common.unit') }}</label>
+                    <input v-model="productForm.unit" type="text" :placeholder="t('productsPage.unitPlaceholder')" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm transition focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20" />
                   </div>
                 </div>
                 <div>
-                  <label class="mb-1 block text-sm font-medium text-gray-700">คำอธิบาย</label>
+                  <label class="mb-1 block text-sm font-medium text-gray-700">{{ t('common.description') }}</label>
                   <textarea v-model="productForm.description" rows="2" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm transition focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20" />
                 </div>
                 <div class="flex items-center gap-6">
@@ -517,7 +515,7 @@ onMounted(() => {
                     >
                       <span class="pointer-events-none inline-block h-4 w-4 rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out" :class="productForm.track_inventory ? 'translate-x-4' : 'translate-x-0'" />
                     </button>
-                    <span class="text-sm text-gray-700">ติดตามสต็อก</span>
+                    <span class="text-sm text-gray-700">{{ t('common.trackStock') }}</span>
                   </label>
                   <label class="flex cursor-pointer items-center gap-2">
                     <button
@@ -530,13 +528,13 @@ onMounted(() => {
                     >
                       <span class="pointer-events-none inline-block h-4 w-4 rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out" :class="productForm.is_active ? 'translate-x-4' : 'translate-x-0'" />
                     </button>
-                    <span class="text-sm text-gray-700">เปิดใช้งาน</span>
+                    <span class="text-sm text-gray-700">{{ t('common.enabled') }}</span>
                   </label>
                 </div>
                 <div class="flex items-center justify-end gap-3 pt-2">
-                  <button type="button" class="rounded-lg px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100" @click="showProductModal = false">ยกเลิก</button>
+                  <button type="button" class="rounded-lg px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100" @click="showProductModal = false">{{ t('common.cancel') }}</button>
                   <button type="submit" class="rounded-lg bg-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2">
-                    {{ editingProduct ? "บันทึก" : "เพิ่มสินค้า" }}
+                    {{ editingProduct ? t('common.save') : t('productsPage.addProduct') }}
                   </button>
                 </div>
               </form>
@@ -567,22 +565,22 @@ onMounted(() => {
           >
             <div v-if="showCategoryModal" class="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
               <div class="mb-5 flex items-center justify-between">
-                <h2 class="text-lg font-semibold text-gray-900">{{ editingCategory ? "แก้ไขหมวดหมู่" : "เพิ่มหมวดหมู่ใหม่" }}</h2>
+                <h2 class="text-lg font-semibold text-gray-900">{{ editingCategory ? t('productsPage.editCategory') : t('productsPage.addNewCategory') }}</h2>
                 <button class="rounded-lg p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600" @click="showCategoryModal = false">
                   <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
                 </button>
               </div>
               <form class="space-y-4" @submit.prevent="handleSaveCategory">
                 <div>
-                  <label class="mb-1 block text-sm font-medium text-gray-700">ชื่อหมวดหมู่ <span class="text-red-500">*</span></label>
+                  <label class="mb-1 block text-sm font-medium text-gray-700">{{ t('productsPage.categoryName') }} <span class="text-red-500">*</span></label>
                   <input v-model="categoryForm.name" type="text" required class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm transition focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20" />
                 </div>
                 <div>
-                  <label class="mb-1 block text-sm font-medium text-gray-700">คำอธิบาย</label>
+                  <label class="mb-1 block text-sm font-medium text-gray-700">{{ t('common.description') }}</label>
                   <textarea v-model="categoryForm.description" rows="2" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm transition focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20" />
                 </div>
                 <div>
-                  <label class="mb-1 block text-sm font-medium text-gray-700">ลำดับการแสดง</label>
+                  <label class="mb-1 block text-sm font-medium text-gray-700">{{ t('productsPage.displayOrder') }}</label>
                   <input v-model.number="categoryForm.sort_order" type="number" min="0" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm transition focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20" />
                 </div>
                 <label class="flex cursor-pointer items-center gap-2">
@@ -596,12 +594,12 @@ onMounted(() => {
                   >
                     <span class="pointer-events-none inline-block h-4 w-4 rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out" :class="categoryForm.is_active ? 'translate-x-4' : 'translate-x-0'" />
                   </button>
-                  <span class="text-sm text-gray-700">เปิดใช้งาน</span>
+                  <span class="text-sm text-gray-700">{{ t('common.enabled') }}</span>
                 </label>
                 <div class="flex items-center justify-end gap-3 pt-2">
-                  <button type="button" class="rounded-lg px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100" @click="showCategoryModal = false">ยกเลิก</button>
+                  <button type="button" class="rounded-lg px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100" @click="showCategoryModal = false">{{ t('common.cancel') }}</button>
                   <button type="submit" class="rounded-lg bg-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2">
-                    {{ editingCategory ? "บันทึก" : "เพิ่มหมวดหมู่" }}
+                    {{ editingCategory ? t('common.save') : t('productsPage.addCategory') }}
                   </button>
                 </div>
               </form>
@@ -626,13 +624,13 @@ onMounted(() => {
             <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
               <svg class="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" /></svg>
             </div>
-            <h3 class="text-center text-lg font-semibold text-gray-900">ยืนยันการลบสินค้า</h3>
+            <h3 class="text-center text-lg font-semibold text-gray-900">{{ t('productsPage.confirmDeleteProduct') }}</h3>
             <p class="mt-2 text-center text-sm text-gray-500">
-              คุณต้องการลบ <span class="font-medium text-gray-700">{{ deletingProduct?.name }}</span> หรือไม่? การดำเนินการนี้ไม่สามารถย้อนกลับได้
+              {{ t('productsPage.confirmDeleteProductDesc', { name: deletingProduct?.name }) }}
             </p>
             <div class="mt-5 flex items-center justify-center gap-3">
-              <button class="rounded-lg px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100" @click="showDeleteConfirm = false">ยกเลิก</button>
-              <button class="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-red-700" @click="handleDeleteProduct">ลบสินค้า</button>
+              <button class="rounded-lg px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100" @click="showDeleteConfirm = false">{{ t('common.cancel') }}</button>
+              <button class="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-red-700" @click="handleDeleteProduct">{{ t('productsPage.deleteProduct') }}</button>
             </div>
           </div>
         </div>
@@ -654,13 +652,13 @@ onMounted(() => {
             <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
               <svg class="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" /></svg>
             </div>
-            <h3 class="text-center text-lg font-semibold text-gray-900">ยืนยันการลบหมวดหมู่</h3>
+            <h3 class="text-center text-lg font-semibold text-gray-900">{{ t('productsPage.confirmDeleteCategory') }}</h3>
             <p class="mt-2 text-center text-sm text-gray-500">
-              คุณต้องการลบ <span class="font-medium text-gray-700">{{ deletingCategory?.name }}</span> หรือไม่? การดำเนินการนี้ไม่สามารถย้อนกลับได้
+              {{ t('productsPage.confirmDeleteCategoryDesc', { name: deletingCategory?.name }) }}
             </p>
             <div class="mt-5 flex items-center justify-center gap-3">
-              <button class="rounded-lg px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100" @click="showDeleteCategoryConfirm = false">ยกเลิก</button>
-              <button class="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-red-700" @click="handleDeleteCategory">ลบหมวดหมู่</button>
+              <button class="rounded-lg px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100" @click="showDeleteCategoryConfirm = false">{{ t('common.cancel') }}</button>
+              <button class="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-red-700" @click="handleDeleteCategory">{{ t('productsPage.deleteCategory') }}</button>
             </div>
           </div>
         </div>

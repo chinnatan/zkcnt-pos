@@ -4,7 +4,18 @@ export default defineNuxtConfig({
   compatibilityDate: "2025-05-01",
   devtools: { enabled: true },
 
-  modules: ["@vite-pwa/nuxt"],
+  modules: ["@vite-pwa/nuxt", "@nuxtjs/i18n"],
+
+  i18n: {
+    locales: [
+      { code: "th", name: "ไทย", file: "th.json" },
+      { code: "en", name: "English", file: "en.json" },
+    ],
+    defaultLocale: "th",
+    strategy: "no_prefix",
+    langDir: "locales",
+    detectBrowserLanguage: false,
+  },
 
   css: ["~/assets/css/main.css"],
 

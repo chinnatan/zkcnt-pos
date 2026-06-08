@@ -1,41 +1,39 @@
 <template>
   <div class="space-y-6">
     <div class="flex items-center justify-between">
-      <h2 class="text-lg font-semibold text-gray-800">Reports</h2>
+      <h2 class="text-lg font-semibold text-gray-800">{{ t('reportsPage.title') }}</h2>
       <div class="flex items-center gap-2">
         <select
           v-model="period"
           class="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none"
         >
-          <option value="today">Today</option>
-          <option value="week">This Week</option>
-          <option value="month">This Month</option>
+          <option value="today">{{ t('reportsPage.today') }}</option>
+          <option value="week">{{ t('reportsPage.thisWeek') }}</option>
+          <option value="month">{{ t('reportsPage.thisMonth') }}</option>
         </select>
       </div>
     </div>
 
-    <!-- Summary Cards -->
     <div class="grid gap-4 sm:grid-cols-3">
       <div class="rounded-xl bg-white p-5 shadow-sm">
-        <p class="text-sm text-gray-500">Total Sales</p>
+        <p class="text-sm text-gray-500">{{ t('reportsPage.totalSales') }}</p>
         <p class="mt-1 text-2xl font-bold text-gray-900">{{ formatCurrency(totalSales) }}</p>
       </div>
       <div class="rounded-xl bg-white p-5 shadow-sm">
-        <p class="text-sm text-gray-500">Total Orders</p>
+        <p class="text-sm text-gray-500">{{ t('reportsPage.totalOrders') }}</p>
         <p class="mt-1 text-2xl font-bold text-gray-900">{{ totalOrders }}</p>
       </div>
       <div class="rounded-xl bg-white p-5 shadow-sm">
-        <p class="text-sm text-gray-500">Average Order</p>
+        <p class="text-sm text-gray-500">{{ t('reportsPage.averageOrder') }}</p>
         <p class="mt-1 text-2xl font-bold text-gray-900">{{ formatCurrency(averageOrder) }}</p>
       </div>
     </div>
 
-    <!-- Payment Method Breakdown -->
     <div class="rounded-xl bg-white p-5 shadow-sm">
-      <h3 class="mb-4 text-base font-semibold text-gray-800">Payment Methods</h3>
+      <h3 class="mb-4 text-base font-semibold text-gray-800">{{ t('reportsPage.paymentMethods') }}</h3>
       <div class="space-y-3">
         <div v-for="pm in paymentBreakdown" :key="pm.method" class="flex items-center gap-3">
-          <span class="w-16 text-sm font-medium text-gray-600 capitalize">{{ pm.method }}</span>
+          <span class="w-16 text-sm font-medium text-gray-600 capitalize">{{ paymentLabel(pm.method) }}</span>
           <div class="flex-1">
             <div class="h-6 overflow-hidden rounded-full bg-gray-100">
               <div
@@ -51,11 +49,10 @@
       </div>
     </div>
 
-    <!-- Top Products -->
     <div class="rounded-xl bg-white p-5 shadow-sm">
-      <h3 class="mb-4 text-base font-semibold text-gray-800">Top Selling Products</h3>
+      <h3 class="mb-4 text-base font-semibold text-gray-800">{{ t('reportsPage.topProducts') }}</h3>
       <div v-if="topProducts.length === 0" class="py-6 text-center text-gray-400">
-        No data available
+        {{ t('reportsPage.noData') }}
       </div>
       <div v-else class="space-y-2">
         <div
@@ -67,7 +64,7 @@
             {{ i + 1 }}
           </span>
           <span class="flex-1 text-sm font-medium">{{ tp.name }}</span>
-          <span class="text-sm text-gray-500">{{ tp.qty }} sold</span>
+          <span class="text-sm text-gray-500">{{ t('common.sold', { qty: tp.qty }) }}</span>
           <span class="text-sm font-semibold">{{ formatCurrency(tp.revenue) }}</span>
         </div>
       </div>
@@ -80,6 +77,9 @@ import { db } from "~/lib/db";
 
 definePageMeta({ middleware: "auth" });
 
+const { t } = useI18n();
+const { formatCurrency } = useFormat();
+const { paymentLabel } = useLabels();
 const { activeStoreId } = useStore();
 const { orders, fetchOrders } = useOrders();
 
@@ -104,7 +104,7 @@ const filteredOrders = computed(() => {
   }
 
   return orders.value.filter(
-    (o) => o.status === "completed" && new Date(o.created) >= start
+    (o) => o.status === "completed" && new Date(o.created) >= start,
   );
 });
 
@@ -143,10 +143,6 @@ async function loadTopProducts() {
   topProducts.value = [...productMap.values()]
     .sort((a, b) => b.revenue - a.revenue)
     .slice(0, 10);
-}
-
-function formatCurrency(amount: number): string {
-  return `฿${amount.toLocaleString("th-TH", { minimumFractionDigits: 2 })}`;
 }
 
 onMounted(async () => {

@@ -12,12 +12,14 @@
     </div>
 
     <div class="flex items-center gap-3">
+      <LayoutLocaleSwitcher />
+
       <span
         class="flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium"
         :class="isOnline ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'"
       >
         <span class="h-1.5 w-1.5 rounded-full" :class="isOnline ? 'bg-green-500' : 'bg-red-500'" />
-        {{ isOnline ? 'Online' : 'Offline' }}
+        {{ isOnline ? t('common.online') : t('common.offline') }}
       </span>
 
       <div class="relative">
@@ -39,7 +41,7 @@
             class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
             @click="logout(); showUserMenu = false"
           >
-            Logout
+            {{ t('nav.logout') }}
           </button>
         </div>
       </div>
@@ -49,23 +51,25 @@
 
 <script setup lang="ts">
 const route = useRoute();
+const { t } = useI18n();
 const { authUser, logout } = useAuth();
 const { isOnline } = useOnlineStatus();
 const showUserMenu = ref(false);
 
 const pageTitle = computed(() => {
   const titles: Record<string, string> = {
-    "/": "Dashboard",
-    "/pos": "POS Terminal",
-    "/products": "Products",
-    "/inventory": "Inventory",
-    "/orders": "Orders",
-    "/customers": "Customers",
-    "/reports": "Reports",
-    "/settings": "Settings",
-    "/stores": "My Stores",
+    "/": t("nav.dashboard"),
+    "/pos": t("nav.pos"),
+    "/products": t("nav.products"),
+    "/inventory": t("nav.inventory"),
+    "/orders": t("nav.orders"),
+    "/customers": t("nav.customers"),
+    "/reports": t("nav.reports"),
+    "/settings": t("nav.settings"),
+    "/stores": t("nav.stores"),
+    "/discounts": t("nav.discounts"),
   };
-  return titles[route.path] || "zKCNT POS";
+  return titles[route.path] || t("nav.appName");
 });
 
 const userInitial = computed(() => {

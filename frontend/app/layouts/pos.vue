@@ -4,7 +4,7 @@
       class="flex h-14 shrink-0 items-center justify-between border-b border-gray-200 bg-white px-4"
     >
       <div class="flex items-center gap-3">
-        <NuxtLink to="/" class="text-lg font-bold text-primary-600">zKCNT POS</NuxtLink>
+        <NuxtLink to="/" class="text-lg font-bold text-primary-600">{{ t('nav.appName') }}</NuxtLink>
         <span
           v-if="activeStore"
           class="rounded-full bg-primary-50 px-3 py-0.5 text-sm font-medium text-primary-700"
@@ -13,18 +13,19 @@
         </span>
       </div>
       <div class="flex items-center gap-3">
+        <LayoutLocaleSwitcher />
         <span
           class="flex items-center gap-1.5 text-sm"
           :class="isOnline ? 'text-success-500' : 'text-danger-500'"
         >
           <span class="h-2 w-2 rounded-full" :class="isOnline ? 'bg-success-500' : 'bg-danger-500'" />
-          {{ isOnline ? "Online" : "Offline" }}
+          {{ isOnline ? t('common.online') : t('common.offline') }}
         </span>
         <NuxtLink
           to="/"
           class="rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50"
         >
-          Dashboard
+          {{ t('nav.dashboard') }}
         </NuxtLink>
       </div>
     </header>
@@ -35,6 +36,7 @@
 </template>
 
 <script setup lang="ts">
+const { t } = useI18n();
 const { activeStore } = useStore();
 const { isOnline } = useOnlineStatus();
 </script>

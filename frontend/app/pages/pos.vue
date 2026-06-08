@@ -11,7 +11,7 @@
         "
         @click="mobileTab = 'products'"
       >
-        สินค้า
+        {{ t('pos.productsTab') }}
       </button>
       <button
         class="flex-1 py-3 text-center text-sm font-semibold transition-colors"
@@ -22,7 +22,7 @@
         "
         @click="mobileTab = 'cart'"
       >
-        ตะกร้า ({{ itemCount }})
+        {{ t('pos.cartTab', { count: itemCount }) }}
       </button>
     </div>
 
@@ -52,7 +52,7 @@
             <input
               v-model="searchQuery"
               type="text"
-              placeholder="ค้นหาสินค้า (ชื่อ, SKU, บาร์โค้ด)..."
+              :placeholder="t('pos.searchPlaceholder')"
               class="w-full rounded-xl border border-gray-300 bg-gray-50 py-3 pl-10 pr-4 text-sm outline-none transition-colors focus:border-primary-500 focus:bg-white focus:ring-2 focus:ring-primary-500/20"
             />
           </div>
@@ -67,7 +67,7 @@
               "
               @click="selectedCategory = null"
             >
-              ทั้งหมด
+              {{ t('pos.allCategories') }}
             </button>
             <button
               v-for="cat in categories"
@@ -108,7 +108,7 @@
                   d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
                 />
               </svg>
-              <p class="mt-2 text-sm">กำลังโหลดสินค้า...</p>
+              <p class="mt-2 text-sm">{{ t('pos.loadingProducts') }}</p>
             </div>
           </div>
 
@@ -130,7 +130,7 @@
                   d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
                 />
               </svg>
-              <p class="mt-2 text-sm">ไม่พบสินค้า</p>
+              <p class="mt-2 text-sm">{{ t('pos.noProducts') }}</p>
             </div>
           </div>
 
@@ -173,7 +173,7 @@
           class="flex shrink-0 items-center justify-between border-b border-gray-200 px-4 py-3"
         >
           <h2 class="text-base font-bold text-gray-800">
-            รายการสั่งซื้อ
+            {{ t('pos.orderItems') }}
             <span
               v-if="itemCount > 0"
               class="ml-1 inline-flex h-6 min-w-6 items-center justify-center rounded-full bg-primary-600 px-1.5 text-xs font-bold text-white"
@@ -186,7 +186,7 @@
             class="rounded-lg px-3 py-1.5 text-xs font-medium text-danger-500 transition-colors hover:bg-red-50"
             @click="clearCart"
           >
-            ล้างทั้งหมด
+            {{ t('pos.clearAll') }}
           </button>
         </div>
 
@@ -207,8 +207,8 @@
                   d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z"
                 />
               </svg>
-              <p class="mt-2 text-sm">ยังไม่มีสินค้าในตะกร้า</p>
-              <p class="mt-1 text-xs">แตะสินค้าเพื่อเพิ่ม</p>
+              <p class="mt-2 text-sm">{{ t('pos.emptyCart') }}</p>
+              <p class="mt-1 text-xs">{{ t('pos.tapToAdd') }}</p>
             </div>
           </div>
 
@@ -223,7 +223,7 @@
                   {{ item.product.name }}
                 </p>
                 <p class="mt-0.5 text-xs text-gray-500">
-                  {{ formatCurrency(item.product.price) }} / ชิ้น
+                  {{ formatCurrency(item.product.price) }} {{ t('common.perPiece') }}
                 </p>
                 <div class="mt-2 flex items-center gap-2">
                   <button
@@ -277,13 +277,13 @@
           <div class="space-y-3 p-4">
             <!-- Subtotal -->
             <div class="flex items-center justify-between text-sm">
-              <span class="text-gray-600">ยอดรวม</span>
+              <span class="text-gray-600">{{ t('pos.subtotal') }}</span>
               <span class="font-medium">{{ formatCurrency(subtotal) }}</span>
             </div>
 
             <!-- Discount -->
             <div class="space-y-2">
-              <label class="text-xs font-medium text-gray-500">ส่วนลด</label>
+              <label class="text-xs font-medium text-gray-500">{{ t('pos.discountLabel') }}</label>
               <div class="flex gap-2">
                 <input
                   :value="cartDiscount"
@@ -309,7 +309,7 @@
               v-if="discountAmount > 0"
               class="flex items-center justify-between text-sm"
             >
-              <span class="text-danger-500">ส่วนลด</span>
+              <span class="text-danger-500">{{ t('pos.discountLabel') }}</span>
               <span class="font-medium text-danger-500">
                 -{{ formatCurrency(discountAmount) }}
               </span>
@@ -319,7 +319,7 @@
             <div
               class="flex items-center justify-between border-t border-gray-300 pt-3 text-lg"
             >
-              <span class="font-bold text-gray-800">ยอดสุทธิ</span>
+              <span class="font-bold text-gray-800">{{ t('pos.netTotal') }}</span>
               <span class="font-bold text-primary-600">
                 {{ formatCurrency(total) }}
               </span>
@@ -328,7 +328,7 @@
             <!-- Payment Method -->
             <div class="space-y-2">
               <label class="text-xs font-medium text-gray-500">
-                ช่องทางชำระเงิน
+                {{ t('pos.paymentMethod') }}
               </label>
               <div class="grid grid-cols-3 gap-2">
                 <button
@@ -350,7 +350,7 @@
             <!-- Payment Received (cash only) -->
             <div v-if="paymentMethod === 'cash'" class="space-y-2">
               <label class="text-xs font-medium text-gray-500">
-                รับเงิน
+                {{ t('pos.paymentReceived') }}
               </label>
               <input
                 :value="paymentReceived"
@@ -378,7 +378,7 @@
                 v-if="paymentReceived > 0"
                 class="flex items-center justify-between rounded-lg bg-green-50 px-3 py-2"
               >
-                <span class="text-sm font-medium text-green-700">เงินทอน</span>
+                <span class="text-sm font-medium text-green-700">{{ t('pos.change') }}</span>
                 <span class="text-lg font-bold text-green-700">
                   {{ formatCurrency(changeAmount) }}
                 </span>
@@ -396,8 +396,8 @@
               :disabled="isCheckingOut || !canCheckout"
               @click="handleCheckout"
             >
-              <span v-if="isCheckingOut">กำลังบันทึก...</span>
-              <span v-else>ชำระเงิน {{ formatCurrency(total) }}</span>
+              <span v-if="isCheckingOut">{{ t('pos.checkingOut') }}</span>
+              <span v-else>{{ t('pos.payAmount', { amount: formatCurrency(total) }) }}</span>
             </button>
           </div>
         </div>
@@ -431,9 +431,9 @@
               />
             </svg>
           </div>
-          <h3 class="mb-1 text-xl font-bold text-gray-800">บันทึกเรียบร้อย!</h3>
+          <h3 class="mb-1 text-xl font-bold text-gray-800">{{ t('pos.successTitle') }}</h3>
           <p class="mb-2 text-sm text-gray-500">
-            หมายเลขออเดอร์: {{ lastOrderNumber }}
+            {{ t('pos.orderNumber', { number: lastOrderNumber }) }}
           </p>
           <p class="mb-6 text-2xl font-bold text-primary-600">
             {{ formatCurrency(lastOrderTotal) }}
@@ -444,13 +444,13 @@
               class="flex-1 rounded-xl border border-gray-300 py-3 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-50"
               @click="handlePrintReceipt"
             >
-              พิมพ์ใบเสร็จ
+              {{ t('pos.printReceipt') }}
             </button>
             <button
               class="flex-1 rounded-xl bg-primary-600 py-3 text-sm font-semibold text-white transition-colors hover:bg-primary-700"
               @click="handleNewOrder"
             >
-              ออเดอร์ใหม่
+              {{ t('pos.newOrder') }}
             </button>
           </div>
         </div>
@@ -464,6 +464,8 @@ import type { Product } from "~/lib/types";
 
 definePageMeta({ layout: "pos", middleware: "auth" });
 
+const { t } = useI18n();
+const { formatCurrency } = useFormat();
 const { products, categories, fetchProducts, fetchCategories, isLoading } =
   useProducts();
 const {
@@ -494,11 +496,11 @@ const showSuccessModal = ref(false);
 const lastOrderNumber = ref("");
 const lastOrderTotal = ref(0);
 
-const paymentMethods = [
-  { value: "cash" as const, label: "เงินสด" },
-  { value: "qr" as const, label: "QR Code" },
-  { value: "card" as const, label: "บัตร" },
-];
+const paymentMethods = computed(() => [
+  { value: "cash" as const, label: t("payment.cash") },
+  { value: "qr" as const, label: t("payment.qr") },
+  { value: "card" as const, label: t("payment.card") },
+]);
 
 const quickCashAmounts = computed(() => {
   const roundedTotal = Math.ceil(total.value);
@@ -534,10 +536,6 @@ const canCheckout = computed(() => {
     return false;
   return true;
 });
-
-function formatCurrency(amount: number): string {
-  return `฿${amount.toLocaleString("th-TH", { minimumFractionDigits: 2 })}`;
-}
 
 function onDiscountInput(e: Event) {
   cartDiscount.value = Number((e.target as HTMLInputElement).value);
@@ -596,7 +594,7 @@ async function handleCheckout() {
     showSuccessModal.value = true;
   } catch (err) {
     console.error("Checkout failed:", err);
-    alert("ไม่สามารถบันทึกรายการได้ กรุณาลองใหม่อีกครั้ง");
+    alert(t("errors.saveFailed"));
   } finally {
     isCheckingOut.value = false;
   }

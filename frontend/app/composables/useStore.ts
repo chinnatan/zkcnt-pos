@@ -169,7 +169,7 @@ export function useStore() {
     } catch (e: unknown) {
       console.error("fetchUserStores failed:", e);
       storesFetchError.value =
-        e instanceof Error ? e.message : "Failed to load stores";
+        e instanceof Error ? e.message : "errors.loadStoresFailed";
 
       try {
         await loadFromCache(authUser.value.id);

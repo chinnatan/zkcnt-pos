@@ -1,35 +1,32 @@
 <template>
   <div ref="receiptRef" class="receipt-container hidden print:block">
     <div class="mx-auto max-w-[300px] p-4 font-mono text-xs">
-      <!-- Header -->
       <div class="mb-3 text-center">
         <h2 class="text-base font-bold">{{ storeName }}</h2>
         <p v-if="storeAddress">{{ storeAddress }}</p>
-        <p v-if="storePhone">Tel: {{ storePhone }}</p>
-        <p v-if="taxId">Tax ID: {{ taxId }}</p>
+        <p v-if="storePhone">{{ t('receipt.tel') }} {{ storePhone }}</p>
+        <p v-if="taxId">{{ t('receipt.taxId') }} {{ taxId }}</p>
       </div>
 
       <div class="mb-2 border-t border-dashed border-gray-400" />
 
-      <!-- Order Info -->
       <div class="mb-2 space-y-0.5">
         <div class="flex justify-between">
-          <span>Order #:</span>
+          <span>{{ t('receipt.orderNumber') }}</span>
           <span>{{ order?.order_number }}</span>
         </div>
         <div class="flex justify-between">
-          <span>Date:</span>
+          <span>{{ t('receipt.date') }}</span>
           <span>{{ formatDate(order?.created) }}</span>
         </div>
         <div class="flex justify-between">
-          <span>Cashier:</span>
+          <span>{{ t('receipt.cashier') }}</span>
           <span>{{ cashierName }}</span>
         </div>
       </div>
 
       <div class="mb-2 border-t border-dashed border-gray-400" />
 
-      <!-- Items -->
       <div class="mb-2 space-y-1">
         <div v-for="item in items" :key="item.id" class="space-y-0.5">
           <div class="flex justify-between">
@@ -40,7 +37,7 @@
             <span>{{ formatAmount(item.total) }}</span>
           </div>
           <div v-if="item.discount > 0" class="flex justify-between pl-2 text-gray-600">
-            <span>Discount</span>
+            <span>{{ t('receipt.discount') }}</span>
             <span>-{{ formatAmount(item.discount) }}</span>
           </div>
         </div>
@@ -48,45 +45,42 @@
 
       <div class="mb-2 border-t border-dashed border-gray-400" />
 
-      <!-- Totals -->
       <div class="mb-2 space-y-0.5">
         <div class="flex justify-between">
-          <span>Subtotal</span>
+          <span>{{ t('common.subtotal') }}</span>
           <span>{{ formatAmount(order?.subtotal ?? 0) }}</span>
         </div>
         <div v-if="(order?.discount_amount ?? 0) > 0" class="flex justify-between">
-          <span>Discount</span>
+          <span>{{ t('receipt.discount') }}</span>
           <span>-{{ formatAmount(order?.discount_amount ?? 0) }}</span>
         </div>
         <div v-if="(order?.tax_amount ?? 0) > 0" class="flex justify-between">
-          <span>VAT</span>
+          <span>{{ t('receipt.vat') }}</span>
           <span>{{ formatAmount(order?.tax_amount ?? 0) }}</span>
         </div>
         <div class="flex justify-between text-sm font-bold">
-          <span>Total</span>
+          <span>{{ t('receipt.total') }}</span>
           <span>{{ formatAmount(order?.total ?? 0) }}</span>
         </div>
       </div>
 
       <div class="mb-2 border-t border-dashed border-gray-400" />
 
-      <!-- Payment -->
       <div class="mb-3 space-y-0.5">
         <div class="flex justify-between">
-          <span>Payment ({{ order?.payment_method }})</span>
+          <span>{{ t('receipt.payment', { method: paymentLabel(order?.payment_method ?? '') }) }}</span>
           <span>{{ formatAmount(order?.payment_received ?? 0) }}</span>
         </div>
         <div class="flex justify-between font-bold">
-          <span>Change</span>
+          <span>{{ t('receipt.change') }}</span>
           <span>{{ formatAmount(order?.change_amount ?? 0) }}</span>
         </div>
       </div>
 
       <div class="mb-3 border-t border-dashed border-gray-400" />
 
-      <!-- Footer -->
       <div class="text-center">
-        <p>Thank you!</p>
+        <p>{{ t('receipt.thankYou') }}</p>
         <p v-if="receiptFooter">{{ receiptFooter }}</p>
       </div>
     </div>
@@ -107,16 +101,11 @@ const props = defineProps<{
   receiptFooter?: string;
 }>();
 
+const { t } = useI18n();
+const { formatDate, formatAmount } = useFormat();
+const { paymentLabel } = useLabels();
+
 const receiptRef = ref<HTMLDivElement>();
-
-function formatAmount(amount: number): string {
-  return amount.toLocaleString("th-TH", { minimumFractionDigits: 2 });
-}
-
-function formatDate(dateStr?: string): string {
-  if (!dateStr) return "";
-  return new Date(dateStr).toLocaleString("th-TH");
-}
 
 function print() {
   if (!receiptRef.value) return;
@@ -127,7 +116,7 @@ function print() {
   printWindow.document.write(`
     <html>
       <head>
-        <title>Receipt</title>
+        <title>${t("receipt.title")}</title>
         <style>
           body { margin: 0; font-family: monospace; font-size: 12px; }
           .receipt-container { max-width: 300px; margin: 0 auto; padding: 16px; }

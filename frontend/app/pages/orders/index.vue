@@ -1,16 +1,16 @@
 <template>
   <div class="space-y-4">
     <div class="flex items-center justify-between">
-      <h2 class="text-lg font-semibold text-gray-800">Orders</h2>
+      <h2 class="text-lg font-semibold text-gray-800">{{ t('ordersPage.title') }}</h2>
       <div class="flex items-center gap-2">
         <select
           v-model="statusFilter"
           class="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none"
         >
-          <option value="">All Status</option>
-          <option value="completed">Completed</option>
-          <option value="voided">Voided</option>
-          <option value="refunded">Refunded</option>
+          <option value="">{{ t('status.all') }}</option>
+          <option value="completed">{{ t('status.completed') }}</option>
+          <option value="voided">{{ t('status.voided') }}</option>
+          <option value="refunded">{{ t('status.refunded') }}</option>
         </select>
       </div>
     </div>
@@ -21,21 +21,21 @@
       </div>
 
       <div v-else-if="filteredOrders.length === 0" class="py-12 text-center text-gray-400">
-        No orders found
+        {{ t('ordersPage.noOrders') }}
       </div>
 
       <div v-else class="overflow-x-auto">
         <table class="w-full text-left text-sm">
           <thead class="border-b border-gray-200 bg-gray-50 text-xs uppercase text-gray-500">
             <tr>
-              <th class="px-4 py-3">Order #</th>
-              <th class="px-4 py-3">Date</th>
-              <th class="px-4 py-3">Subtotal</th>
-              <th class="px-4 py-3">Discount</th>
-              <th class="px-4 py-3">Total</th>
-              <th class="px-4 py-3">Payment</th>
-              <th class="px-4 py-3">Status</th>
-              <th class="px-4 py-3">Actions</th>
+              <th class="px-4 py-3">{{ t('dashboard.orderNumber') }}</th>
+              <th class="px-4 py-3">{{ t('common.date') }}</th>
+              <th class="px-4 py-3">{{ t('common.subtotal') }}</th>
+              <th class="px-4 py-3">{{ t('common.discount') }}</th>
+              <th class="px-4 py-3">{{ t('common.total') }}</th>
+              <th class="px-4 py-3">{{ t('common.payment') }}</th>
+              <th class="px-4 py-3">{{ t('common.status') }}</th>
+              <th class="px-4 py-3">{{ t('common.actions') }}</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-100">
@@ -49,12 +49,12 @@
               <td class="px-4 py-3 font-semibold">{{ formatCurrency(order.total) }}</td>
               <td class="px-4 py-3">
                 <span class="rounded-full px-2 py-0.5 text-xs font-medium" :class="paymentBadge(order.payment_method)">
-                  {{ order.payment_method }}
+                  {{ paymentLabel(order.payment_method) }}
                 </span>
               </td>
               <td class="px-4 py-3">
                 <span class="rounded-full px-2 py-0.5 text-xs font-medium" :class="statusBadge(order.status)">
-                  {{ order.status }}
+                  {{ statusLabel(order.status) }}
                 </span>
               </td>
               <td class="px-4 py-3">
@@ -62,7 +62,7 @@
                   class="rounded px-2 py-1 text-xs text-primary-600 hover:bg-primary-50"
                   @click="viewOrder(order)"
                 >
-                  View
+                  {{ t('common.view') }}
                 </button>
               </td>
             </tr>
@@ -71,12 +71,11 @@
       </div>
     </div>
 
-    <!-- Order Detail Modal -->
     <Teleport to="body">
       <div v-if="selectedOrder" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" @click.self="selectedOrder = null">
         <div class="max-h-[80vh] w-full max-w-lg overflow-y-auto rounded-xl bg-white p-6 shadow-xl">
           <div class="mb-4 flex items-center justify-between">
-            <h3 class="text-lg font-semibold">Order {{ selectedOrder.order_number }}</h3>
+            <h3 class="text-lg font-semibold">{{ t('ordersPage.orderDetail', { number: selectedOrder.order_number }) }}</h3>
             <button class="text-gray-400 hover:text-gray-600" @click="selectedOrder = null">
               <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -86,23 +85,23 @@
 
           <div class="space-y-3 text-sm">
             <div class="flex justify-between">
-              <span class="text-gray-500">Date</span>
+              <span class="text-gray-500">{{ t('common.date') }}</span>
               <span>{{ formatDate(selectedOrder.created) }}</span>
             </div>
             <div class="flex justify-between">
-              <span class="text-gray-500">Status</span>
+              <span class="text-gray-500">{{ t('common.status') }}</span>
               <span class="rounded-full px-2 py-0.5 text-xs font-medium" :class="statusBadge(selectedOrder.status)">
-                {{ selectedOrder.status }}
+                {{ statusLabel(selectedOrder.status) }}
               </span>
             </div>
             <div class="flex justify-between">
-              <span class="text-gray-500">Payment</span>
-              <span>{{ selectedOrder.payment_method }}</span>
+              <span class="text-gray-500">{{ t('common.payment') }}</span>
+              <span>{{ paymentLabel(selectedOrder.payment_method) }}</span>
             </div>
 
             <hr class="my-3" />
 
-            <div v-if="orderItemsLoading" class="py-4 text-center text-gray-400">Loading items...</div>
+            <div v-if="orderItemsLoading" class="py-4 text-center text-gray-400">{{ t('ordersPage.loadingItems') }}</div>
             <div v-else>
               <div v-for="item in orderItems" :key="item.id" class="flex items-center justify-between py-2">
                 <div>
@@ -116,15 +115,15 @@
             <hr class="my-3" />
 
             <div class="flex justify-between">
-              <span class="text-gray-500">Subtotal</span>
+              <span class="text-gray-500">{{ t('common.subtotal') }}</span>
               <span>{{ formatCurrency(selectedOrder.subtotal) }}</span>
             </div>
             <div v-if="selectedOrder.discount_amount > 0" class="flex justify-between text-danger-500">
-              <span>Discount</span>
+              <span>{{ t('common.discount') }}</span>
               <span>-{{ formatCurrency(selectedOrder.discount_amount) }}</span>
             </div>
             <div class="flex justify-between text-base font-bold">
-              <span>Total</span>
+              <span>{{ t('common.total') }}</span>
               <span>{{ formatCurrency(selectedOrder.total) }}</span>
             </div>
           </div>
@@ -139,6 +138,9 @@ import type { Order, OrderItem } from "~/lib/types";
 
 definePageMeta({ middleware: "auth" });
 
+const { t } = useI18n();
+const { formatCurrency, formatDate } = useFormat();
+const { statusLabel, paymentLabel } = useLabels();
 const { orders, isLoading, fetchOrders, getOrderItems } = useOrders();
 
 const statusFilter = ref("");
@@ -150,14 +152,6 @@ const filteredOrders = computed(() => {
   if (!statusFilter.value) return orders.value;
   return orders.value.filter((o) => o.status === statusFilter.value);
 });
-
-function formatCurrency(amount: number): string {
-  return `฿${amount.toLocaleString("th-TH", { minimumFractionDigits: 2 })}`;
-}
-
-function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleString("th-TH");
-}
 
 function statusBadge(status: string) {
   const map: Record<string, string> = {

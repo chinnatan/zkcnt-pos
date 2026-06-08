@@ -2,24 +2,23 @@
   <div>
     <div v-if="!activeStore" class="flex min-h-[60vh] items-center justify-center">
       <div class="text-center">
-        <h2 class="text-xl font-semibold text-gray-700">No store selected</h2>
-        <p class="mt-2 text-gray-500">Please select a store to continue</p>
+        <h2 class="text-xl font-semibold text-gray-700">{{ t('dashboard.noStoreTitle') }}</h2>
+        <p class="mt-2 text-gray-500">{{ t('dashboard.noStoreDesc') }}</p>
         <NuxtLink
           to="/stores"
           class="mt-4 inline-block rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700"
         >
-          Select Store
+          {{ t('dashboard.selectStore') }}
         </NuxtLink>
       </div>
     </div>
 
     <div v-else class="space-y-6">
-      <!-- Stats Cards -->
       <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <div class="rounded-xl bg-white p-5 shadow-sm">
           <div class="flex items-center justify-between">
             <div>
-              <p class="text-sm text-gray-500">Today's Sales</p>
+              <p class="text-sm text-gray-500">{{ t('dashboard.todaySales') }}</p>
               <p class="mt-1 text-2xl font-bold text-gray-900">{{ formatCurrency(todaySales) }}</p>
             </div>
             <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-green-100">
@@ -33,7 +32,7 @@
         <div class="rounded-xl bg-white p-5 shadow-sm">
           <div class="flex items-center justify-between">
             <div>
-              <p class="text-sm text-gray-500">Orders Today</p>
+              <p class="text-sm text-gray-500">{{ t('dashboard.ordersToday') }}</p>
               <p class="mt-1 text-2xl font-bold text-gray-900">{{ todayOrderCount }}</p>
             </div>
             <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-100">
@@ -47,7 +46,7 @@
         <div class="rounded-xl bg-white p-5 shadow-sm">
           <div class="flex items-center justify-between">
             <div>
-              <p class="text-sm text-gray-500">Products</p>
+              <p class="text-sm text-gray-500">{{ t('nav.products') }}</p>
               <p class="mt-1 text-2xl font-bold text-gray-900">{{ productCount }}</p>
             </div>
             <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-purple-100">
@@ -61,9 +60,9 @@
         <div class="rounded-xl bg-white p-5 shadow-sm">
           <div class="flex items-center justify-between">
             <div>
-              <p class="text-sm text-gray-500">Sync Status</p>
+              <p class="text-sm text-gray-500">{{ t('dashboard.syncStatus') }}</p>
               <p class="mt-1 text-2xl font-bold" :class="pendingSyncCount > 0 ? 'text-warning-500' : 'text-success-500'">
-                {{ pendingSyncCount > 0 ? `${pendingSyncCount} pending` : 'Synced' }}
+                {{ pendingSyncCount > 0 ? t('common.pending', { count: pendingSyncCount }) : t('common.synced') }}
               </p>
             </div>
             <div class="flex h-10 w-10 items-center justify-center rounded-lg" :class="isOnline ? 'bg-green-100' : 'bg-red-100'">
@@ -75,9 +74,8 @@
         </div>
       </div>
 
-      <!-- Quick Actions -->
       <div class="rounded-xl bg-white p-5 shadow-sm">
-        <h3 class="mb-4 text-lg font-semibold text-gray-800">Quick Actions</h3>
+        <h3 class="mb-4 text-lg font-semibold text-gray-800">{{ t('dashboard.quickActions') }}</h3>
         <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <NuxtLink
             to="/pos"
@@ -86,7 +84,7 @@
             <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
             </svg>
-            Open POS Terminal
+            {{ t('dashboard.openPos') }}
           </NuxtLink>
           <NuxtLink
             to="/products"
@@ -95,7 +93,7 @@
             <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
             </svg>
-            Add Product
+            {{ t('dashboard.addProduct') }}
           </NuxtLink>
           <NuxtLink
             to="/orders"
@@ -104,7 +102,7 @@
             <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
             </svg>
-            View Orders
+            {{ t('dashboard.viewOrders') }}
           </NuxtLink>
           <NuxtLink
             to="/reports"
@@ -113,26 +111,25 @@
             <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
             </svg>
-            View Reports
+            {{ t('dashboard.viewReports') }}
           </NuxtLink>
         </div>
       </div>
 
-      <!-- Recent Orders -->
       <div class="rounded-xl bg-white p-5 shadow-sm">
-        <h3 class="mb-4 text-lg font-semibold text-gray-800">Recent Orders</h3>
+        <h3 class="mb-4 text-lg font-semibold text-gray-800">{{ t('dashboard.recentOrders') }}</h3>
         <div v-if="orders.length === 0" class="py-8 text-center text-gray-400">
-          No orders yet
+          {{ t('dashboard.noOrders') }}
         </div>
         <div v-else class="overflow-x-auto">
           <table class="w-full text-left text-sm">
             <thead class="border-b border-gray-200 text-xs uppercase text-gray-500">
               <tr>
-                <th class="px-4 py-3">Order #</th>
-                <th class="px-4 py-3">Total</th>
-                <th class="px-4 py-3">Payment</th>
-                <th class="px-4 py-3">Status</th>
-                <th class="px-4 py-3">Time</th>
+                <th class="px-4 py-3">{{ t('dashboard.orderNumber') }}</th>
+                <th class="px-4 py-3">{{ t('common.total') }}</th>
+                <th class="px-4 py-3">{{ t('common.payment') }}</th>
+                <th class="px-4 py-3">{{ t('common.status') }}</th>
+                <th class="px-4 py-3">{{ t('common.time') }}</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-gray-100">
@@ -141,12 +138,12 @@
                 <td class="px-4 py-3">{{ formatCurrency(order.total) }}</td>
                 <td class="px-4 py-3">
                   <span class="rounded-full px-2 py-0.5 text-xs font-medium" :class="paymentBadge(order.payment_method)">
-                    {{ order.payment_method }}
+                    {{ paymentLabel(order.payment_method) }}
                   </span>
                 </td>
                 <td class="px-4 py-3">
                   <span class="rounded-full px-2 py-0.5 text-xs font-medium" :class="statusBadge(order.status)">
-                    {{ order.status }}
+                    {{ statusLabel(order.status) }}
                   </span>
                 </td>
                 <td class="px-4 py-3 text-gray-500">{{ formatTime(order.created) }}</td>
@@ -164,6 +161,9 @@ import { db } from "~/lib/db";
 
 definePageMeta({ middleware: "auth" });
 
+const { t } = useI18n();
+const { formatCurrency, formatTime } = useFormat();
+const { statusLabel, paymentLabel } = useLabels();
 const { activeStore, activeStoreId } = useStore();
 const { isOnline } = useOnlineStatus();
 const { pendingSyncCount, initSync } = useSync();
@@ -173,14 +173,6 @@ const { setup: setupOnlineStatus } = useOnlineStatus();
 const todaySales = ref(0);
 const todayOrderCount = ref(0);
 const productCount = ref(0);
-
-function formatCurrency(amount: number): string {
-  return `฿${amount.toLocaleString("th-TH", { minimumFractionDigits: 2 })}`;
-}
-
-function formatTime(dateStr: string): string {
-  return new Date(dateStr).toLocaleString("th-TH", { hour: "2-digit", minute: "2-digit" });
-}
 
 function statusBadge(status: string) {
   const map: Record<string, string> = {
@@ -205,15 +197,13 @@ async function loadDashboardData() {
 
   await fetchOrders(10);
 
-  // Calculate today's stats
   const today = new Date().toISOString().slice(0, 10);
   const todayOrders = orders.value.filter(
-    (o) => o.created.startsWith(today) && o.status === "completed"
+    (o) => o.created.startsWith(today) && o.status === "completed",
   );
   todaySales.value = todayOrders.reduce((sum, o) => sum + o.total, 0);
   todayOrderCount.value = todayOrders.length;
 
-  // Product count from Dexie
   productCount.value = await db.products.where("store").equals(activeStoreId.value).count();
 }
 
