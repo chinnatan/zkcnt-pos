@@ -9,6 +9,17 @@
           <div class="h-8 w-8 animate-spin rounded-full border-4 border-primary-200 border-t-primary-600" />
         </div>
 
+        <div v-else-if="storesFetchError" class="py-6 text-center">
+          <p class="mb-2 text-gray-700">Could not load your stores.</p>
+          <p class="mb-4 text-sm text-red-600">{{ storesFetchError }}</p>
+          <button
+            class="rounded-lg bg-primary-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-primary-700"
+            @click="fetchUserStores"
+          >
+            Retry
+          </button>
+        </div>
+
         <div v-else-if="userStores.length === 0" class="py-6 text-center">
           <p class="mb-4 text-gray-500">You don't have any stores yet.</p>
           <button
@@ -130,7 +141,7 @@ import type { Store } from "~/lib/types";
 
 definePageMeta({ middleware: "auth" });
 
-const { activeStore, userStores, isLoadingStores, fetchUserStores, setActiveStore, createStore } = useStore();
+const { activeStore, userStores, isLoadingStores, storesFetchError, fetchUserStores, setActiveStore, createStore } = useStore();
 
 const showCreateModal = ref(false);
 const isCreating = ref(false);
