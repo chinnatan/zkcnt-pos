@@ -103,6 +103,61 @@ PORT=80
 
 Frontend อ่านค่า `NUXT_PUBLIC_POCKETBASE_URL` — ในโหมด `task local` จะถูก set อัตโนมัติเป็น `http://localhost:8090`
 
+บน Pi production ต้องตั้ง `POCKETBASE_URL` เป็น URL ที่ browser เข้าถึงได้ (เช่น `http://192.168.1.50`) ก่อนรัน `docker compose` เพราะค่านี้ถูก bake ตอน build frontend
+
+## Deploy to Raspberry Pi 5
+
+CI/CD ใช้ GitHub Actions: **CI** รันบน cloud ทุก push/PR, **Deploy** รันบน Pi ผ่าน self-hosted runner ใน Docker
+
+### One-time setup บน Pi
+
+```bash
+# 1. Clone repo
+git clone https://github.com/chinnatan/zkcnt-pos.git ~/apps/zkcnt-pos
+cd ~/apps/zkcnt-pos
+
+# 2. สร้าง .env (ไม่ commit)
+cp .env.example .env
+# แก้ POCKETBASE_URL เป็น IP/domain ของ Pi เช่น http://192.168.1.50
+
+# 3. Deploy ครั้งแรก (manual)
+docker compose -f docker-compose.prod.yml up -d --build
+
+# 4. สร้าง PocketBase superuser ที่ http://<pi-ip>/__/
+```
+
+### ติดตั้ง GitHub Actions runner (Docker)
+
+```bash
+cd ~/apps/zkcnt-pos
+
+# GitHub → Settings → Actions → Runners → New self-hosted runner → copy token
+RUNNER_TOKEN=<token> docker compose -f docker-compose.runner.yml up -d
+```
+
+Runner mount `/var/run/docker.sock` และ deploy directory (`~/apps/zkcnt-pos` → `/deploy`) เพื่อรัน `docker compose prod` อัตโนมัติ
+
+### Deploy flow
+
+| Event | ผลลัพธ์ |
+|-------|---------|
+| Push / PR (ทุก branch) | CI — `bun install` + `bun run build` บน ubuntu-latest |
+| Push `main` (หลัง CI ผ่าน) | Deploy อัตโนมัติบน Pi |
+| Manual (Actions → Deploy to Pi 5 → Run workflow) | Deploy ทันทีบน Pi |
+
+### Troubleshooting
+
+```bash
+# ดู logs บน Pi
+cd ~/apps/zkcnt-pos
+docker compose -f docker-compose.prod.yml logs -f
+
+# ตรวจ runner
+docker compose -f docker-compose.runner.yml logs -f
+
+# Build บน Pi ช้า — ปกติสำหรับ ARM64, ใช้ manual deploy ตอนที่ Pi ว่างได้
+```
+
 ## Project Structure
 
 ```
@@ -128,7 +183,8 @@ zkcnt-pos/
 │   ├── rules/              # Cursor AI rules
 │   └── skills/             # Cursor AI skills
 ├── docker-compose.dev.yml  # Development
-└── docker-compose.prod.yml # Production
+├── docker-compose.prod.yml # Production
+└── docker-compose.runner.yml # GitHub Actions runner (Pi only)
 ```
 
 ## Manual Commands (Fallback)

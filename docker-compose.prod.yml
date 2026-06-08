@@ -13,6 +13,8 @@ services:
   frontend:
     build:
       context: ./frontend
+      args:
+        NUXT_PUBLIC_POCKETBASE_URL: ${POCKETBASE_URL:-http://localhost:8090}
     restart: unless-stopped
     environment:
       - NUXT_PUBLIC_POCKETBASE_URL=${POCKETBASE_URL:-http://pocketbase:8090}

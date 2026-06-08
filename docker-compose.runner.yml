@@ -1,0 +1,25 @@
+# GitHub Actions self-hosted runner for Pi 5 deploy.
+# Run on the Pi (not part of the app stack):
+#
+#   1. GitHub → Settings → Actions → Runners → New self-hosted runner → copy token
+#   2. RUNNER_TOKEN=<token> docker compose -f docker-compose.runner.yml up -d
+#
+# Customize DEPLOY_DIR if the repo lives elsewhere on the Pi.
+
+services:
+  github-runner:
+    image: myoung34/github-runner:latest
+    restart: unless-stopped
+    environment:
+      REPO_URL: ${REPO_URL:-https://github.com/chinnatan/zkcnt-pos}
+      RUNNER_TOKEN: ${RUNNER_TOKEN}
+      RUNNER_NAME: ${RUNNER_NAME:-pi5-runner}
+      RUNNER_LABELS: pi5,linux,ARM64
+      RUNNER_WORKDIR: /deploy
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ${DEPLOY_DIR:-./}:/deploy
+      - runner-data:/runner
+
+volumes:
+  runner-data:

@@ -6,6 +6,8 @@ COPY package.json bun.lock* ./
 RUN bun install --frozen-lockfile
 
 FROM base AS build
+ARG NUXT_PUBLIC_POCKETBASE_URL=http://localhost:8090
+ENV NUXT_PUBLIC_POCKETBASE_URL=$NUXT_PUBLIC_POCKETBASE_URL
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN bun run build
