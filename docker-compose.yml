@@ -13,7 +13,7 @@ services:
     build:
       context: ./frontend
     environment:
-      - NUXT_PUBLIC_POCKETBASE_URL=${POCKETBASE_URL:-http://pocketbase:8090}
+      - NUXT_PUBLIC_POCKETBASE_URL=${POCKETBASE_URL:-http://localhost:8090}
     depends_on:
       - pocketbase
     networks:

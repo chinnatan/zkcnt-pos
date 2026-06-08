@@ -1,8 +1,11 @@
 import PocketBase from "pocketbase";
+import { resolvePocketBaseUrl } from "~/lib/pocketbase-url";
 
 export default defineNuxtPlugin(() => {
   const config = useRuntimeConfig();
-  const pb = new PocketBase(config.public.pocketbaseUrl as string);
+  const pb = new PocketBase(
+    resolvePocketBaseUrl(config.public.pocketbaseUrl as string)
+  );
 
   // Restore auth from cookie/localStorage
   if (import.meta.client) {

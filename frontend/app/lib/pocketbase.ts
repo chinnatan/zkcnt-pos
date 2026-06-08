@@ -1,4 +1,5 @@
 import PocketBase from "pocketbase";
+import { resolvePocketBaseUrl } from "~/lib/pocketbase-url";
 
 let pb: PocketBase | null = null;
 
@@ -6,7 +7,9 @@ export function usePocketBase(): PocketBase {
   if (pb) return pb;
 
   const config = useRuntimeConfig();
-  pb = new PocketBase(config.public.pocketbaseUrl as string);
+  pb = new PocketBase(
+    resolvePocketBaseUrl(config.public.pocketbaseUrl as string)
+  );
 
   return pb;
 }
