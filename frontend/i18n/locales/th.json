@@ -229,8 +229,35 @@
     "saveChanges": "บันทึกการเปลี่ยนแปลง",
     "teamMembers": "สมาชิกทีม",
     "inviteMember": "เชิญสมาชิก",
+    "addMember": "เพิ่มสมาชิก",
+    "addMemberTitle": "เพิ่มสมาชิกทีม",
     "inviteTitle": "เชิญสมาชิกทีม",
-    "memberEmailPlaceholder": "member{'@'}example.com"
+    "memberEmailPlaceholder": "member{'@'}example.com",
+    "inviteModeTitle": "วิธีเพิ่มสมาชิก",
+    "inviteModeDirect": "เพิ่มโดยตรง",
+    "inviteModeDirectHint": "เพิ่มสมาชิกทันทีถ้ามีบัญชีแล้ว ไม่ส่งอีเมล",
+    "inviteModeEmail": "เชิญทางอีเมล",
+    "inviteModeEmailHint": "ส่งลิงก์เชิญทางอีเมล รองรับผู้ที่ยังไม่มีบัญชี",
+    "pendingInvites": "คำเชิญที่รอดำเนินการ",
+    "memberAdded": "เพิ่มสมาชิกสำเร็จ",
+    "inviteSent": "สร้างคำเชิญสำเร็จ",
+    "userNotRegistered": "อีเมลนี้ยังไม่มีบัญชี ให้ลงทะเบียนก่อน หรือเปลี่ยนเป็นโหมดเชิญทางอีเมล",
+    "inviteLinkLabel": "ลิงก์เชิญ",
+    "copyInviteLink": "คัดลอกลิงก์",
+    "inviteLinkCopied": "คัดลอกลิงก์แล้ว",
+    "inviteLinkCopyFailed": "ไม่สามารถคัดลอกลิงก์ได้",
+    "confirmRemoveMember": "ลบสมาชิกคนนี้ออกจากทีม?"
+  },
+  "invitePage": {
+    "title": "คำเชิญเข้าร่วมทีม",
+    "subtitle": "คุณได้รับเชิญเข้าร่วม {store}",
+    "signInPrompt": "เข้าสู่ระบบหรือสร้างบัญชีเพื่อยอมรับคำเชิญ",
+    "accept": "ยอมรับคำเชิญ",
+    "expired": "คำเชิญนี้หมดอายุแล้ว",
+    "noLongerValid": "คำเชิญนี้ไม่สามารถใช้งานได้แล้ว",
+    "notFound": "ไม่พบคำเชิญ",
+    "acceptFailed": "ไม่สามารถยอมรับคำเชิญได้",
+    "emailMismatch": "กรุณาเข้าสู่ระบบด้วย {email} เพื่อยอมรับคำเชิญนี้"
   },
   "storesPage": {
     "title": "เลือกร้าน",
@@ -280,6 +307,9 @@
     "saveFailed": "ไม่สามารถบันทึกรายการได้ กรุณาลองใหม่อีกครั้ง",
     "inviteFailed": "เชิญสมาชิกไม่สำเร็จ",
     "createStoreFailed": "สร้างร้านไม่สำเร็จ",
-    "loadStoresFailed": "โหลดรายการร้านไม่สำเร็จ"
+    "loadStoresFailed": "โหลดรายการร้านไม่สำเร็จ",
+    "loadMembersFailed": "โหลดสมาชิกทีมไม่สำเร็จ",
+    "updateFailed": "อัปเดตไม่สำเร็จ",
+    "deleteFailed": "ลบไม่สำเร็จ"
   }
 }

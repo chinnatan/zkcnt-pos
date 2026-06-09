@@ -4,6 +4,7 @@ vars:
   DEV_COMPOSE: docker compose -f docker-compose.dev.yml
   PROD_COMPOSE: docker compose -f docker-compose.prod.yml
   PB_URL: http://localhost:8090
+  APP_URL: http://localhost:3000
 
 tasks:
   default:
@@ -43,6 +44,7 @@ tasks:
     dir: frontend
     env:
       NUXT_PUBLIC_POCKETBASE_URL: "{{.PB_URL}}"
+      NUXT_PUBLIC_APP_URL: "{{.APP_URL}}"
     cmds:
       - bun run dev
     interactive: true
@@ -58,6 +60,7 @@ tasks:
     dir: frontend
     env:
       NUXT_PUBLIC_POCKETBASE_URL: "{{.PB_URL}}"
+      NUXT_PUBLIC_APP_URL: "{{.APP_URL}}"
     cmds:
       - bun run dev
     interactive: true

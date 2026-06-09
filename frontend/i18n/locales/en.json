@@ -229,8 +229,35 @@
     "saveChanges": "Save Changes",
     "teamMembers": "Team Members",
     "inviteMember": "Invite Member",
+    "addMember": "Add Member",
+    "addMemberTitle": "Add Team Member",
     "inviteTitle": "Invite Team Member",
-    "memberEmailPlaceholder": "member{'@'}example.com"
+    "memberEmailPlaceholder": "member{'@'}example.com",
+    "inviteModeTitle": "Member addition mode",
+    "inviteModeDirect": "Add directly",
+    "inviteModeDirectHint": "Add members immediately if they already have an account. No email is sent.",
+    "inviteModeEmail": "Invite by email",
+    "inviteModeEmailHint": "Send an invite link by email. Works for users who do not have an account yet.",
+    "pendingInvites": "Pending invites",
+    "memberAdded": "Member added successfully",
+    "inviteSent": "Invite created successfully",
+    "userNotRegistered": "This email is not registered yet. Ask them to sign up first, or switch to email invite mode.",
+    "inviteLinkLabel": "Invite link",
+    "copyInviteLink": "Copy link",
+    "inviteLinkCopied": "Link copied to clipboard",
+    "inviteLinkCopyFailed": "Could not copy link",
+    "confirmRemoveMember": "Remove this team member?"
+  },
+  "invitePage": {
+    "title": "Team Invitation",
+    "subtitle": "You have been invited to join {store}",
+    "signInPrompt": "Sign in or create an account to accept this invitation",
+    "accept": "Accept invitation",
+    "expired": "This invitation has expired",
+    "noLongerValid": "This invitation is no longer valid",
+    "notFound": "Invitation not found",
+    "acceptFailed": "Failed to accept invitation",
+    "emailMismatch": "Please sign in with {email} to accept this invitation"
   },
   "storesPage": {
     "title": "Select Store",
@@ -280,6 +307,9 @@
     "saveFailed": "Could not save order. Please try again.",
     "inviteFailed": "Failed to invite member",
     "createStoreFailed": "Failed to create store",
-    "loadStoresFailed": "Failed to load stores"
+    "loadStoresFailed": "Failed to load stores",
+    "loadMembersFailed": "Failed to load team members",
+    "updateFailed": "Update failed",
+    "deleteFailed": "Delete failed"
   }
 }

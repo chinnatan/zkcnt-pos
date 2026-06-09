@@ -10,11 +10,14 @@ export interface BaseRecord {
 
 // ─── Store ───────────────────────────────────────────────────────────────────
 
+export type MemberInviteMode = 'direct' | 'email';
+
 export interface StoreSettings {
   currency: string;   // default 'THB'
   vat_rate: number;   // default 7
   receipt_header: string;
   receipt_footer: string;
+  member_invite_mode?: MemberInviteMode;
 }
 
 export interface Store extends BaseRecord {
@@ -34,6 +37,23 @@ export interface StoreMember extends BaseRecord {
   user: string;
   role: 'owner' | 'manager' | 'cashier';
   is_active: boolean;
+  expand?: {
+    user?: {
+      id: string;
+      name?: string;
+      email?: string;
+    };
+  };
+}
+
+export interface StoreInvite extends BaseRecord {
+  store: string;
+  email: string;
+  role: 'manager' | 'cashier';
+  token: string;
+  status: 'pending' | 'accepted' | 'expired' | 'cancelled';
+  invited_by: string;
+  expires: string;
 }
 
 // ─── Catalog ─────────────────────────────────────────────────────────────────

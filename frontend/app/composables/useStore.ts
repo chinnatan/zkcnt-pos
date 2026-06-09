@@ -33,6 +33,7 @@ function toStoreRecord(record: Record<string, unknown>): Store {
       vat_rate: 7,
       receipt_header: "",
       receipt_footer: "",
+      member_invite_mode: "direct",
     },
     owner: relationId(record.owner),
     is_active: record.is_active !== false,
@@ -196,7 +197,7 @@ export function useStore() {
       ...data,
       owner: authUser.value.id,
       is_active: true,
-      settings: { currency: "THB", vat_rate: 7, receipt_header: "", receipt_footer: "" },
+      settings: { currency: "THB", vat_rate: 7, receipt_header: "", receipt_footer: "", member_invite_mode: "direct" },
     });
 
     await $pb.collection("store_members").create({
@@ -208,23 +209,6 @@ export function useStore() {
 
     await fetchUserStores();
     return store;
-  }
-
-  async function inviteMember(email: string, role: "manager" | "cashier") {
-    if (!activeStore.value) throw new Error("No active store");
-
-    const users = await $pb.collection("users").getFullList({
-      filter: `email = "${email}"`,
-    });
-
-    if (users.length === 0) throw new Error("User not found");
-
-    return await $pb.collection("store_members").create({
-      store: activeStore.value.id,
-      user: users[0].id,
-      role,
-      is_active: true,
-    });
   }
 
   return {
@@ -240,6 +224,5 @@ export function useStore() {
     fetchUserStores,
     setActiveStore,
     createStore,
-    inviteMember,
   };
 }

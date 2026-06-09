@@ -51,17 +51,26 @@
 definePageMeta({ layout: "auth", middleware: "auth" });
 
 const { t } = useI18n();
+const route = useRoute();
 const { login, isLoading } = useAuth();
 const { fetchUserStores, userStores } = useStore();
 const email = ref("");
 const password = ref("");
 const error = ref("");
 
+const redirectPath = computed(() => String(route.query.redirect || ""));
+
 async function handleLogin() {
   error.value = "";
   try {
     await login(email.value, password.value);
     await fetchUserStores();
+
+    if (redirectPath.value) {
+      navigateTo(redirectPath.value);
+      return;
+    }
+
     navigateTo(userStores.value.length === 1 ? "/" : "/stores");
   } catch (e: any) {
     error.value = e?.message || t("errors.invalidCredentials");

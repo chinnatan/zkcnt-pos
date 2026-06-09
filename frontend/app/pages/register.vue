@@ -23,7 +23,8 @@
           v-model="email"
           type="email"
           required
-          class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+          :readonly="!!inviteToken"
+          class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 disabled:bg-gray-50"
           :placeholder="t('auth.emailPlaceholder')"
         />
       </div>
@@ -60,17 +61,25 @@
 definePageMeta({ layout: "auth", middleware: "auth" });
 
 const { t } = useI18n();
+const route = useRoute();
 const { register, isLoading } = useAuth();
 const { fetchUserStores, userStores } = useStore();
+const { acceptInvite } = useStoreMembers();
 const name = ref("");
-const email = ref("");
+const email = ref(String(route.query.email || ""));
 const password = ref("");
 const error = ref("");
+const inviteToken = computed(() => String(route.query.invite || ""));
 
 async function handleRegister() {
   error.value = "";
   try {
     await register(email.value, password.value, name.value);
+
+    if (inviteToken.value) {
+      await acceptInvite(inviteToken.value);
+    }
+
     await fetchUserStores();
     navigateTo(userStores.value.length === 1 ? "/" : "/stores");
   } catch (e: any) {

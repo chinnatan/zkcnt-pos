@@ -3,8 +3,12 @@ export default defineNuxtRouteMiddleware((to) => {
 
   initAuth();
 
-  const publicPages = ["/login", "/register"];
-  if (publicPages.includes(to.path)) {
+  const isPublicPage =
+    to.path === "/login" ||
+    to.path === "/register" ||
+    to.path.startsWith("/invite/");
+
+  if (isPublicPage) {
     if (isAuthenticated.value) {
       return navigateTo("/");
     }

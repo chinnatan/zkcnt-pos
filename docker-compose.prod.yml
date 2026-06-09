@@ -7,6 +7,8 @@ services:
     restart: unless-stopped
     volumes:
       - pb_data:/pb/pb_data
+    environment:
+      - APP_URL=${NUXT_PUBLIC_APP_URL:-http://localhost:3000}
     networks:
       - pos-network
 
@@ -15,11 +17,13 @@ services:
       context: ./frontend
       args:
         NUXT_PUBLIC_POCKETBASE_URL: ${NUXT_PUBLIC_POCKETBASE_URL:-${POCKETBASE_URL:-http://localhost:8090}}
+        NUXT_PUBLIC_APP_URL: ${NUXT_PUBLIC_APP_URL:-http://localhost:3000}
     restart: unless-stopped
     env_file:
       - .env
     environment:
       - NUXT_PUBLIC_POCKETBASE_URL=${NUXT_PUBLIC_POCKETBASE_URL:-${POCKETBASE_URL:-http://localhost:8090}}
+      - NUXT_PUBLIC_APP_URL=${NUXT_PUBLIC_APP_URL:-http://localhost:3000}
     depends_on:
       - pocketbase
     networks:
