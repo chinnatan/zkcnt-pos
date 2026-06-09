@@ -330,7 +330,7 @@
               <label class="text-xs font-medium text-gray-500">
                 {{ t('pos.paymentMethod') }}
               </label>
-              <div class="grid grid-cols-3 gap-2">
+              <div class="grid grid-cols-2 gap-2">
                 <button
                   v-for="method in paymentMethods"
                   :key="method.value"
@@ -499,7 +499,6 @@ const lastOrderTotal = ref(0);
 const paymentMethods = computed(() => [
   { value: "cash" as const, label: t("payment.cash") },
   { value: "qr" as const, label: t("payment.qr") },
-  { value: "card" as const, label: t("payment.card") },
 ]);
 
 const quickCashAmounts = computed(() => {

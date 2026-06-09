@@ -38,7 +38,7 @@
             <div class="h-6 overflow-hidden rounded-full bg-gray-100">
               <div
                 class="h-full rounded-full transition-all"
-                :class="pm.method === 'cash' ? 'bg-green-500' : pm.method === 'qr' ? 'bg-blue-500' : 'bg-purple-500'"
+                :class="pm.method === 'cash' ? 'bg-green-500' : 'bg-blue-500'"
                 :style="{ width: `${pm.percentage}%` }"
               />
             </div>
@@ -113,7 +113,7 @@ const totalOrders = computed(() => filteredOrders.value.length);
 const averageOrder = computed(() => (totalOrders.value > 0 ? totalSales.value / totalOrders.value : 0));
 
 const paymentBreakdown = computed(() => {
-  const methods = ["cash", "qr", "card"];
+  const methods = ["cash", "qr"];
   return methods.map((method) => {
     const methodOrders = filteredOrders.value.filter((o) => o.payment_method === method);
     const total = methodOrders.reduce((sum, o) => sum + o.total, 0);

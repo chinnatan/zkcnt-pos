@@ -14,7 +14,6 @@ export function useLabels() {
     const map: Record<string, string> = {
       cash: t("payment.cash"),
       qr: t("payment.qr"),
-      card: t("payment.card"),
     };
     return map[method] || method;
   }

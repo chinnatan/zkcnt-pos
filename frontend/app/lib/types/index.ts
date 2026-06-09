@@ -88,7 +88,7 @@ export interface Order extends BaseRecord {
   discount_type: 'percent' | 'fixed' | '';
   tax_amount: number;
   total: number;
-  payment_method: 'cash' | 'qr' | 'card';
+  payment_method: 'cash' | 'qr';
   payment_received: number;
   change_amount: number;
   status: 'completed' | 'voided' | 'refunded';

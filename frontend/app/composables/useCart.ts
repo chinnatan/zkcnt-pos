@@ -4,7 +4,7 @@ const cartItems = ref<CartItem[]>([]);
 const cartDiscount = ref(0);
 const cartDiscountType = ref<"percent" | "fixed">("fixed");
 const selectedCustomerId = ref<string | null>(null);
-const paymentMethod = ref<"cash" | "qr" | "card">("cash");
+const paymentMethod = ref<"cash" | "qr">("cash");
 const paymentReceived = ref(0);
 const cartNote = ref("");
 

@@ -187,7 +187,6 @@ function paymentBadge(method: string) {
   const map: Record<string, string> = {
     cash: "bg-green-100 text-green-700",
     qr: "bg-blue-100 text-blue-700",
-    card: "bg-purple-100 text-purple-700",
   };
   return map[method] || "bg-gray-100 text-gray-700";
 }

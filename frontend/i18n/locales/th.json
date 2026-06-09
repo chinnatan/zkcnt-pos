@@ -143,8 +143,7 @@
   },
   "payment": {
     "cash": "เงินสด",
-    "qr": "QR Code",
-    "card": "บัตร"
+    "qr": "QR Code"
   },
   "status": {
     "completed": "สำเร็จ",
