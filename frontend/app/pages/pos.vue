@@ -144,10 +144,8 @@
               class="group flex flex-col items-center rounded-xl border border-gray-200 bg-white p-4 text-center shadow-sm transition-all hover:border-primary-300 hover:shadow-md active:scale-[0.97]"
               @click="handleAddItem(product)"
             >
-              <div
-                class="mb-3 flex h-16 w-16 items-center justify-center rounded-xl bg-primary-50 text-2xl font-bold text-primary-600 transition-colors group-hover:bg-primary-100"
-              >
-                {{ product.name.charAt(0) }}
+              <div class="mb-3">
+                <ProductImage :product="product" size="lg" />
               </div>
               <span
                 class="mb-1 line-clamp-2 w-full text-sm font-medium text-gray-800"

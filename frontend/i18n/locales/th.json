@@ -190,7 +190,13 @@
     "deleteProduct": "ลบสินค้า",
     "confirmDeleteCategory": "ยืนยันการลบหมวดหมู่",
     "confirmDeleteCategoryDesc": "คุณต้องการลบ {name} หรือไม่? การดำเนินการนี้ไม่สามารถย้อนกลับได้",
-    "deleteCategory": "ลบหมวดหมู่"
+    "deleteCategory": "ลบหมวดหมู่",
+    "image": "รูปภาพ",
+    "uploadImage": "เลือกรูปภาพ",
+    "removeImage": "ลบรูป",
+    "imageTooLarge": "ไฟล์รูปใหญ่เกิน 5 MB",
+    "imageInvalidType": "รองรับเฉพาะ JPEG, PNG และ WebP",
+    "imageRequiresOnline": "การอัปโหลดรูปต้องเชื่อมต่ออินเทอร์เน็ต (รูปจะ sync อัตโนมัติเมื่อกลับออนไลน์)"
   },
   "ordersPage": {
     "title": "ออเดอร์",

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { validateProductImage } from "~/lib/files/constants";
 import type { Product, Category } from "~/lib/types";
 
 definePageMeta({ middleware: "auth" });
@@ -7,6 +8,8 @@ const { t } = useI18n();
 const { formatCurrency } = useFormat();
 const { products, categories, fetchProducts, fetchCategories, createProduct, updateProduct, deleteProduct, createCategory, updateCategory, deleteCategory, isLoading } = useProducts();
 const { activeStoreId } = useStore();
+const { isOnline } = useOnlineStatus();
+const { getFileUrl } = useFileUrl();
 
 const searchQuery = ref("");
 const selectedCategoryId = ref<string | null>(null);
@@ -42,6 +45,49 @@ const categoryForm = ref({
   is_active: true,
 });
 
+const imageFile = ref<File | null>(null);
+const imagePreview = ref<string | null>(null);
+const removeImage = ref(false);
+const imageError = ref<string | null>(null);
+const isSavingProduct = ref(false);
+
+function clearImageState() {
+  if (imagePreview.value) URL.revokeObjectURL(imagePreview.value);
+  imageFile.value = null;
+  imagePreview.value = null;
+  removeImage.value = false;
+  imageError.value = null;
+}
+
+function handleImageSelect(event: Event) {
+  const input = event.target as HTMLInputElement;
+  const file = input.files?.[0];
+  if (!file) return;
+
+  const errorKey = validateProductImage(file);
+  if (errorKey) {
+    imageError.value = errorKey;
+    input.value = "";
+    return;
+  }
+
+  imageError.value = null;
+  if (imagePreview.value) URL.revokeObjectURL(imagePreview.value);
+  imageFile.value = file;
+  imagePreview.value = URL.createObjectURL(file);
+  removeImage.value = false;
+}
+
+function handleRemoveImage() {
+  clearImageState();
+  removeImage.value = true;
+}
+
+const existingImageUrl = computed(() => {
+  if (!editingProduct.value?.image || removeImage.value || imagePreview.value) return null;
+  return getFileUrl(editingProduct.value, editingProduct.value.image);
+});
+
 const filteredProducts = computed(() => {
   let result = products.value ?? [];
   if (searchQuery.value) {
@@ -65,6 +111,7 @@ function getCategoryName(categoryId: string): string {
 
 function openAddProduct() {
   editingProduct.value = null;
+  clearImageState();
   productForm.value = {
     name: "",
     sku: "",
@@ -82,6 +129,7 @@ function openAddProduct() {
 
 function openEditProduct(product: Product) {
   editingProduct.value = product;
+  clearImageState();
   productForm.value = {
     name: product.name,
     sku: product.sku ?? "",
@@ -98,12 +146,27 @@ function openEditProduct(product: Product) {
 }
 
 async function handleSaveProduct() {
-  if (editingProduct.value) {
-    await updateProduct(editingProduct.value.id, { ...productForm.value, store: activeStoreId.value });
-  } else {
-    await createProduct({ ...productForm.value, store: activeStoreId.value });
+  if (imageError.value) return;
+
+  isSavingProduct.value = true;
+  try {
+    const payload = {
+      ...productForm.value,
+      store: activeStoreId.value,
+      imageFile: imageFile.value,
+      removeImage: removeImage.value,
+    };
+
+    if (editingProduct.value) {
+      await updateProduct(editingProduct.value.id, payload);
+    } else {
+      await createProduct(payload);
+    }
+    showProductModal.value = false;
+    clearImageState();
+  } finally {
+    isSavingProduct.value = false;
   }
-  showProductModal.value = false;
 }
 
 function confirmDeleteProduct(product: Product) {
@@ -161,6 +224,10 @@ async function handleDeleteCategory() {
 onMounted(() => {
   fetchProducts();
   fetchCategories();
+});
+
+onUnmounted(() => {
+  if (imagePreview.value) URL.revokeObjectURL(imagePreview.value);
 });
 </script>
 
@@ -258,9 +325,7 @@ onMounted(() => {
               <tr v-for="product in filteredProducts" :key="product.id" class="transition hover:bg-gray-50/80">
                 <td class="whitespace-nowrap px-6 py-4">
                   <div class="flex items-center gap-3">
-                    <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-primary-50 text-primary-600">
-                      <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
-                    </div>
+                    <ProductImage :product="product" size="sm" />
                     <div>
                       <div class="text-sm font-medium text-gray-900">{{ product.name }}</div>
                       <div v-if="product.barcode" class="text-xs text-gray-400">{{ product.barcode }}</div>
@@ -318,9 +383,7 @@ onMounted(() => {
           <div v-for="product in filteredProducts" :key="product.id" class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
             <div class="flex items-start justify-between">
               <div class="flex items-center gap-3">
-                <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-primary-50 text-primary-600">
-                  <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
-                </div>
+                <ProductImage :product="product" size="sm" />
                 <div>
                   <div class="text-sm font-medium text-gray-900">{{ product.name }}</div>
                   <div class="text-xs text-gray-400">{{ product.sku || t('common.noSku') }}</div>
@@ -460,6 +523,43 @@ onMounted(() => {
                   <label class="mb-1 block text-sm font-medium text-gray-700">{{ t('productsPage.productName') }} <span class="text-red-500">*</span></label>
                   <input v-model="productForm.name" type="text" required class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm transition focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20" />
                 </div>
+                <div>
+                  <label class="mb-1 block text-sm font-medium text-gray-700">{{ t('productsPage.image') }}</label>
+                  <div class="flex items-start gap-4">
+                    <div class="flex h-20 w-20 flex-shrink-0 items-center justify-center overflow-hidden rounded-xl border border-gray-200 bg-gray-50">
+                      <img
+                        v-if="imagePreview"
+                        :src="imagePreview"
+                        alt=""
+                        class="h-full w-full object-cover"
+                      />
+                      <img
+                        v-else-if="existingImageUrl"
+                        :src="existingImageUrl"
+                        alt=""
+                        class="h-full w-full object-cover"
+                      />
+                      <svg v-else class="h-8 w-8 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                    </div>
+                    <div class="flex flex-col gap-2">
+                      <label class="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50">
+                        <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
+                        {{ t('productsPage.uploadImage') }}
+                        <input type="file" accept="image/jpeg,image/png,image/webp" class="hidden" @change="handleImageSelect" />
+                      </label>
+                      <button
+                        v-if="imagePreview || existingImageUrl"
+                        type="button"
+                        class="text-left text-sm text-red-600 hover:text-red-700"
+                        @click="handleRemoveImage"
+                      >
+                        {{ t('productsPage.removeImage') }}
+                      </button>
+                      <p v-if="imageError" class="text-xs text-red-600">{{ t(imageError) }}</p>
+                      <p v-if="!isOnline && imageFile" class="text-xs text-amber-600">{{ t('productsPage.imageRequiresOnline') }}</p>
+                    </div>
+                  </div>
+                </div>
                 <div class="grid grid-cols-2 gap-4">
                   <div>
                     <label class="mb-1 block text-sm font-medium text-gray-700">{{ t('common.sku') }}</label>
@@ -533,7 +633,7 @@ onMounted(() => {
                 </div>
                 <div class="flex items-center justify-end gap-3 pt-2">
                   <button type="button" class="rounded-lg px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100" @click="showProductModal = false">{{ t('common.cancel') }}</button>
-                  <button type="submit" class="rounded-lg bg-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2">
+                  <button type="submit" :disabled="isSavingProduct" class="rounded-lg bg-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50">
                     {{ editingProduct ? t('common.save') : t('productsPage.addProduct') }}
                   </button>
                 </div>

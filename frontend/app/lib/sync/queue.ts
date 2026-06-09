@@ -14,8 +14,10 @@ export async function addToSyncQueue(
 }
 
 export async function getPendingItems(storeId?: string): Promise<SyncQueueItem[]> {
-  let query = db.syncQueue.where("status").anyOf(["pending", "error"]);
-  const items = await query.toArray();
+  const items = await db.syncQueue
+    .where("status")
+    .anyOf(["pending", "error"])
+    .sortBy("created_at");
   if (storeId) {
     return items.filter((i) => i.store === storeId) as SyncQueueItem[];
   }

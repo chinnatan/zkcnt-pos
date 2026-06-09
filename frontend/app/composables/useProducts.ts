@@ -1,6 +1,76 @@
 import { db } from "~/lib/db";
+import {
+  addToFileUploadQueue,
+  deleteAllBlobsForRecord,
+  deleteFileBlob,
+  storeFileBlob,
+} from "~/lib/files/blobs";
 import { addToSyncQueue } from "~/lib/sync/queue";
 import type { Product, Category } from "~/lib/types";
+
+export type ProductInput = Partial<Product> & {
+  imageFile?: File | null;
+  removeImage?: boolean;
+};
+
+function buildProductBody(
+  data: ProductInput,
+): FormData | Record<string, unknown> {
+  const { imageFile, removeImage, ...rest } = data;
+  if (!imageFile && !removeImage) return rest;
+
+  const form = new FormData();
+  for (const [key, value] of Object.entries(rest)) {
+    if (value === undefined || value === null) continue;
+    if (typeof value === "boolean") {
+      form.append(key, value ? "true" : "false");
+    } else {
+      form.append(key, String(value));
+    }
+  }
+  if (imageFile) form.append("image", imageFile);
+  else if (removeImage) form.append("image", "");
+  return form;
+}
+
+async function queueOfflineImageUpload(
+  storeId: string,
+  recordId: string,
+  imageFile: File | null | undefined,
+  removeImage: boolean | undefined,
+): Promise<void> {
+  if (removeImage) {
+    await addToFileUploadQueue({
+      store: storeId,
+      collection: "products",
+      record_id: recordId,
+      field: "image",
+      blob_id: "",
+      remove: true,
+    });
+    return;
+  }
+
+  if (!imageFile) return;
+
+  const blobId = await storeFileBlob(
+    "products",
+    recordId,
+    "image",
+    storeId,
+    imageFile,
+    imageFile.type,
+  );
+
+  await addToFileUploadQueue({
+    store: storeId,
+    collection: "products",
+    record_id: recordId,
+    field: "image",
+    blob_id: blobId,
+    remove: false,
+  });
+}
 
 export function useProducts() {
   const { $pb } = useNuxtApp();
@@ -66,20 +136,38 @@ export function useProducts() {
     }
   }
 
-  async function createProduct(data: Partial<Product>) {
+  async function createProduct(data: ProductInput) {
     if (!activeStoreId.value) throw new Error("No active store");
 
-    const productData = { ...data, store: activeStoreId.value };
+    const { imageFile, removeImage, ...fields } = data;
+    const productData = { ...fields, store: activeStoreId.value };
+    const body = buildProductBody(data);
 
     if (isOnline.value) {
-      const record = await $pb.collection("products").create(productData);
+      const record = await $pb.collection("products").create(body);
       await db.products.put(record);
       await fetchProducts();
       return record;
-    } else {
+    }
+
+    if (imageFile) {
       const tempId = `temp_${Date.now()}`;
-      const localRecord = { ...productData, id: tempId, created: new Date().toISOString(), updated: new Date().toISOString() };
+      const localRecord = {
+        ...productData,
+        id: tempId,
+        image: "",
+        created: new Date().toISOString(),
+        updated: new Date().toISOString(),
+      };
       await db.products.put(localRecord);
+      await storeFileBlob(
+        "products",
+        tempId,
+        "image",
+        activeStoreId.value,
+        imageFile,
+        imageFile.type,
+      );
       await addToSyncQueue({
         collection: "products",
         action: "create",
@@ -87,28 +175,87 @@ export function useProducts() {
         data: productData,
         store: activeStoreId.value,
       });
+      await addToFileUploadQueue({
+        store: activeStoreId.value,
+        collection: "products",
+        record_id: tempId,
+        field: "image",
+        blob_id: `products/${tempId}/image`,
+        remove: false,
+      });
       await fetchProducts();
       return localRecord;
     }
+
+    const tempId = `temp_${Date.now()}`;
+    const localRecord = {
+      ...productData,
+      id: tempId,
+      created: new Date().toISOString(),
+      updated: new Date().toISOString(),
+    };
+    await db.products.put(localRecord);
+    await addToSyncQueue({
+      collection: "products",
+      action: "create",
+      record_id: tempId,
+      data: productData,
+      store: activeStoreId.value,
+    });
+    await fetchProducts();
+    return localRecord;
   }
 
-  async function updateProduct(id: string, data: Partial<Product>) {
+  async function updateProduct(id: string, data: ProductInput) {
+    const { imageFile, removeImage, ...fields } = data;
+    const body = buildProductBody(data);
+
     if (isOnline.value) {
-      const record = await $pb.collection("products").update(id, data);
+      const record = await $pb.collection("products").update(id, body);
       await db.products.put(record);
       await fetchProducts();
       return record;
-    } else {
-      await db.products.update(id, { ...data, updated: new Date().toISOString() });
+    }
+
+    const hasImageChange = imageFile || removeImage;
+    await db.products.update(id, {
+      ...fields,
+      ...(removeImage ? { image: "" } : {}),
+      updated: new Date().toISOString(),
+    });
+
+    if (hasImageChange && activeStoreId.value) {
+      if (removeImage) {
+        await deleteFileBlob("products", id, "image");
+      }
+      await queueOfflineImageUpload(
+        activeStoreId.value,
+        id,
+        imageFile,
+        removeImage,
+      );
+    }
+
+    if (!hasImageChange) {
       await addToSyncQueue({
         collection: "products",
         action: "update",
         record_id: id,
-        data,
+        data: fields,
         store: activeStoreId.value!,
       });
-      await fetchProducts();
+    } else {
+      const { imageFile: _f, removeImage: _r, ...syncFields } = data;
+      await addToSyncQueue({
+        collection: "products",
+        action: "update",
+        record_id: id,
+        data: syncFields,
+        store: activeStoreId.value!,
+      });
     }
+
+    await fetchProducts();
   }
 
   async function deleteProduct(id: string) {
@@ -125,6 +272,7 @@ export function useProducts() {
         store: activeStoreId.value!,
       });
     }
+    await deleteAllBlobsForRecord("products", id);
     await fetchProducts();
   }
 

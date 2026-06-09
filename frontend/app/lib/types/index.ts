@@ -161,6 +161,33 @@ export interface Discount extends BaseRecord {
   is_active: boolean;
 }
 
+// ─── File Blobs (IndexedDB only) ────────────────────────────────────────────
+
+export interface FileBlob {
+  id: string;
+  store: string;
+  collection: string;
+  record_id: string;
+  field: string;
+  blob: Blob;
+  mime_type: string;
+  created_at: string;
+}
+
+export interface FileUploadQueueItem {
+  id: number;
+  store: string;
+  collection: string;
+  record_id: string;
+  field: string;
+  blob_id: string;
+  remove: boolean;
+  status: "pending" | "in_flight" | "synced" | "error";
+  retry_count: number;
+  created_at: string;
+  error_message: string;
+}
+
 // ─── Sync Queue (IndexedDB only) ────────────────────────────────────────────
 
 export interface SyncQueueItem {

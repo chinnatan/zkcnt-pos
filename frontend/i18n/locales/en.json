@@ -190,7 +190,13 @@
     "deleteProduct": "Delete Product",
     "confirmDeleteCategory": "Confirm delete category",
     "confirmDeleteCategoryDesc": "Delete {name}? This action cannot be undone.",
-    "deleteCategory": "Delete Category"
+    "deleteCategory": "Delete Category",
+    "image": "Image",
+    "uploadImage": "Choose image",
+    "removeImage": "Remove image",
+    "imageTooLarge": "Image must be 5 MB or smaller",
+    "imageInvalidType": "Only JPEG, PNG, and WebP are supported",
+    "imageRequiresOnline": "Image uploads require internet (images sync automatically when back online)"
   },
   "ordersPage": {
     "title": "Orders",

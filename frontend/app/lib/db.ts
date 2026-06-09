@@ -9,6 +9,8 @@ import type {
   OrderItem,
   Inventory,
   SyncQueueItem,
+  FileBlob,
+  FileUploadQueueItem,
 } from './types';
 
 export class PosDatabase extends Dexie {
@@ -21,6 +23,8 @@ export class PosDatabase extends Dexie {
   orderItems!: Table<OrderItem>;
   inventory!: Table<Inventory>;
   syncQueue!: Table<SyncQueueItem, number>;
+  fileBlobs!: Table<FileBlob>;
+  fileUploadQueue!: Table<FileUploadQueueItem, number>;
 
   constructor() {
     super('zkcnt-pos');
@@ -35,6 +39,11 @@ export class PosDatabase extends Dexie {
       orderItems: 'id, order, product',
       inventory: 'id, store, [store+product], product',
       syncQueue: '++id, collection, action, status, store, created_at',
+    });
+
+    this.version(2).stores({
+      fileBlobs: 'id, store, [store+collection+record_id], collection, record_id, field',
+      fileUploadQueue: '++id, store, collection, record_id, status, created_at',
     });
   }
 }

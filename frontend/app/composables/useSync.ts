@@ -33,8 +33,10 @@ export function useSync() {
     try {
       // Push local changes first
       await syncEngine.drainSyncQueue();
+      await syncEngine.drainFileQueue();
       // Then pull remote changes
       await syncEngine.pullAll();
+      await syncEngine.prefetchProductImages();
       lastSyncAt.value = new Date().toISOString();
     } finally {
       isSyncing.value = false;
