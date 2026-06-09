@@ -193,6 +193,79 @@ routerAdd(
   $apis.requireAuth()
 );
 
+routerAdd(
+  "GET",
+  "/api/stores/{storeId}/team-members",
+  (e) => {
+    const auth = e.auth;
+    if (!auth) {
+      throw new UnauthorizedError("Authentication required");
+    }
+
+    const storeId = e.request.pathValue("storeId");
+    const authId = auth.id || auth.get("id");
+
+    const membership = $app.findRecordsByFilter(
+      "store_members",
+      "store = {:storeId} && user = {:userId} && is_active = true",
+      "",
+      1,
+      0,
+      { storeId: storeId, userId: authId }
+    );
+    if (membership.length === 0) {
+      throw new ForbiddenError("You are not a member of this store");
+    }
+
+    const members = $app.findRecordsByFilter(
+      "store_members",
+      "store = {:storeId}",
+      "role",
+      0,
+      0,
+      { storeId: storeId }
+    );
+
+    const result = [];
+    for (let i = 0; i < members.length; i++) {
+      const m = members[i];
+      const userId = m.get("user");
+      let name = "";
+      let email = "";
+
+      try {
+        const user = $app.findRecordById("users", userId);
+        name = user.get("name") || "";
+        email = user.get("email") || "";
+      } catch {
+        // user record unavailable
+      }
+
+      result.push({
+        id: m.id,
+        created: m.get("created"),
+        updated: m.get("updated"),
+        collectionId: m.collection().id,
+        collectionName: "store_members",
+        store: m.get("store"),
+        user: userId,
+        role: m.get("role"),
+        is_active: m.get("is_active"),
+        expand: {
+          user: {
+            id: userId,
+            name: name,
+            email: email,
+          },
+        },
+      });
+    }
+
+    return e.json(200, result);
+  },
+  $apis.requireAuth()
+);
+
 routerAdd("GET", "/api/invites/{token}", (e) => {
   const token = e.request.pathValue("token");
 

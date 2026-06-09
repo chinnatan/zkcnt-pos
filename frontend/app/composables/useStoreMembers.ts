@@ -58,11 +58,11 @@ export function useStoreMembers() {
     membersError.value = null;
 
     try {
-      const records = await $pb.collection("store_members").getFullList({
-        filter: `store = "${id}"`,
-        expand: "user",
+      const records = await $pb.send(`/api/stores/${id}/team-members`, {
+        method: "GET",
       });
-      storeMembers.value = records.map((r) =>
+      const list = Array.isArray(records) ? records : [];
+      storeMembers.value = list.map((r) =>
         toStoreMember(r as unknown as Record<string, unknown>),
       );
     } catch (e: unknown) {
