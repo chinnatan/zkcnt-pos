@@ -4,7 +4,7 @@ import { generateClientId } from "~/lib/sync/conflict";
 import type { Order, OrderItem } from "~/lib/types";
 
 export function useOrders() {
-  const { $pb } = useNuxtApp();
+  const { $api } = useNuxtApp();
   const { activeStoreId } = useStore();
   const { isOnline } = useOnlineStatus();
   const { authUser } = useAuth();
@@ -17,12 +17,11 @@ export function useOrders() {
     isLoading.value = true;
     try {
       if (isOnline.value) {
-        const records = await $pb.collection("orders").getList(1, limit, {
-          filter: `store = "${activeStoreId.value}"`,
-          sort: "-created",
-        });
-        orders.value = records.items as unknown as Order[];
-        await db.orders.bulkPut(records.items);
+        const result = await $api.send<{ items: Order[] }>(
+          `/stores/${activeStoreId.value}/orders?limit=${limit}`,
+        );
+        orders.value = result.items;
+        await db.orders.bulkPut(result.items);
       } else {
         const local = await db.orders
           .where("store")
@@ -63,7 +62,7 @@ export function useOrders() {
     change_amount: number;
     customer?: string;
     note?: string;
-  }) {
+  }): Promise<Order> {
     if (!activeStoreId.value || !authUser.value) {
       throw new Error("Not authenticated or no active store");
     }
@@ -91,53 +90,50 @@ export function useOrders() {
       synced_at: isOnline.value ? now : "",
     };
 
+    const items = orderData.items.map((item) => ({
+      product: item.product_id,
+      product_name: item.product_name,
+      product_price: item.product_price,
+      quantity: item.quantity,
+      unit_price: item.unit_price,
+      discount: item.discount,
+      total: item.total,
+    }));
+
     if (isOnline.value) {
       try {
-        const record = await $pb.collection("orders").create(order);
+        const record = await $api.send<Order>(
+          `/stores/${activeStoreId.value}/orders`,
+          { method: "POST", body: { order, items } },
+        );
         await db.orders.put(record);
 
-        // Create order items
-        for (const item of orderData.items) {
-          const orderItem = {
-            order: record.id,
-            product: item.product_id,
-            product_name: item.product_name,
-            product_price: item.product_price,
-            quantity: item.quantity,
-            unit_price: item.unit_price,
-            discount: item.discount,
-            total: item.total,
-          };
-          const itemRecord = await $pb.collection("order_items").create(orderItem);
-          await db.orderItems.put(itemRecord);
-        }
+        const itemRecords = await $api.send<OrderItem[]>(
+          `/stores/${activeStoreId.value}/orders/${record.id}/items`,
+        );
+        await db.orderItems.bulkPut(itemRecords);
 
         return record;
       } catch {
-        // Fallback to offline mode
         return await saveOrderOffline(order, orderData.items, clientId);
       }
-    } else {
-      return await saveOrderOffline(order, orderData.items, clientId);
     }
+
+    return await saveOrderOffline(order, orderData.items, clientId);
   }
 
-  async function saveOrderOffline(
-    order: any,
-    items: any[],
-    clientId: string
-  ) {
+  async function saveOrderOffline(order: Record<string, unknown>, items: Array<Record<string, unknown>>, clientId: string) {
     const orderId = `temp_${clientId}`;
     const now = new Date().toISOString();
 
     const localOrder = { ...order, id: orderId, created: now, updated: now };
-    await db.orders.put(localOrder);
+    await db.orders.put(localOrder as Order);
     await addToSyncQueue({
       collection: "orders",
       action: "create",
       record_id: orderId,
       data: order,
-      store: order.store,
+      store: String(order.store),
     });
 
     for (const item of items) {
@@ -155,17 +151,26 @@ export function useOrders() {
         created: now,
         updated: now,
       };
-      await db.orderItems.put(orderItem);
+      await db.orderItems.put(orderItem as OrderItem);
       await addToSyncQueue({
         collection: "order_items",
         action: "create",
         record_id: itemId,
-        data: { ...orderItem, id: undefined, order: orderId },
-        store: order.store,
+        data: {
+          order: orderId,
+          product: item.product_id,
+          product_name: item.product_name,
+          product_price: item.product_price,
+          quantity: item.quantity,
+          unit_price: item.unit_price,
+          discount: item.discount,
+          total: item.total,
+        },
+        store: String(order.store),
       });
     }
 
-    return localOrder;
+    return localOrder as Order;
   }
 
   function generateOrderNumber(): string {
@@ -178,11 +183,11 @@ export function useOrders() {
 
   async function getOrderItems(orderId: string): Promise<OrderItem[]> {
     try {
-      if (isOnline.value) {
-        const records = await $pb.collection("order_items").getFullList({
-          filter: `order = "${orderId}"`,
-        });
-        return records as unknown as OrderItem[];
+      if (isOnline.value && activeStoreId.value && !orderId.startsWith("temp_")) {
+        const records = await $api.send<OrderItem[]>(
+          `/stores/${activeStoreId.value}/orders/${orderId}/items`,
+        );
+        return records;
       }
     } catch {
       // fallback

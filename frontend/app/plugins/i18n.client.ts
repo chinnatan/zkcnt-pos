@@ -4,7 +4,10 @@ export default defineNuxtPlugin({
   name: "i18n-locale-persistence",
   dependsOn: ["i18n:plugin"],
   setup(nuxtApp) {
-    const i18n = nuxtApp.$i18n;
+    const i18n = nuxtApp.$i18n as {
+      setLocale: (locale: string) => void;
+      locale: string | Ref<string>;
+    };
 
     const saved = localStorage.getItem(LOCALE_KEY);
     if (saved === "th" || saved === "en") {

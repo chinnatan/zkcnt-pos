@@ -1,21 +1,15 @@
-FROM alpine:3.20 AS downloader
-ARG PB_VERSION=0.38.1
-ARG TARGETARCH
+FROM oven/bun:1-alpine
 
-RUN apk add --no-cache wget unzip ca-certificates
+WORKDIR /app
 
-RUN wget -q "https://github.com/pocketbase/pocketbase/releases/download/v${PB_VERSION}/pocketbase_${PB_VERSION}_linux_${TARGETARCH}.zip" \
-    -O /tmp/pocketbase.zip \
-    && unzip /tmp/pocketbase.zip -d /tmp/pocketbase \
-    && rm /tmp/pocketbase.zip
+COPY package.json bun.lock* ./
+RUN bun install --frozen-lockfile || bun install
 
-FROM alpine:3.20
-RUN apk add --no-cache ca-certificates
+COPY . .
 
-COPY --from=downloader /tmp/pocketbase/pocketbase /usr/local/bin/pocketbase
-COPY pb_migrations /pb/pb_migrations
-COPY pb_hooks /pb/pb_hooks
+ENV DATA_DIR=/data
+ENV PORT=3001
 
-EXPOSE 8090
+EXPOSE 3001
 
-CMD ["pocketbase", "serve", "--http=0.0.0.0:8090", "--dir=/pb/pb_data", "--migrationsDir=/pb/pb_migrations", "--hooksDir=/pb/pb_hooks"]
+CMD ["bun", "run", "start"]

@@ -1,15 +1,16 @@
-import type { RecordModel } from "pocketbase";
+import type { AuthUser } from "~/lib/types";
 
-const authUser = ref<RecordModel | null>(null);
+const authUser = ref<AuthUser | null>(null);
 const isAuthenticated = ref(false);
 const isLoading = ref(false);
 
 export function useAuth() {
-  const { $pb } = useNuxtApp();
+  const { $api } = useNuxtApp();
 
   function initAuth() {
-    if ($pb.authStore.isValid && $pb.authStore.record) {
-      authUser.value = $pb.authStore.record;
+    $api.restoreAuth();
+    if ($api.isAuthenticated && $api.user) {
+      authUser.value = $api.user;
       isAuthenticated.value = true;
     } else {
       authUser.value = null;
@@ -20,10 +21,10 @@ export function useAuth() {
   async function login(email: string, password: string) {
     isLoading.value = true;
     try {
-      const record = await $pb.collection("users").authWithPassword(email, password);
-      authUser.value = record.record;
+      const result = await $api.login(email, password);
+      authUser.value = result.user;
       isAuthenticated.value = true;
-      return record;
+      return result;
     } finally {
       isLoading.value = false;
     }
@@ -32,12 +33,7 @@ export function useAuth() {
   async function register(email: string, password: string, name: string) {
     isLoading.value = true;
     try {
-      await $pb.collection("users").create({
-        email,
-        password,
-        passwordConfirm: password,
-        name,
-      });
+      await $api.register(email, password, name);
       return await login(email, password);
     } finally {
       isLoading.value = false;
@@ -45,7 +41,7 @@ export function useAuth() {
   }
 
   function logout() {
-    $pb.authStore.clear();
+    $api.logout();
     authUser.value = null;
     isAuthenticated.value = false;
     localStorage.removeItem("active_store_id");
@@ -53,11 +49,15 @@ export function useAuth() {
   }
 
   async function refreshAuth() {
-    if (!$pb.authStore.isValid) return;
+    if (!$api.token) return;
     try {
-      const result = await $pb.collection("users").authRefresh();
-      authUser.value = result.record;
-      isAuthenticated.value = true;
+      const result = await $api.refreshAuth();
+      if (result?.user) {
+        authUser.value = result.user;
+        isAuthenticated.value = true;
+      } else {
+        logout();
+      }
     } catch {
       logout();
     }

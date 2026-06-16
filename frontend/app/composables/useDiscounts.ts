@@ -3,7 +3,7 @@ import { addToSyncQueue } from "~/lib/sync/queue";
 import type { Discount } from "~/lib/types";
 
 export function useDiscounts() {
-  const { $pb } = useNuxtApp();
+  const { $api } = useNuxtApp();
   const { activeStoreId } = useStore();
   const { isOnline } = useOnlineStatus();
 
@@ -15,11 +15,10 @@ export function useDiscounts() {
     isLoading.value = true;
     try {
       if (isOnline.value) {
-        const records = await $pb.collection("discounts").getFullList({
-          filter: `store = "${activeStoreId.value}"`,
-          sort: "-created",
-        });
-        discounts.value = records as unknown as Discount[];
+        const records = await $api.send<Discount[]>(
+          `/stores/${activeStoreId.value}/discounts`,
+        );
+        discounts.value = records;
         await db.discounts.bulkPut(records);
       } else {
         const local = await db.discounts
@@ -65,30 +64,36 @@ export function useDiscounts() {
     const discountData = { ...data, store: activeStoreId.value };
 
     if (isOnline.value) {
-      const record = await $pb.collection("discounts").create(discountData);
+      const record = await $api.send<Discount>(
+        `/stores/${activeStoreId.value}/discounts`,
+        { method: "POST", body: discountData },
+      );
       await db.discounts.put(record);
       await fetchDiscounts();
       return record;
-    } else {
-      const tempId = `temp_${Date.now()}`;
-      const now = new Date().toISOString();
-      const localRecord = { ...discountData, id: tempId, created: now, updated: now };
-      await db.discounts.put(localRecord);
-      await addToSyncQueue({
-        collection: "discounts",
-        action: "create",
-        record_id: tempId,
-        data: discountData,
-        store: activeStoreId.value,
-      });
-      await fetchDiscounts();
-      return localRecord;
     }
+
+    const tempId = `temp_${Date.now()}`;
+    const now = new Date().toISOString();
+    const localRecord = { ...discountData, id: tempId, created: now, updated: now };
+    await db.discounts.put(localRecord as Discount);
+    await addToSyncQueue({
+      collection: "discounts",
+      action: "create",
+      record_id: tempId,
+      data: discountData,
+      store: activeStoreId.value,
+    });
+    await fetchDiscounts();
+    return localRecord;
   }
 
   async function updateDiscount(id: string, data: Partial<Discount>) {
     if (isOnline.value) {
-      const record = await $pb.collection("discounts").update(id, data);
+      const record = await $api.send<Discount>(
+        `/stores/${activeStoreId.value}/discounts/${id}`,
+        { method: "PATCH", body: data },
+      );
       await db.discounts.put(record);
     } else {
       await db.discounts.update(id, data);
@@ -105,7 +110,9 @@ export function useDiscounts() {
 
   async function deleteDiscount(id: string) {
     if (isOnline.value) {
-      await $pb.collection("discounts").delete(id);
+      await $api.send(`/stores/${activeStoreId.value}/discounts/${id}`, {
+        method: "DELETE",
+      });
       await db.discounts.delete(id);
     } else {
       await db.discounts.delete(id);

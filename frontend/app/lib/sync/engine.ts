@@ -1,4 +1,4 @@
-import type PocketBase from "pocketbase";
+import type { ApiClient } from "~/lib/api/client";
 import { db } from "../db";
 import {
   blobCacheId,
@@ -17,49 +17,49 @@ import {
 } from "./queue";
 
 export class SyncEngine {
-  private pb: PocketBase;
+  private api: ApiClient;
   private storeId: string;
-  private subscriptions: Array<() => void> = [];
   private isSyncing = false;
 
-  constructor(pb: PocketBase, storeId: string) {
-    this.pb = pb;
+  constructor(api: ApiClient, storeId: string) {
+    this.api = api;
     this.storeId = storeId;
   }
 
-  async pullCollection(collectionName: string) {
-    try {
-      const records = await this.pb.collection(collectionName).getFullList({
-        filter: collectionName === "stores" ? "" : `store = "${this.storeId}"`,
-        sort: "-updated",
-      });
-
-      const table = this.getTable(collectionName);
-      if (!table) return;
-
-      await table.bulkPut(records);
-    } catch (e) {
-      console.warn(`Pull failed for ${collectionName}:`, e);
-    }
-  }
-
-  async pullAll() {
-    const collections = [
-      "categories",
-      "products",
-      "customers",
-      "inventory",
-      "discounts",
-    ];
-
-    await Promise.allSettled(
-      collections.map((c) => this.pullCollection(c)),
+  async pullAll(since?: string) {
+    const delta = await this.api.syncDelta(
+      this.storeId,
+      since ?? "1970-01-01T00:00:00.000Z",
     );
+
+    if (delta.categories?.length) {
+      await db.categories.bulkPut(delta.categories as never[]);
+    }
+    if (delta.products?.length) {
+      await db.products.bulkPut(delta.products as never[]);
+    }
+    if (delta.customers?.length) {
+      await db.customers.bulkPut(delta.customers as never[]);
+    }
+    if (delta.inventory?.length) {
+      await db.inventory.bulkPut(delta.inventory as never[]);
+    }
+    if (delta.discounts?.length) {
+      await db.discounts.bulkPut(delta.discounts as never[]);
+    }
+    if (delta.orders?.length) {
+      await db.orders.bulkPut(delta.orders as never[]);
+    }
+    if (delta.order_items?.length) {
+      await db.orderItems.bulkPut(delta.order_items as never[]);
+    }
   }
 
   async drainSyncQueue() {
     if (this.isSyncing) return;
     this.isSyncing = true;
+
+    const orderIdMap = new Map<string, string>();
 
     try {
       const pending = await getPendingItems(this.storeId);
@@ -68,40 +68,72 @@ export class SyncEngine {
         try {
           await markInFlight(item.id);
 
+          let record: Record<string, unknown> | undefined;
+
           switch (item.action) {
             case "create": {
-              const record = await this.pb
-                .collection(item.collection)
-                .create(item.data);
+              const payload =
+                item.collection === "order_items" && item.data.order
+                  ? {
+                      ...item.data,
+                      order:
+                        orderIdMap.get(String(item.data.order)) ??
+                        item.data.order,
+                    }
+                  : item.data;
+
+              record = (await this.api.collectionCreate(
+                this.storeId,
+                item.collection,
+                payload,
+              )) as Record<string, unknown>;
+
+              if (item.collection === "orders" && item.record_id.startsWith("temp_")) {
+                orderIdMap.set(item.record_id, String(record.id));
+              }
+
               if (item.record_id.startsWith("temp_")) {
                 const table = this.getTable(item.collection);
                 if (table) {
                   await table.delete(item.record_id);
-                  await table.put(record);
+                  await table.put(record as never);
                 }
                 await remapFileQueueRecordId(
                   item.collection,
                   item.record_id,
-                  record.id,
+                  String(record.id),
                 );
               }
               break;
             }
             case "update":
-              await this.pb
-                .collection(item.collection)
-                .update(item.record_id, item.data);
+              record = (await this.api.collectionUpdate(
+                this.storeId,
+                item.collection,
+                item.record_id,
+                item.data,
+              )) as Record<string, unknown>;
+              {
+                const table = this.getTable(item.collection);
+                if (table) await table.put(record as never);
+              }
               break;
             case "delete":
-              await this.pb
-                .collection(item.collection)
-                .delete(item.record_id);
+              await this.api.collectionDelete(
+                this.storeId,
+                item.collection,
+                item.record_id,
+              );
+              {
+                const table = this.getTable(item.collection);
+                if (table) await table.delete(item.record_id);
+              }
               break;
           }
 
           await markSynced(item.id);
-        } catch (e: any) {
-          const msg = e?.message || "Unknown sync error";
+        } catch (e: unknown) {
+          const msg = e instanceof Error ? e.message : "Unknown sync error";
           await markError(item.id, msg);
         }
       }
@@ -121,7 +153,8 @@ export class SyncEngine {
 
         const form = new FormData();
         if (item.remove) {
-          form.append(item.field, "");
+          form.append("image", "");
+          form.append("remove", "true");
         } else {
           const blobRecord = await db.fileBlobs.get(item.blob_id);
           if (!blobRecord) {
@@ -131,23 +164,25 @@ export class SyncEngine {
           const file = new File([blobRecord.blob], "upload", {
             type: blobRecord.mime_type,
           });
-          form.append(item.field, file);
+          form.append("image", file);
         }
 
-        const record = await this.pb
-          .collection(item.collection)
-          .update(item.record_id, form);
+        const record = (await this.api.uploadProductImage(
+          this.storeId,
+          item.record_id,
+          form,
+        )) as Record<string, unknown>;
 
         const table = this.getTable(item.collection);
-        if (table) await table.put(record);
+        if (table) await table.put(record as never);
 
         if (item.blob_id && !item.remove) {
           await db.fileBlobs.delete(item.blob_id);
         }
 
         await markFileSynced(item.id!);
-      } catch (e: any) {
-        const msg = e?.message || "Unknown file sync error";
+      } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : "Unknown file sync error";
         await markFileError(item.id!, msg);
       }
     }
@@ -167,7 +202,7 @@ export class SyncEngine {
       if (existing) continue;
 
       try {
-        const url = this.pb.files.getUrl(product, product.image);
+        const url = this.api.getFileUrl(product.image);
         const res = await fetch(url);
         if (!res.ok) continue;
 
@@ -186,67 +221,32 @@ export class SyncEngine {
     }
   }
 
-  subscribeToCollection(collectionName: string) {
-    this.pb.collection(collectionName).subscribe("*", async (e) => {
-      const table = this.getTable(collectionName);
-      if (!table) return;
-
-      if (e.record.store && e.record.store !== this.storeId) return;
-
-      switch (e.action) {
-        case "create":
-        case "update":
-          await table.put(e.record);
-          break;
-        case "delete":
-          await table.delete(e.record.id);
-          break;
-      }
-    });
-
-    this.subscriptions.push(() => {
-      this.pb.collection(collectionName).unsubscribe("*");
-    });
-  }
-
   subscribeAll() {
-    const collections = [
-      "categories",
-      "products",
-      "customers",
-      "orders",
-      "order_items",
-      "inventory",
-      "inventory_transactions",
-      "discounts",
-    ];
-
-    for (const c of collections) {
-      this.subscribeToCollection(c);
-    }
+    // Realtime disabled — pull on reconnect only
   }
 
   unsubscribeAll() {
-    for (const unsub of this.subscriptions) {
-      try {
-        unsub();
-      } catch {
-        // ignore
-      }
-    }
-    this.subscriptions = [];
+    // no-op
   }
 
   private getTable(collectionName: string) {
-    const map: Record<string, any> = {
-      categories: db.categories,
-      products: db.products,
-      customers: db.customers,
-      orders: db.orders,
-      order_items: db.orderItems,
-      inventory: db.inventory,
-      discounts: db.discounts,
-    };
-    return map[collectionName] ?? null;
+    switch (collectionName) {
+      case "categories":
+        return db.categories;
+      case "products":
+        return db.products;
+      case "customers":
+        return db.customers;
+      case "orders":
+        return db.orders;
+      case "order_items":
+        return db.orderItems;
+      case "inventory":
+        return db.inventory;
+      case "discounts":
+        return db.discounts;
+      default:
+        return null;
+    }
   }
 }

@@ -1,0 +1,35 @@
+---
+description: Backend API schema and authorization conventions
+globs: "backend/**/*.ts"
+---
+
+# API Schema Conventions
+
+## Database
+- Location: `backend/data/pos.db` (SQLite via Drizzle ORM)
+- Schema: `backend/src/db/schema.ts`
+- Migrations: `backend/src/db/migrate.ts` (runs on API startup)
+
+## Multi-Tenant Authorization
+Every store-scoped table must enforce membership via middleware:
+
+- `requireStoreMember` — any member can read/create
+- `requireManager` — manager or owner for updates
+- `requireOwner` — owner only (store settings, team management)
+
+## Table Rules
+- Immutable records: `orders`, `order_items`, `inventory_transactions` — no PATCH/DELETE routes
+- Unique constraints: `(store, order_number)`, `(store, product)` for inventory, `(store, user)` for store_members
+- All business tables have `store` FK to `stores`
+
+## Adding a New Entity
+1. Add Drizzle table in `backend/src/db/schema.ts` + migration in `migrate.ts`
+2. Add Hono routes under `/api/stores/:storeId/...`
+3. Add Dexie table + indexes in `frontend/app/lib/db.ts`
+4. Add TypeScript interface in `frontend/app/lib/types/index.ts`
+5. Register in sync engine's `getTable()` map and delta sync endpoint
+
+## File Uploads
+- Stored at `backend/data/uploads/{collection}/{recordId}/{field}.{ext}`
+- DB stores relative path (e.g. `products/abc123/image.webp`)
+- Served by Nginx at `/uploads/` (not through API)

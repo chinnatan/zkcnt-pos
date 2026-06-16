@@ -72,7 +72,7 @@ export async function addToFileUploadQueue(
     retry_count: 0,
     created_at: new Date().toISOString(),
     error_message: "",
-  });
+  } as FileUploadQueueItem);
 }
 
 export async function getPendingFileUploads(

@@ -13,9 +13,7 @@ export type ProductInput = Partial<Product> & {
   removeImage?: boolean;
 };
 
-function buildProductBody(
-  data: ProductInput,
-): FormData | Record<string, unknown> {
+function buildProductBody(data: ProductInput): Record<string, unknown> | FormData {
   const { imageFile, removeImage, ...rest } = data;
   if (!imageFile && !removeImage) return rest;
 
@@ -73,7 +71,7 @@ async function queueOfflineImageUpload(
 }
 
 export function useProducts() {
-  const { $pb } = useNuxtApp();
+  const { $api } = useNuxtApp();
   const { activeStoreId } = useStore();
   const { isOnline } = useOnlineStatus();
 
@@ -86,11 +84,10 @@ export function useProducts() {
     isLoading.value = true;
     try {
       if (isOnline.value) {
-        const records = await $pb.collection("products").getFullList({
-          filter: `store = "${activeStoreId.value}"`,
-          sort: "name",
-        });
-        products.value = records as unknown as Product[];
+        const records = await $api.send<Product[]>(
+          `/stores/${activeStoreId.value}/products`,
+        );
+        products.value = records;
         await db.products.bulkPut(records);
       } else {
         const local = await db.products
@@ -114,11 +111,10 @@ export function useProducts() {
     if (!activeStoreId.value) return;
     try {
       if (isOnline.value) {
-        const records = await $pb.collection("categories").getFullList({
-          filter: `store = "${activeStoreId.value}"`,
-          sort: "sort_order,name",
-        });
-        categories.value = records as unknown as Category[];
+        const records = await $api.send<Category[]>(
+          `/stores/${activeStoreId.value}/categories`,
+        );
+        categories.value = records;
         await db.categories.bulkPut(records);
       } else {
         const local = await db.categories
@@ -139,12 +135,15 @@ export function useProducts() {
   async function createProduct(data: ProductInput) {
     if (!activeStoreId.value) throw new Error("No active store");
 
-    const { imageFile, removeImage, ...fields } = data;
+    const { imageFile, ...fields } = data;
     const productData = { ...fields, store: activeStoreId.value };
     const body = buildProductBody(data);
 
     if (isOnline.value) {
-      const record = await $pb.collection("products").create(body);
+      const record = await $api.send<Product>(
+        `/stores/${activeStoreId.value}/products`,
+        { method: "POST", body },
+      );
       await db.products.put(record);
       await fetchProducts();
       return record;
@@ -159,7 +158,7 @@ export function useProducts() {
         created: new Date().toISOString(),
         updated: new Date().toISOString(),
       };
-      await db.products.put(localRecord);
+      await db.products.put(localRecord as Product);
       await storeFileBlob(
         "products",
         tempId,
@@ -194,7 +193,7 @@ export function useProducts() {
       created: new Date().toISOString(),
       updated: new Date().toISOString(),
     };
-    await db.products.put(localRecord);
+    await db.products.put(localRecord as Product);
     await addToSyncQueue({
       collection: "products",
       action: "create",
@@ -211,7 +210,10 @@ export function useProducts() {
     const body = buildProductBody(data);
 
     if (isOnline.value) {
-      const record = await $pb.collection("products").update(id, body);
+      const record = await $api.send<Product>(
+        `/stores/${activeStoreId.value}/products/${id}`,
+        { method: "PATCH", body },
+      );
       await db.products.put(record);
       await fetchProducts();
       return record;
@@ -260,7 +262,9 @@ export function useProducts() {
 
   async function deleteProduct(id: string) {
     if (isOnline.value) {
-      await $pb.collection("products").delete(id);
+      await $api.send(`/stores/${activeStoreId.value}/products/${id}`, {
+        method: "DELETE",
+      });
       await db.products.delete(id);
     } else {
       await db.products.delete(id);
@@ -282,29 +286,40 @@ export function useProducts() {
     const catData = { ...data, store: activeStoreId.value };
 
     if (isOnline.value) {
-      const record = await $pb.collection("categories").create(catData);
+      const record = await $api.send<Category>(
+        `/stores/${activeStoreId.value}/categories`,
+        { method: "POST", body: catData },
+      );
       await db.categories.put(record);
       await fetchCategories();
       return record;
-    } else {
-      const tempId = `temp_${Date.now()}`;
-      const localRecord = { ...catData, id: tempId, created: new Date().toISOString(), updated: new Date().toISOString() };
-      await db.categories.put(localRecord);
-      await addToSyncQueue({
-        collection: "categories",
-        action: "create",
-        record_id: tempId,
-        data: catData,
-        store: activeStoreId.value,
-      });
-      await fetchCategories();
-      return localRecord;
     }
+
+    const tempId = `temp_${Date.now()}`;
+    const localRecord = {
+      ...catData,
+      id: tempId,
+      created: new Date().toISOString(),
+      updated: new Date().toISOString(),
+    };
+    await db.categories.put(localRecord as Category);
+    await addToSyncQueue({
+      collection: "categories",
+      action: "create",
+      record_id: tempId,
+      data: catData,
+      store: activeStoreId.value,
+    });
+    await fetchCategories();
+    return localRecord;
   }
 
   async function updateCategory(id: string, data: Partial<Category>) {
     if (isOnline.value) {
-      const record = await $pb.collection("categories").update(id, data);
+      const record = await $api.send<Category>(
+        `/stores/${activeStoreId.value}/categories/${id}`,
+        { method: "PATCH", body: data },
+      );
       await db.categories.put(record);
     } else {
       await db.categories.update(id, data);
@@ -321,7 +336,9 @@ export function useProducts() {
 
   async function deleteCategory(id: string) {
     if (isOnline.value) {
-      await $pb.collection("categories").delete(id);
+      await $api.send(`/stores/${activeStoreId.value}/categories/${id}`, {
+        method: "DELETE",
+      });
       await db.categories.delete(id);
     } else {
       await db.categories.delete(id);

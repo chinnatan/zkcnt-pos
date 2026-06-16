@@ -29,17 +29,18 @@ brew install go-task/tap/go-task oven-sh/bun/bun
 
 | User intent | Command | Notes |
 |-------------|---------|-------|
-| Daily dev / hot reload | `task local` | PocketBase in Docker, Bun on host |
+| Daily dev / hot reload | `task local` | Backend in Docker, Bun on host |
 | No Bun on machine | `task dev` | Everything in Docker |
 | Production test | `task prod` | Detached, Nginx on port 80 |
-| Frontend only | `task local:frontend` | Requires PocketBase already running |
-| Backend only | `task local:backend` | PocketBase container only |
+| Frontend only | `task local:frontend` | Requires backend already running |
+| Backend only | `task local:backend` | Backend container only |
+| Browse SQLite DB | `task db-admin` | adminer-node at :8080 (dev only) |
 
 First time:
 
 ```bash
 task env      # create .env from .env.example
-task local    # installs deps + starts PocketBase + frontend
+task local    # installs deps + starts backend + frontend
 ```
 
 ## Step 3: Verify Services
@@ -47,36 +48,37 @@ task local    # installs deps + starts PocketBase + frontend
 | Service | URL |
 |---------|-----|
 | Frontend | http://localhost:3000 |
-| PocketBase API | http://localhost:8090 |
-| PocketBase Admin | http://localhost:8090/_/ |
+| Backend API | http://localhost:3001/api/health |
+| DB Admin (optional) | http://localhost:8080 |
 | Production (Nginx) | http://localhost |
 
 ## Step 4: Stop Services
 
 | Mode | Stop command |
 |------|-------------|
-| Local (PocketBase) | `task local:stop` |
+| Local (backend) | `task local:stop` |
 | Dev stack | `task dev:down` |
 | Prod stack | `task prod:down` |
+| DB admin | `task db-admin:stop` |
 
 ## Troubleshooting
 
-### Port 3000 or 8090 already in use
+### Port 3000 or 3001 already in use
 
 ```bash
 lsof -i :3000
-lsof -i :8090
+lsof -i :3001
 # Kill the process or stop conflicting containers:
 task local:stop
 task dev:down
 ```
 
-### PocketBase not ready / frontend can't connect
+### Backend not ready / frontend can't connect
 
-1. Ensure PocketBase container is running: `docker ps | grep pocketbase`
+1. Ensure backend container is running: `docker ps | grep backend`
 2. Start it: `task local:backend`
-3. Wait for http://localhost:8090 to respond before opening frontend
-4. Verify env: `NUXT_PUBLIC_POCKETBASE_URL=http://localhost:8090`
+3. Wait for http://localhost:3001/api/health to respond before opening frontend
+4. Verify env: `NUXT_PUBLIC_API_URL=http://localhost:3001`
 
 ### Bun install fails or postinstall blocked
 
@@ -89,21 +91,15 @@ bun install
 ### Docker build fails
 
 ```bash
-docker compose -f docker-compose.dev.yml build --no-cache pocketbase
+docker compose -f docker-compose.dev.yml build --no-cache backend
 ```
-
-### First-time PocketBase setup
-
-1. Open http://localhost:8090/_/
-2. Create superuser (first visit only)
-3. Migrations run automatically from `backend/pb_migrations/`
 
 ## Logs
 
 ```bash
 task dev:logs    # dev stack
 task prod:logs   # prod stack
-docker compose -f docker-compose.dev.yml logs pocketbase  # PocketBase only
+docker compose -f docker-compose.dev.yml logs backend  # Backend only
 ```
 
 ## Do NOT

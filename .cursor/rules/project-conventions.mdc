@@ -8,7 +8,7 @@ alwaysApply: true
 ## Tech Stack
 - Frontend: Nuxt 3 (Vue 3) with Tailwind CSS v4, SSR disabled (SPA/PWA)
 - Local DB: Dexie.js (IndexedDB wrapper)
-- Backend: PocketBase v0.38 (SQLite-backed, single binary)
+- Backend: Bun + Hono + Drizzle ORM + SQLite (`backend/data/pos.db`)
 - Containerization: Docker with separate dev/prod compose files
 - Task Runner: go-task (`Taskfile.yml` at project root)
 - Package Manager: Bun (`bun.lock`, not npm)
@@ -16,8 +16,9 @@ alwaysApply: true
 ## Development Workflow
 - Use `task` commands to run the project — prefer `task local` for daily dev
 - Frontend: always use **Bun** (`bun install`, `bun run dev`, `bun run build`) — never npm
-- Local mode: PocketBase in Docker + Bun frontend on host (`task local`)
+- Local mode: Backend API in Docker + Bun frontend on host (`task local`)
 - Full Docker dev: `task dev` | Production: `task prod`
+- SQLite admin UI (dev only): `task db-admin` → http://localhost:8080
 - When adding a new Docker Compose service, update `Taskfile.yml` accordingly
 - Lockfile: commit `bun.lock`, do not commit `package-lock.json`
 
@@ -26,14 +27,14 @@ alwaysApply: true
 ### Multi-Tenant Pattern
 - Every business data collection MUST have a `store` relation field
 - All queries MUST filter by the active store ID
-- PocketBase API rules MUST verify store membership via `store_members`
+- Backend middleware MUST verify store membership via `store_members`
 - Dexie compound indexes: `[store+field]` for store-scoped queries
 
 ### Offline-First Pattern
 - All reads go through Dexie.js (local cache) first
-- Online writes: PocketBase first, then sync to Dexie
+- Online writes: API first, then sync to Dexie
 - Offline writes: write to Dexie + add to `syncQueue`
-- On reconnect: drain sync queue, then pull remote changes
+- On reconnect: drain sync queue, then pull remote changes via delta sync
 - Conflict resolution: last-write-wins using `updated` timestamp
 
 ## Directory Structure (Nuxt 4 compat mode)
@@ -45,12 +46,16 @@ frontend/
 │   ├── composables/        # use*.ts composables (auto-imported)
 │   ├── layouts/            # Layout templates
 │   ├── lib/                # Non-auto-imported utilities
+│   │   ├── api/            # ApiClient
 │   │   ├── db.ts           # Dexie database
 │   │   ├── types/          # TypeScript interfaces
 │   │   └── sync/           # Sync engine
 │   ├── middleware/          # Route middleware
 │   ├── pages/              # File-based routing
-│   └── plugins/            # Nuxt plugins
+│   └── plugins/            # API & Dexie plugins
+backend/
+├── src/                    # Hono API routes, Drizzle schema
+└── data/                   # pos.db + uploads (gitignored)
 ```
 
 ## Naming Conventions
@@ -58,14 +63,14 @@ frontend/
 - Components: PascalCase, grouped by feature → `components/pos/`, `components/product/`
 - Pages: lowercase, index.vue for list pages → `pages/products/index.vue`
 - Types: PascalCase interfaces → `Product`, `Order`, `CartItem`
-- PocketBase collections: snake_case → `store_members`, `order_items`
+- API tables/collections: snake_case → `store_members`, `order_items`
 
 ## Composable Pattern
 Every data composable follows this pattern:
 1. Check `isOnline` from `useOnlineStatus()`
-2. If online: call PocketBase SDK, cache result in Dexie
+2. If online: call `$api` (ApiClient), cache result in Dexie
 3. If offline or error: read from Dexie
-4. For mutations: if online write to PB first, if offline add to syncQueue
+4. For mutations: if online write to API first, if offline add to syncQueue
 5. Always include the `store` field from `useStore().activeStoreId`
 
 ## Currency

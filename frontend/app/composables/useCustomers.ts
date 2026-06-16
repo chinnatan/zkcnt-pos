@@ -3,7 +3,7 @@ import { addToSyncQueue } from "~/lib/sync/queue";
 import type { Customer } from "~/lib/types";
 
 export function useCustomers() {
-  const { $pb } = useNuxtApp();
+  const { $api } = useNuxtApp();
   const { activeStoreId } = useStore();
   const { isOnline } = useOnlineStatus();
 
@@ -15,11 +15,10 @@ export function useCustomers() {
     isLoading.value = true;
     try {
       if (isOnline.value) {
-        const records = await $pb.collection("customers").getFullList({
-          filter: `store = "${activeStoreId.value}"`,
-          sort: "name",
-        });
-        customers.value = records as unknown as Customer[];
+        const records = await $api.send<Customer[]>(
+          `/stores/${activeStoreId.value}/customers`,
+        );
+        customers.value = records;
         await db.customers.bulkPut(records);
       } else {
         const local = await db.customers
@@ -45,7 +44,10 @@ export function useCustomers() {
     const customerData = { ...data, store: activeStoreId.value, total_spent: 0, visit_count: 0 };
 
     if (isOnline.value) {
-      const record = await $pb.collection("customers").create(customerData);
+      const record = await $api.send<Customer>(
+        `/stores/${activeStoreId.value}/customers`,
+        { method: "POST", body: customerData },
+      );
       await db.customers.put(record);
       await fetchCustomers();
       return record;
@@ -53,7 +55,7 @@ export function useCustomers() {
       const tempId = `temp_${Date.now()}`;
       const now = new Date().toISOString();
       const localRecord = { ...customerData, id: tempId, created: now, updated: now };
-      await db.customers.put(localRecord);
+      await db.customers.put(localRecord as Customer);
       await addToSyncQueue({
         collection: "customers",
         action: "create",
@@ -68,7 +70,10 @@ export function useCustomers() {
 
   async function updateCustomer(id: string, data: Partial<Customer>) {
     if (isOnline.value) {
-      const record = await $pb.collection("customers").update(id, data);
+      const record = await $api.send<Customer>(
+        `/stores/${activeStoreId.value}/customers/${id}`,
+        { method: "PATCH", body: data },
+      );
       await db.customers.put(record);
     } else {
       await db.customers.update(id, { ...data, updated: new Date().toISOString() });
@@ -85,7 +90,9 @@ export function useCustomers() {
 
   async function deleteCustomer(id: string) {
     if (isOnline.value) {
-      await $pb.collection("customers").delete(id);
+      await $api.send(`/stores/${activeStoreId.value}/customers/${id}`, {
+        method: "DELETE",
+      });
       await db.customers.delete(id);
     } else {
       await db.customers.delete(id);

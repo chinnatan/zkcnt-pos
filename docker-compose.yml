@@ -1,26 +1,32 @@
 services:
-  pocketbase:
+  backend:
     build:
       context: ./backend
-      args:
-        PB_VERSION: "0.38.1"
     volumes:
-      - pb_data:/pb/pb_data
+      - backend_data:/data
+    environment:
+      - DATA_DIR=/data
+      - JWT_SECRET=${JWT_SECRET:-dev-secret-change-in-production}
+      - APP_URL=${NUXT_PUBLIC_APP_URL:-http://localhost:3000}
     networks:
       - pos-network
 
   frontend:
     build:
       context: ./frontend
+      args:
+        NUXT_PUBLIC_API_URL: ${NUXT_PUBLIC_API_URL:-http://localhost:3001}
+        NUXT_PUBLIC_APP_URL: ${NUXT_PUBLIC_APP_URL:-http://localhost:3000}
     environment:
-      - NUXT_PUBLIC_POCKETBASE_URL=${POCKETBASE_URL:-http://localhost:8090}
+      - NUXT_PUBLIC_API_URL=${NUXT_PUBLIC_API_URL:-http://localhost:3001}
+      - NUXT_PUBLIC_APP_URL=${NUXT_PUBLIC_APP_URL:-http://localhost:3000}
     depends_on:
-      - pocketbase
+      - backend
     networks:
       - pos-network
 
 volumes:
-  pb_data:
+  backend_data:
 
 networks:
   pos-network:

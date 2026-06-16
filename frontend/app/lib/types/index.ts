@@ -1,11 +1,19 @@
-// ─── PocketBase Base Record ──────────────────────────────────────────────────
+// ─── Base Record ───────────────────────────────────────────────────────────────
 
 export interface BaseRecord {
   id: string;
   created: string;
   updated: string;
-  collectionId: string;
-  collectionName: string;
+  collectionId?: string;
+  collectionName?: string;
+}
+
+export interface AuthUser {
+  id: string;
+  email: string;
+  name: string;
+  created: string;
+  updated: string;
 }
 
 // ─── Store ───────────────────────────────────────────────────────────────────

@@ -10,7 +10,7 @@ export async function addToSyncQueue(
     retry_count: 0,
     created_at: new Date().toISOString(),
     error_message: "",
-  });
+  } as SyncQueueItem);
 }
 
 export async function getPendingItems(storeId?: string): Promise<SyncQueueItem[]> {

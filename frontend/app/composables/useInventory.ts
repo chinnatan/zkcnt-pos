@@ -3,7 +3,7 @@ import { addToSyncQueue } from "~/lib/sync/queue";
 import type { Inventory, InventoryTransaction } from "~/lib/types";
 
 export function useInventory() {
-  const { $pb } = useNuxtApp();
+  const { $api } = useNuxtApp();
   const { activeStoreId } = useStore();
   const { isOnline } = useOnlineStatus();
   const { authUser } = useAuth();
@@ -16,12 +16,13 @@ export function useInventory() {
     isLoading.value = true;
     try {
       if (isOnline.value) {
-        const records = await $pb.collection("inventory").getFullList({
-          filter: `store = "${activeStoreId.value}"`,
-          expand: "product",
-        });
-        inventoryItems.value = records as unknown as Inventory[];
-        await db.inventory.bulkPut(records.map((r) => ({ ...r, expand: undefined })));
+        const records = await $api.send<Inventory[]>(
+          `/stores/${activeStoreId.value}/inventory?expand=product`,
+        );
+        inventoryItems.value = records;
+        await db.inventory.bulkPut(
+          records.map((r) => ({ ...r, expand: undefined })) as Inventory[],
+        );
       } else {
         const local = await db.inventory
           .where("store")
@@ -44,13 +45,14 @@ export function useInventory() {
     productId: string,
     type: "stock_in" | "stock_out" | "adjustment",
     quantity: number,
-    note?: string
+    note?: string,
   ) {
     if (!activeStoreId.value || !authUser.value) return;
 
     const current = inventoryItems.value.find((i) => i.product === productId);
     const beforeQty = current?.quantity ?? 0;
-    const afterQty = type === "stock_out" ? beforeQty - quantity : beforeQty + quantity;
+    const afterQty =
+      type === "stock_out" ? beforeQty - quantity : beforeQty + quantity;
 
     const txData: Partial<InventoryTransaction> = {
       store: activeStoreId.value,
@@ -65,18 +67,10 @@ export function useInventory() {
     };
 
     if (isOnline.value) {
-      await $pb.collection("inventory_transactions").create(txData);
-
-      if (current) {
-        await $pb.collection("inventory").update(current.id, { quantity: afterQty });
-      } else {
-        await $pb.collection("inventory").create({
-          store: activeStoreId.value,
-          product: productId,
-          quantity: afterQty,
-          low_stock_threshold: 10,
-        });
-      }
+      await $api.send(
+        `/stores/${activeStoreId.value}/inventory-transactions`,
+        { method: "POST", body: txData },
+      );
     } else {
       const txId = `temp_${Date.now()}`;
       const now = new Date().toISOString();
@@ -108,7 +102,7 @@ export function useInventory() {
           created: now,
           updated: now,
         };
-        await db.inventory.put(invData);
+        await db.inventory.put(invData as Inventory);
         await addToSyncQueue({
           collection: "inventory",
           action: "create",
@@ -123,7 +117,7 @@ export function useInventory() {
   }
 
   const lowStockItems = computed(() =>
-    inventoryItems.value.filter((i) => i.quantity <= i.low_stock_threshold)
+    inventoryItems.value.filter((i) => i.quantity <= i.low_stock_threshold),
   );
 
   return {

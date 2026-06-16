@@ -146,13 +146,14 @@ function openEditProduct(product: Product) {
 }
 
 async function handleSaveProduct() {
-  if (imageError.value) return;
+  if (imageError.value || !activeStoreId.value) return;
 
   isSavingProduct.value = true;
   try {
+    const storeId = activeStoreId.value;
     const payload = {
       ...productForm.value,
-      store: activeStoreId.value,
+      store: storeId,
       imageFile: imageFile.value,
       removeImage: removeImage.value,
     };
@@ -200,10 +201,12 @@ function openEditCategory(category: Category) {
 }
 
 async function handleSaveCategory() {
+  if (!activeStoreId.value) return;
+  const storeId = activeStoreId.value;
   if (editingCategory.value) {
-    await updateCategory(editingCategory.value.id, { ...categoryForm.value, store: activeStoreId.value });
+    await updateCategory(editingCategory.value.id, { ...categoryForm.value, store: storeId });
   } else {
-    await createCategory({ ...categoryForm.value, store: activeStoreId.value });
+    await createCategory({ ...categoryForm.value, store: storeId });
   }
   showCategoryModal.value = false;
 }

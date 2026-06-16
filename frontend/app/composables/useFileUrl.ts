@@ -1,13 +1,13 @@
 export function useFileUrl() {
-  const { $pb } = useNuxtApp();
+  const { $api } = useNuxtApp();
 
   function getFileUrl(
-    record: { id: string; collectionId?: string },
-    filename: string | undefined | null,
+    record: { id: string; image?: string; logo?: string },
+    filename?: string,
     options?: { thumb?: string },
-  ): string | null {
-    if (!filename) return null;
-    return $pb.files.getUrl(record, filename, options);
+  ): string {
+    const path = filename ?? record.image ?? record.logo ?? "";
+    return $api.getFileUrl(path, options?.thumb);
   }
 
   return { getFileUrl };

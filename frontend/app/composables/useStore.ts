@@ -7,14 +7,6 @@ const userMemberships = ref<StoreMember[]>([]);
 const isLoadingStores = ref(false);
 const storesFetchError = ref<string | null>(null);
 
-function relationId(value: unknown): string {
-  if (typeof value === "string") return value;
-  if (value && typeof value === "object" && "id" in value) {
-    return String((value as { id: string }).id);
-  }
-  return "";
-}
-
 function toStoreRecord(record: Record<string, unknown>): Store {
   return {
     id: String(record.id),
@@ -35,7 +27,7 @@ function toStoreRecord(record: Record<string, unknown>): Store {
       receipt_footer: "",
       member_invite_mode: "direct",
     },
-    owner: relationId(record.owner),
+    owner: String(record.owner ?? ""),
     is_active: record.is_active !== false,
   };
 }
@@ -47,8 +39,8 @@ function toStoreMemberRecord(record: Record<string, unknown>): StoreMember {
     updated: String(record.updated ?? ""),
     collectionId: String(record.collectionId ?? ""),
     collectionName: String(record.collectionName ?? "store_members"),
-    store: relationId(record.store),
-    user: relationId(record.user),
+    store: String(record.store ?? ""),
+    user: String(record.user ?? ""),
     role: record.role as StoreMember["role"],
     is_active: record.is_active !== false,
   };
@@ -64,7 +56,7 @@ async function cacheStores(stores: Store[], members: StoreMember[]) {
 }
 
 export function useStore() {
-  const { $pb } = useNuxtApp();
+  const { $api } = useNuxtApp();
   const { authUser, initAuth } = useAuth();
 
   const activeStoreId = computed(() => activeStore.value?.id ?? null);
@@ -72,7 +64,7 @@ export function useStore() {
   const currentRole = computed(() => {
     if (!activeStore.value || !authUser.value) return null;
     const membership = userMemberships.value.find(
-      (m) => m.store === activeStore.value!.id && m.user === authUser.value!.id
+      (m) => m.store === activeStore.value!.id && m.user === authUser.value!.id,
     );
     return membership?.role ?? null;
   });
@@ -82,7 +74,8 @@ export function useStore() {
 
   async function applyStoreSelection() {
     if (userStores.value.length === 1 && !activeStore.value) {
-      await setActiveStore(userStores.value[0]);
+      const store = userStores.value[0];
+      if (store) await setActiveStore(store);
     }
 
     const savedId = localStorage.getItem("active_store_id");
@@ -106,40 +99,16 @@ export function useStore() {
     await applyStoreSelection();
   }
 
-  async function backfillOwnedStores(userId: string) {
-    const ownedStores = await $pb.collection("stores").getFullList({
-      filter: `owner = "${userId}"`,
-    });
-
-    for (const store of ownedStores) {
-      try {
-        await $pb.collection("store_members").create({
-          store: store.id,
-          user: userId,
-          role: "owner",
-          is_active: true,
-        });
-      } catch {
-        // membership may already exist
-      }
-    }
-
-    return ownedStores.length > 0;
-  }
-
   async function fetchMemberships(userId: string) {
-    const memberships = await $pb.collection("store_members").getFullList({
-      filter: `user = "${userId}"`,
-      expand: "store",
-    });
+    const memberships = await $api.listMemberships();
 
     const members = memberships.map((m) =>
-      toStoreMemberRecord(m as unknown as Record<string, unknown>)
+      toStoreMemberRecord(m as unknown as Record<string, unknown>),
     );
     const stores = memberships
-      .map((m) => m.expand?.store)
+      .map((m) => (m as { expand?: { store?: unknown } }).expand?.store)
       .filter(Boolean)
-      .map((s) => toStoreRecord(s as unknown as Record<string, unknown>))
+      .map((s) => toStoreRecord(s as Record<string, unknown>))
       .filter((s) => s.is_active !== false);
 
     await cacheStores(stores, members);
@@ -158,14 +127,6 @@ export function useStore() {
 
     try {
       await fetchMemberships(authUser.value.id);
-
-      if (userStores.value.length === 0) {
-        const hasOwned = await backfillOwnedStores(authUser.value.id);
-        if (hasOwned) {
-          await fetchMemberships(authUser.value.id);
-        }
-      }
-
       await applyStoreSelection();
     } catch (e: unknown) {
       console.error("fetchUserStores failed:", e);
@@ -190,25 +151,44 @@ export function useStore() {
     localStorage.setItem("active_store_id", store.id);
   }
 
-  async function createStore(data: { name: string; slug: string; address?: string; phone?: string }) {
+  async function createStore(data: {
+    name: string;
+    slug: string;
+    address?: string;
+    phone?: string;
+  }) {
     if (!authUser.value) throw new Error("Not authenticated");
 
-    const store = await $pb.collection("stores").create({
-      ...data,
-      owner: authUser.value.id,
-      is_active: true,
-      settings: { currency: "THB", vat_rate: 7, receipt_header: "", receipt_footer: "", member_invite_mode: "direct" },
-    });
-
-    await $pb.collection("store_members").create({
-      store: store.id,
-      user: authUser.value.id,
-      role: "owner",
-      is_active: true,
+    const store = await $api.send<Record<string, unknown>>("/stores", {
+      method: "POST",
+      body: {
+        ...data,
+        is_active: true,
+        settings: {
+          currency: "THB",
+          vat_rate: 7,
+          receipt_header: "",
+          receipt_footer: "",
+          member_invite_mode: "direct",
+        },
+      },
     });
 
     await fetchUserStores();
-    return store;
+    return toStoreRecord(store);
+  }
+
+  async function updateStore(storeId: string, data: Partial<Store>) {
+    const record = await $api.send<Record<string, unknown>>(
+      `/stores/${storeId}`,
+      { method: "PATCH", body: data },
+    );
+    const updated = toStoreRecord(record);
+    if (activeStore.value?.id === storeId) {
+      await setActiveStore(updated);
+    }
+    await fetchUserStores();
+    return updated;
   }
 
   return {
@@ -224,5 +204,6 @@ export function useStore() {
     fetchUserStores,
     setActiveStore,
     createStore,
+    updateStore,
   };
 }

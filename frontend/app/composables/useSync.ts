@@ -7,22 +7,16 @@ const isSyncing = ref(false);
 const lastSyncAt = ref<string | null>(null);
 
 export function useSync() {
-  const { $pb } = useNuxtApp();
+  const { $api } = useNuxtApp();
   const { activeStoreId } = useStore();
   const { isOnline } = useOnlineStatus();
 
   function initSync() {
     if (!activeStoreId.value) return;
 
-    // Clean up previous instance
-    if (syncEngine) {
-      syncEngine.unsubscribeAll();
-    }
-
-    syncEngine = new SyncEngine($pb, activeStoreId.value);
+    syncEngine = new SyncEngine($api, activeStoreId.value);
 
     if (isOnline.value) {
-      syncEngine.subscribeAll();
       performSync();
     }
   }
@@ -31,11 +25,10 @@ export function useSync() {
     if (!syncEngine || !isOnline.value) return;
     isSyncing.value = true;
     try {
-      // Push local changes first
+      const since = lastSyncAt.value ?? "1970-01-01T00:00:00.000Z";
       await syncEngine.drainSyncQueue();
       await syncEngine.drainFileQueue();
-      // Then pull remote changes
-      await syncEngine.pullAll();
+      await syncEngine.pullAll(since);
       await syncEngine.prefetchProductImages();
       lastSyncAt.value = new Date().toISOString();
     } finally {
@@ -48,26 +41,18 @@ export function useSync() {
     pendingSyncCount.value = await getPendingCount(activeStoreId.value ?? undefined);
   }
 
-  // Watch online status to trigger sync
   watch(isOnline, (online) => {
     if (online && syncEngine) {
-      syncEngine.subscribeAll();
       performSync();
-    } else if (!online && syncEngine) {
-      syncEngine.unsubscribeAll();
     }
   });
 
-  // Watch store change
   watch(activeStoreId, () => {
     initSync();
   });
 
   function cleanup() {
-    if (syncEngine) {
-      syncEngine.unsubscribeAll();
-      syncEngine = null;
-    }
+    syncEngine = null;
   }
 
   return {

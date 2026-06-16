@@ -15,10 +15,12 @@ Always prefer `task` commands over raw docker/bun commands in docs and scripts.
 | Local (hybrid) | `task local` | Daily development — fast hot reload |
 | Dev (full Docker) | `task dev` | When Bun is not installed on host |
 | Prod | `task prod` | Production deployment testing |
+| DB admin | `task db-admin` | Browse SQLite (dev only) |
 
 ### URLs
 - Frontend: http://localhost:3000
-- PocketBase Admin: http://localhost:8090/_/
+- Backend API: http://localhost:3001/api/health
+- DB Admin (optional): http://localhost:8080
 - Production (via Nginx): http://localhost (port 80)
 
 ## Taskfile Conventions
@@ -36,8 +38,8 @@ Always prefer `task` commands over raw docker/bun commands in docs and scripts.
 
 ## Docker Compose Files
 
-- `docker-compose.dev.yml` — development (PocketBase + optional frontend container)
-- `docker-compose.prod.yml` — production (PocketBase + built frontend + Nginx)
+- `docker-compose.dev.yml` — development (backend + optional frontend container + db-admin profile)
+- `docker-compose.prod.yml` — production (backend + built frontend + Nginx)
 - `docker-compose.yml` — base/shared service definitions
 
 ## Documentation

@@ -183,8 +183,7 @@ definePageMeta({ middleware: "auth" });
 
 const { t } = useI18n();
 const { roleLabel } = useLabels();
-const { $pb } = useNuxtApp();
-const { activeStore, activeStoreId, isManager, isOwner } = useStore();
+const { activeStore, activeStoreId, isManager, isOwner, updateStore } = useStore();
 const {
   storeMembers,
   pendingInvites,
@@ -237,7 +236,7 @@ async function saveStoreInfo() {
   if (!activeStoreId.value) return;
   isSaving.value = true;
   try {
-    await $pb.collection("stores").update(activeStoreId.value, storeForm);
+    await updateStore(activeStoreId.value, storeForm);
   } finally {
     isSaving.value = false;
   }
@@ -281,9 +280,14 @@ async function handleAddOrInvite() {
   try {
     const result = await addOrInvite(memberEmail.value, memberRole.value);
 
-    if (memberInviteMode.value === "email" && result && "inviteLink" in result) {
+    if (
+      memberInviteMode.value === "email" &&
+      result &&
+      typeof result === "object" &&
+      "inviteLink" in result
+    ) {
       memberSuccess.value = t("settingsPage.inviteSent");
-      inviteLink.value = result.inviteLink;
+      inviteLink.value = String((result as { inviteLink: string }).inviteLink);
     } else {
       memberSuccess.value = t("settingsPage.memberAdded");
       setTimeout(() => closeMemberModal(), 1200);
