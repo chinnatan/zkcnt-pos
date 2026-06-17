@@ -139,7 +139,11 @@
     "successTitle": "บันทึกเรียบร้อย!",
     "orderNumber": "หมายเลขออเดอร์: {number}",
     "printReceipt": "พิมพ์ใบเสร็จ",
-    "newOrder": "ออเดอร์ใหม่"
+    "newOrder": "ออเดอร์ใหม่",
+    "stockRemaining": "เหลือ {count}",
+    "cannotAddOutOfStock": "สินค้าหมดสต็อก",
+    "cannotAddExceedsStock": "ไม่สามารถเพิ่มได้ สต็อกเหลือ {available} ชิ้น",
+    "insufficientStockCheckout": "ไม่สามารถชำระเงินได้ สินค้า {name} เหลือ {available} แต่ในตะกร้า {requested} ชิ้น"
   },
   "payment": {
     "cash": "เงินสด",

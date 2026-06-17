@@ -139,7 +139,11 @@
     "successTitle": "Order saved!",
     "orderNumber": "Order #: {number}",
     "printReceipt": "Print Receipt",
-    "newOrder": "New Order"
+    "newOrder": "New Order",
+    "stockRemaining": "{count} left",
+    "cannotAddOutOfStock": "Out of stock",
+    "cannotAddExceedsStock": "Cannot add more — only {available} in stock",
+    "insufficientStockCheckout": "Cannot checkout — {name} has {available} in stock but {requested} in cart"
   },
   "payment": {
     "cash": "Cash",

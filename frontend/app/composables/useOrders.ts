@@ -1,7 +1,66 @@
 import { db } from "~/lib/db";
 import { addToSyncQueue } from "~/lib/sync/queue";
 import { generateClientId } from "~/lib/sync/conflict";
-import type { Order, OrderItem } from "~/lib/types";
+import {
+  buildStockMap,
+  validateOrderItems,
+  type StockShortage,
+} from "~/lib/stock";
+import type { Inventory, Order, OrderItem, Product } from "~/lib/types";
+
+export class InsufficientStockError extends Error {
+  shortages: StockShortage[];
+
+  constructor(shortages: StockShortage[]) {
+    super("insufficient_stock");
+    this.name = "InsufficientStockError";
+    this.shortages = shortages;
+  }
+}
+
+async function loadStockContext(storeId: string) {
+  const [inventory, products] = await Promise.all([
+    db.inventory.where("store").equals(storeId).toArray(),
+    db.products.where("store").equals(storeId).toArray(),
+  ]);
+
+  const stockMap = buildStockMap(inventory as Inventory[]);
+  const trackInventoryByProduct = new Map<string, boolean>();
+  for (const product of products as Product[]) {
+    trackInventoryByProduct.set(product.id, product.track_inventory ?? false);
+  }
+
+  return { stockMap, trackInventoryByProduct, inventory: inventory as Inventory[] };
+}
+
+async function deductLocalInventory(
+  storeId: string,
+  items: Array<{ product_id: string; quantity: number }>,
+  trackInventoryByProduct: Map<string, boolean>,
+) {
+  const now = new Date().toISOString();
+
+  for (const item of items) {
+    if (!trackInventoryByProduct.get(item.product_id)) continue;
+
+    const inv = await db.inventory
+      .where("[store+product]")
+      .equals([storeId, item.product_id])
+      .first();
+
+    if (!inv) continue;
+
+    const afterQty = inv.quantity - item.quantity;
+    await db.inventory.update(inv.id, { quantity: afterQty, updated: now });
+    await addToSyncQueue({
+      collection: "inventory",
+      action: "update",
+      record_id: inv.id,
+      data: { quantity: afterQty },
+      store: storeId,
+    });
+  }
+}
 
 export function useOrders() {
   const { $api } = useNuxtApp();
@@ -114,7 +173,13 @@ export function useOrders() {
         await db.orderItems.bulkPut(itemRecords);
 
         return record;
-      } catch {
+      } catch (err) {
+        if (
+          err instanceof Error &&
+          err.message === "insufficient_stock"
+        ) {
+          throw new InsufficientStockError([]);
+        }
         return await saveOrderOffline(order, orderData.items, clientId);
       }
     }
@@ -122,7 +187,30 @@ export function useOrders() {
     return await saveOrderOffline(order, orderData.items, clientId);
   }
 
-  async function saveOrderOffline(order: Record<string, unknown>, items: Array<Record<string, unknown>>, clientId: string) {
+  async function saveOrderOffline(
+    order: Record<string, unknown>,
+    items: Array<{
+      product_id: string;
+      product_name: string;
+      product_price: number;
+      quantity: number;
+      unit_price: number;
+      discount: number;
+      total: number;
+    }>,
+    clientId: string,
+  ) {
+    const storeId = String(order.store);
+    const { stockMap, trackInventoryByProduct } = await loadStockContext(storeId);
+
+    const shortages = validateOrderItems(
+      items,
+      stockMap,
+      trackInventoryByProduct,
+    );
+    if (shortages.length > 0) {
+      throw new InsufficientStockError(shortages);
+    }
     const orderId = `temp_${clientId}`;
     const now = new Date().toISOString();
 
@@ -169,6 +257,8 @@ export function useOrders() {
         store: String(order.store),
       });
     }
+
+    await deductLocalInventory(storeId, items, trackInventoryByProduct);
 
     return localOrder as Order;
   }

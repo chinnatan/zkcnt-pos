@@ -228,56 +228,40 @@ orderRoutes.post(
     const paymentMethod =
       (orderData.payment_method as "cash" | "qr") ?? "cash";
 
-    await db.insert(orders).values({
-      id: orderId,
-      store: storeId,
-      orderNumber,
-      clientId,
-      customer: orderData.customer ? String(orderData.customer) : null,
-      cashier: String(orderData.cashier ?? userId),
-      subtotal: Number(orderData.subtotal ?? 0),
-      discountAmount: Number(orderData.discount_amount ?? 0),
-      discountType: String(orderData.discount_type ?? ""),
-      taxAmount: Number(orderData.tax_amount ?? 0),
-      total,
-      paymentMethod,
-      paymentReceived: Number(orderData.payment_received ?? 0),
-      changeAmount: Number(orderData.change_amount ?? 0),
-      status:
-        (orderData.status as "completed" | "voided" | "refunded") ??
-        "completed",
-      note: String(orderData.note ?? ""),
-      syncedAt: String(orderData.synced_at ?? now),
-      created: now,
-      updated: now,
-    });
-
+    const qtyByProduct = new Map<
+      string,
+      { name: string; quantity: number }
+    >();
     for (const item of items) {
-      const itemId = generateId();
       const productId = String(item.product ?? item.product_id ?? "");
+      const quantity = Number(item.quantity ?? 1);
+      const name = String(item.product_name ?? "");
+      const existing = qtyByProduct.get(productId);
+      if (existing) {
+        existing.quantity += quantity;
+      } else {
+        qtyByProduct.set(productId, { name, quantity });
+      }
+    }
 
-      await db.insert(orderItems).values({
-        id: itemId,
-        order: orderId,
-        product: productId,
-        productName: String(item.product_name ?? ""),
-        productPrice: Number(item.product_price ?? 0),
-        quantity: Number(item.quantity ?? 1),
-        unitPrice: Number(item.unit_price ?? 0),
-        discount: Number(item.discount ?? 0),
-        total: Number(item.total ?? 0),
-        created: now,
-        updated: now,
-      });
+    const createdOrder = await db.transaction(async (tx) => {
+      const shortages: Array<{
+        product_id: string;
+        name: string;
+        available: number;
+        requested: number;
+      }> = [];
 
-      const productRows = await db
-        .select()
-        .from(products)
-        .where(eq(products.id, productId))
-        .limit(1);
+      for (const [productId, { name, quantity }] of qtyByProduct) {
+        const productRows = await tx
+          .select()
+          .from(products)
+          .where(eq(products.id, productId))
+          .limit(1);
 
-      if (productRows[0]?.trackInventory) {
-        const invRows = await db
+        if (!productRows[0]?.trackInventory) continue;
+
+        const invRows = await tx
           .select()
           .from(inventory)
           .where(
@@ -285,32 +269,115 @@ orderRoutes.post(
           )
           .limit(1);
 
-        const beforeQty = invRows[0]?.quantity ?? 0;
-        const afterQty = beforeQty - Number(item.quantity ?? 0);
-
-        if (invRows[0]) {
-          await db
-            .update(inventory)
-            .set({ quantity: afterQty, updated: now })
-            .where(eq(inventory.id, invRows[0].id));
+        const available = invRows[0]?.quantity ?? 0;
+        if (available < quantity) {
+          shortages.push({
+            product_id: productId,
+            name,
+            available,
+            requested: quantity,
+          });
         }
+      }
 
-        await db.insert(inventoryTransactions).values({
-          id: generateId(),
-          store: storeId,
+      if (shortages.length > 0) {
+        throw new HTTPException(409, { message: "insufficient_stock" });
+      }
+
+      await tx.insert(orders).values({
+        id: orderId,
+        store: storeId,
+        orderNumber,
+        clientId,
+        customer: orderData.customer ? String(orderData.customer) : null,
+        cashier: String(orderData.cashier ?? userId),
+        subtotal: Number(orderData.subtotal ?? 0),
+        discountAmount: Number(orderData.discount_amount ?? 0),
+        discountType: String(orderData.discount_type ?? ""),
+        taxAmount: Number(orderData.tax_amount ?? 0),
+        total,
+        paymentMethod,
+        paymentReceived: Number(orderData.payment_received ?? 0),
+        changeAmount: Number(orderData.change_amount ?? 0),
+        status:
+          (orderData.status as "completed" | "voided" | "refunded") ??
+          "completed",
+        note: String(orderData.note ?? ""),
+        syncedAt: String(orderData.synced_at ?? now),
+        created: now,
+        updated: now,
+      });
+
+      for (const item of items) {
+        const itemId = generateId();
+        const productId = String(item.product ?? item.product_id ?? "");
+
+        await tx.insert(orderItems).values({
+          id: itemId,
+          order: orderId,
           product: productId,
-          type: "sale",
-          quantity: Number(item.quantity ?? 0),
-          beforeQty,
-          afterQty,
-          reference: orderId,
-          note: "",
-          createdBy: userId,
+          productName: String(item.product_name ?? ""),
+          productPrice: Number(item.product_price ?? 0),
+          quantity: Number(item.quantity ?? 1),
+          unitPrice: Number(item.unit_price ?? 0),
+          discount: Number(item.discount ?? 0),
+          total: Number(item.total ?? 0),
           created: now,
           updated: now,
         });
+
+        const productRows = await tx
+          .select()
+          .from(products)
+          .where(eq(products.id, productId))
+          .limit(1);
+
+        if (productRows[0]?.trackInventory) {
+          const invRows = await tx
+            .select()
+            .from(inventory)
+            .where(
+              and(
+                eq(inventory.store, storeId),
+                eq(inventory.product, productId),
+              ),
+            )
+            .limit(1);
+
+          const beforeQty = invRows[0]?.quantity ?? 0;
+          const afterQty = beforeQty - Number(item.quantity ?? 0);
+
+          if (invRows[0]) {
+            await tx
+              .update(inventory)
+              .set({ quantity: afterQty, updated: now })
+              .where(eq(inventory.id, invRows[0].id));
+          }
+
+          await tx.insert(inventoryTransactions).values({
+            id: generateId(),
+            store: storeId,
+            product: productId,
+            type: "sale",
+            quantity: Number(item.quantity ?? 0),
+            beforeQty,
+            afterQty,
+            reference: orderId,
+            note: "",
+            createdBy: userId,
+            created: now,
+            updated: now,
+          });
+        }
       }
-    }
+
+      const rows = await tx
+        .select()
+        .from(orders)
+        .where(eq(orders.id, orderId))
+        .limit(1);
+      return rows[0]!;
+    });
 
     logAuditEvent(c, {
       store: storeId,
@@ -328,12 +395,7 @@ orderRoutes.post(
       },
     });
 
-    const rows = await db
-      .select()
-      .from(orders)
-      .where(eq(orders.id, orderId))
-      .limit(1);
-    return c.json(mapOrder(rows[0]!), 201);
+    return c.json(mapOrder(createdOrder), 201);
   },
 );
 

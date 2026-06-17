@@ -141,7 +141,13 @@
             <button
               v-for="product in filteredProducts"
               :key="product.id"
-              class="group flex flex-col items-center rounded-xl border border-gray-200 bg-white p-4 text-center shadow-sm transition-all hover:border-primary-300 hover:shadow-md active:scale-[0.97]"
+              class="group flex flex-col items-center rounded-xl border border-gray-200 bg-white p-4 text-center shadow-sm transition-all"
+              :class="
+                isOutOfStock(product)
+                  ? 'cursor-not-allowed opacity-50'
+                  : 'hover:border-primary-300 hover:shadow-md active:scale-[0.97]'
+              "
+              :disabled="isOutOfStock(product)"
               @click="handleAddItem(product)"
             >
               <div class="mb-3">
@@ -154,6 +160,17 @@
               </span>
               <span class="text-sm font-bold text-primary-600">
                 {{ formatCurrency(product.price) }}
+              </span>
+              <span
+                v-if="product.track_inventory"
+                class="mt-1 text-xs"
+                :class="isOutOfStock(product) ? 'text-danger-500' : 'text-gray-500'"
+              >
+                {{
+                  isOutOfStock(product)
+                    ? t('stock.outOfStock')
+                    : t('pos.stockRemaining', { count: getAvailableQty(product.id) })
+                }}
               </span>
             </button>
           </div>
@@ -236,8 +253,9 @@
                     {{ item.quantity }}
                   </span>
                   <button
-                    class="flex h-8 w-8 items-center justify-center rounded-lg border border-gray-300 text-gray-600 transition-colors hover:bg-gray-100 active:bg-gray-200"
-                    @click="updateQuantity(item.product.id, item.quantity + 1)"
+                    class="flex h-8 w-8 items-center justify-center rounded-lg border border-gray-300 text-gray-600 transition-colors hover:bg-gray-100 active:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-40"
+                    :disabled="!canIncreaseQty(item.product, item.quantity)"
+                    @click="handleUpdateQuantity(item.product.id, item.quantity + 1)"
                   >
                     <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
@@ -460,6 +478,7 @@
 <script setup lang="ts">
 import type { Product } from "~/lib/types";
 import { createLogger } from "~/lib/logger";
+import { InsufficientStockError } from "~/composables/useOrders";
 
 const logger = createLogger("pos");
 
@@ -469,6 +488,14 @@ const { t } = useI18n();
 const { formatCurrency } = useFormat();
 const { products, categories, fetchProducts, fetchCategories, isLoading } =
   useProducts();
+const {
+  fetchInventory,
+  getAvailableQty,
+  canAddToCart,
+  maxCartQty,
+  isOutOfStock,
+  validateCartItems,
+} = usePosStock();
 const {
   cartItems,
   addItem,
@@ -534,8 +561,32 @@ const canCheckout = computed(() => {
   if (cartItems.value.length === 0) return false;
   if (paymentMethod.value === "cash" && paymentReceived.value < total.value)
     return false;
+  if (validateCartItems(cartItems.value).length > 0) return false;
   return true;
 });
+
+function getCartQty(productId: string): number {
+  return cartItems.value.find((item) => item.product.id === productId)?.quantity ?? 0;
+}
+
+function canIncreaseQty(product: Product, currentQty: number): boolean {
+  if (!product.track_inventory) return true;
+  return currentQty < maxCartQty(product);
+}
+
+function showStockAlert(message: string) {
+  alert(message);
+}
+
+function stockErrorMessage(shortages: { name: string; available: number; requested: number }[]) {
+  const first = shortages[0];
+  if (!first) return t("errors.saveFailed");
+  return t("pos.insufficientStockCheckout", {
+    name: first.name,
+    available: first.available,
+    requested: first.requested,
+  });
+}
 
 function onDiscountInput(e: Event) {
   cartDiscount.value = Number((e.target as HTMLInputElement).value);
@@ -550,14 +601,48 @@ function onPaymentReceivedInput(e: Event) {
 }
 
 function handleAddItem(product: Product) {
-  addItem(product);
-  if (mobileTab.value === "products" && window.innerWidth < 1024) {
-    // Brief visual feedback; don't auto-switch
+  const currentQty = getCartQty(product.id);
+
+  if (!canAddToCart(product, currentQty)) {
+    if (isOutOfStock(product) && currentQty === 0) {
+      showStockAlert(t("pos.cannotAddOutOfStock"));
+    } else {
+      showStockAlert(
+        t("pos.cannotAddExceedsStock", {
+          available: getAvailableQty(product.id),
+        }),
+      );
+    }
+    return;
   }
+
+  addItem(product);
+}
+
+function handleUpdateQuantity(productId: string, quantity: number) {
+  const item = cartItems.value.find((i) => i.product.id === productId);
+  if (!item) return;
+
+  const capped = Math.min(quantity, maxCartQty(item.product));
+  if (quantity > capped && item.product.track_inventory) {
+    showStockAlert(
+      t("pos.cannotAddExceedsStock", {
+        available: getAvailableQty(productId),
+      }),
+    );
+  }
+  updateQuantity(productId, capped);
 }
 
 async function handleCheckout() {
   if (!canCheckout.value || isCheckingOut.value) return;
+
+  const shortages = validateCartItems(cartItems.value);
+  if (shortages.length > 0) {
+    showStockAlert(stockErrorMessage(shortages));
+    return;
+  }
+
   isCheckingOut.value = true;
 
   try {
@@ -592,9 +677,14 @@ async function handleCheckout() {
     lastOrderNumber.value = order.order_number || order.id || "";
     lastOrderTotal.value = total.value;
     showSuccessModal.value = true;
+    await fetchInventory();
   } catch (err) {
     logger.error("Checkout failed:", err);
-    alert(t("errors.saveFailed"));
+    if (err instanceof InsufficientStockError) {
+      showStockAlert(stockErrorMessage(err.shortages));
+    } else {
+      alert(t("errors.saveFailed"));
+    }
   } finally {
     isCheckingOut.value = false;
   }
@@ -611,7 +701,7 @@ function handleNewOrder() {
 }
 
 onMounted(async () => {
-  await Promise.all([fetchProducts(), fetchCategories()]);
+  await Promise.all([fetchProducts(), fetchCategories(), fetchInventory()]);
 });
 </script>
 
