@@ -130,6 +130,7 @@ definePageMeta({ middleware: "auth" });
 const { t } = useI18n();
 const { formatCurrency, formatDateShort } = useFormat();
 const { discounts, isLoading, fetchDiscounts, createDiscount, updateDiscount, deleteDiscount } = useDiscounts();
+const { confirm } = useDialog();
 
 const showModal = ref(false);
 const editingId = ref<string | null>(null);
@@ -172,7 +173,7 @@ async function handleSave() {
 }
 
 async function handleDelete(id: string) {
-  if (confirm(t("common.confirmDelete"))) {
+  if (await confirm(t("common.confirmDelete"))) {
     await deleteDiscount(id);
   }
 }

@@ -163,6 +163,7 @@ const { formatCurrency, formatDate } = useFormat();
 const { statusLabel, paymentLabel } = useLabels();
 const { orders, isLoading, fetchOrders, getOrderItems, updateOrderStatus } = useOrders();
 const { isManager } = useStore();
+const { alert, prompt } = useDialog();
 
 const statusFilter = ref("");
 const selectedOrder = ref<Order | null>(null);
@@ -205,7 +206,7 @@ async function viewOrder(order: Order) {
 async function confirmStatusChange(status: "voided" | "refunded") {
   if (!selectedOrder.value) return;
   const label = status === "voided" ? t("ordersPage.voidOrder") : t("ordersPage.refundOrder");
-  const reason = window.prompt(t("ordersPage.reasonPrompt", { action: label }));
+  const reason = await prompt(t("ordersPage.reasonPrompt", { action: label }));
   if (reason === null) return;
 
   isUpdatingStatus.value = true;
@@ -214,7 +215,7 @@ async function confirmStatusChange(status: "voided" | "refunded") {
     selectedOrder.value = updated;
     await fetchOrders(100);
   } catch {
-    alert(t("errors.updateFailed"));
+    await alert(t("errors.updateFailed"));
   } finally {
     isUpdatingStatus.value = false;
   }

@@ -208,6 +208,7 @@ const {
   removeMember,
   updateInviteMode,
 } = useStoreMembers();
+const { confirm } = useDialog();
 
 const isSaving = ref(false);
 const showMemberModal = ref(false);
@@ -325,7 +326,7 @@ async function handleCancelInvite(id: string) {
 }
 
 async function handleRemoveMember(id: string) {
-  if (!confirm(t("settingsPage.confirmRemoveMember"))) return;
+  if (!(await confirm(t("settingsPage.confirmRemoveMember")))) return;
   try {
     await removeMember(id);
   } catch (e: unknown) {

@@ -115,6 +115,7 @@ definePageMeta({ middleware: "auth" });
 const { t } = useI18n();
 const { formatCurrency } = useFormat();
 const { customers, isLoading, fetchCustomers, createCustomer, updateCustomer, deleteCustomer } = useCustomers();
+const { confirm } = useDialog();
 
 const search = ref("");
 const showModal = ref(false);
@@ -150,7 +151,7 @@ async function handleSave() {
 }
 
 async function handleDelete(id: string) {
-  if (confirm(t("common.confirmDeleteCustomer"))) {
+  if (await confirm(t("common.confirmDeleteCustomer"))) {
     await deleteCustomer(id);
   }
 }

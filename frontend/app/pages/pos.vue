@@ -515,6 +515,7 @@ const {
   cartNote,
 } = useCart();
 const { createOrder } = useOrders();
+const { alert } = useDialog();
 
 const mobileTab = ref<"products" | "cart">("products");
 const searchQuery = ref("");
@@ -575,7 +576,7 @@ function canIncreaseQty(product: Product, currentQty: number): boolean {
 }
 
 function showStockAlert(message: string) {
-  alert(message);
+  void alert(message);
 }
 
 function stockErrorMessage(shortages: { name: string; available: number; requested: number }[]) {
@@ -683,7 +684,7 @@ async function handleCheckout() {
     if (err instanceof InsufficientStockError) {
       showStockAlert(stockErrorMessage(err.shortages));
     } else {
-      alert(t("errors.saveFailed"));
+      await alert(t("errors.saveFailed"));
     }
   } finally {
     isCheckingOut.value = false;
