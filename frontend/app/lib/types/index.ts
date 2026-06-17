@@ -26,6 +26,7 @@ export interface StoreSettings {
   receipt_header: string;
   receipt_footer: string;
   member_invite_mode?: MemberInviteMode;
+  promptpay_id?: string;
 }
 
 export interface Store extends BaseRecord {

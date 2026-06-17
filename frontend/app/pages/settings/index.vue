@@ -46,6 +46,26 @@
         </form>
       </div>
 
+      <div v-if="isManager" class="rounded-xl bg-white p-6 shadow-sm">
+        <h3 class="mb-4 text-base font-semibold text-gray-800">{{ t('settingsPage.paymentSettings') }}</h3>
+        <form @submit.prevent="savePaymentSettings" class="space-y-4">
+          <div>
+            <label class="mb-1 block text-sm font-medium text-gray-700">{{ t('settingsPage.promptpayId') }}</label>
+            <input
+              v-model="paymentForm.promptpay_id"
+              type="text"
+              inputmode="numeric"
+              class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-primary-500 focus:outline-none"
+              :placeholder="t('settingsPage.promptpayIdPlaceholder')"
+            />
+            <p class="mt-1 text-xs text-gray-500">{{ t('settingsPage.promptpayIdHint') }}</p>
+          </div>
+          <button type="submit" :disabled="isSavingPayment" class="rounded-lg bg-primary-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-primary-700 disabled:opacity-50">
+            {{ isSavingPayment ? t('common.saving') : t('settingsPage.saveChanges') }}
+          </button>
+        </form>
+      </div>
+
       <div class="rounded-xl bg-white p-6 shadow-sm">
         <div class="mb-4 flex items-center justify-between">
           <h3 class="text-base font-semibold text-gray-800">{{ t('settingsPage.teamMembers') }}</h3>
@@ -211,6 +231,7 @@ const {
 const { confirm } = useDialog();
 
 const isSaving = ref(false);
+const isSavingPayment = ref(false);
 const showMemberModal = ref(false);
 const memberEmail = ref("");
 const memberRole = ref<"manager" | "cashier">("cashier");
@@ -230,6 +251,10 @@ const storeForm = reactive({
   tax_id: "",
 });
 
+const paymentForm = reactive({
+  promptpay_id: "",
+});
+
 watch(
   activeStore,
   (store) => {
@@ -238,6 +263,7 @@ watch(
       storeForm.phone = store.phone || "";
       storeForm.address = store.address || "";
       storeForm.tax_id = store.tax_id || "";
+      paymentForm.promptpay_id = store.settings?.promptpay_id ?? "";
       inviteModeForm.value = store.settings?.member_invite_mode ?? "direct";
       refreshTeamData(store.id);
     }
@@ -252,6 +278,21 @@ async function saveStoreInfo() {
     await updateStore(activeStoreId.value, storeForm);
   } finally {
     isSaving.value = false;
+  }
+}
+
+async function savePaymentSettings() {
+  if (!activeStoreId.value || !activeStore.value) return;
+  isSavingPayment.value = true;
+  try {
+    await updateStore(activeStoreId.value, {
+      settings: {
+        ...activeStore.value.settings,
+        promptpay_id: paymentForm.promptpay_id.trim(),
+      },
+    });
+  } finally {
+    isSavingPayment.value = false;
   }
 }
 

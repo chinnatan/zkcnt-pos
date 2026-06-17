@@ -9,6 +9,7 @@ export interface StoreSettings {
   receipt_header: string;
   receipt_footer: string;
   member_invite_mode?: "direct" | "email";
+  promptpay_id?: string;
 }
 
 export const DEFAULT_STORE_SETTINGS: StoreSettings = {

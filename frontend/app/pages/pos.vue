@@ -401,6 +401,13 @@
               </div>
             </div>
 
+            <p
+              v-if="paymentMethod === 'qr' && !hasPromptPayId"
+              class="rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-700"
+            >
+              {{ t('pos.promptpayNotConfigured') }}
+            </p>
+
             <!-- Checkout Button -->
             <button
               class="w-full rounded-xl py-4 text-base font-bold text-white shadow-lg transition-all active:scale-[0.98] disabled:opacity-50 disabled:shadow-none"
@@ -472,6 +479,16 @@
         </div>
       </div>
     </Teleport>
+
+    <PosPromptPayQrModal
+      :show="showQrModal"
+      :amount="total"
+      :data-url="qrDataUrl"
+      :loading="isGeneratingQr"
+      :confirming="isCheckingOut"
+      @confirm="confirmQrPayment"
+      @cancel="showQrModal = false"
+    />
   </div>
 </template>
 
@@ -516,14 +533,25 @@ const {
 } = useCart();
 const { createOrder } = useOrders();
 const { alert } = useDialog();
+const { activeStore } = useStore();
+const { generateQrDataUrl, resolvePromptPayId } = usePromptPayQr();
 
 const mobileTab = ref<"products" | "cart">("products");
 const searchQuery = ref("");
 const selectedCategory = ref<string | null>(null);
 const isCheckingOut = ref(false);
 const showSuccessModal = ref(false);
+const showQrModal = ref(false);
+const qrDataUrl = ref("");
+const isGeneratingQr = ref(false);
 const lastOrderNumber = ref("");
 const lastOrderTotal = ref(0);
+
+const resolvedPromptPayId = computed(() =>
+  resolvePromptPayId(activeStore.value),
+);
+
+const hasPromptPayId = computed(() => Boolean(resolvedPromptPayId.value));
 
 const paymentMethods = computed(() => [
   { value: "cash" as const, label: t("payment.cash") },
@@ -644,6 +672,46 @@ async function handleCheckout() {
     return;
   }
 
+  if (paymentMethod.value === "qr") {
+    await openQrModal();
+    return;
+  }
+
+  await completeCheckout();
+}
+
+async function openQrModal() {
+  const promptpayId = resolvedPromptPayId.value;
+  if (!promptpayId) {
+    await alert(t("pos.promptpayNotConfigured"));
+    return;
+  }
+
+  showQrModal.value = true;
+  isGeneratingQr.value = true;
+  qrDataUrl.value = "";
+
+  try {
+    qrDataUrl.value = (await generateQrDataUrl(promptpayId, total.value)) ?? "";
+    if (!qrDataUrl.value) {
+      showQrModal.value = false;
+      await alert(t("pos.promptpayQrFailed"));
+    }
+  } catch (error) {
+    logger.error("openQrModal failed:", error);
+    showQrModal.value = false;
+    await alert(t("pos.promptpayQrFailed"));
+  } finally {
+    isGeneratingQr.value = false;
+  }
+}
+
+async function confirmQrPayment() {
+  if (isCheckingOut.value) return;
+  await completeCheckout();
+}
+
+async function completeCheckout() {
   isCheckingOut.value = true;
 
   try {
@@ -677,6 +745,7 @@ async function handleCheckout() {
 
     lastOrderNumber.value = order.order_number || order.id || "";
     lastOrderTotal.value = total.value;
+    showQrModal.value = false;
     showSuccessModal.value = true;
     await fetchInventory();
   } catch (err) {

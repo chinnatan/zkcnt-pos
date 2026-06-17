@@ -148,7 +148,13 @@
     "stockRemaining": "{count} left",
     "cannotAddOutOfStock": "Out of stock",
     "cannotAddExceedsStock": "Cannot add more — only {available} in stock",
-    "insufficientStockCheckout": "Cannot checkout — {name} has {available} in stock but {requested} in cart"
+    "insufficientStockCheckout": "Cannot checkout — {name} has {available} in stock but {requested} in cart",
+    "promptpayNotConfigured": "No PromptPay ID — set it in Settings > Payment, or add a phone number or tax ID in store info",
+    "promptpayQrFailed": "Failed to generate QR code. Please check your PromptPay ID",
+    "qrPaymentTitle": "Scan to pay with PromptPay",
+    "qrPaymentHint": "Ask the customer to scan the QR, then verify the amount in your banking app before confirming",
+    "qrPaymentConfirm": "Payment received",
+    "qrPaymentCancel": "Cancel"
   },
   "payment": {
     "cash": "Cash",
@@ -265,7 +271,11 @@
     "inviteLinkCopied": "Link copied to clipboard",
     "inviteLinkCopyFailed": "Could not copy link",
     "confirmRemoveMember": "Remove this team member?",
-    "auditLog": "Audit log"
+    "auditLog": "Audit log",
+    "paymentSettings": "Payment",
+    "promptpayId": "PromptPay ID",
+    "promptpayIdPlaceholder": "0812345678 or 13-digit national ID",
+    "promptpayIdHint": "Used to generate payment QR codes. If empty, the store phone or tax ID will be used instead"
   },
   "invitePage": {
     "title": "Team Invitation",

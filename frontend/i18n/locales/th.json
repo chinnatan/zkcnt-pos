@@ -148,7 +148,13 @@
     "stockRemaining": "เหลือ {count}",
     "cannotAddOutOfStock": "สินค้าหมดสต็อก",
     "cannotAddExceedsStock": "ไม่สามารถเพิ่มได้ สต็อกเหลือ {available} ชิ้น",
-    "insufficientStockCheckout": "ไม่สามารถชำระเงินได้ สินค้า {name} เหลือ {available} แต่ในตะกร้า {requested} ชิ้น"
+    "insufficientStockCheckout": "ไม่สามารถชำระเงินได้ สินค้า {name} เหลือ {available} แต่ในตะกร้า {requested} ชิ้น",
+    "promptpayNotConfigured": "ยังไม่มี PromptPay ID — ตั้งค่าใน ตั้งค่าร้าน > การชำระเงิน หรือกรอกเบอร์โทร/เลขประจำตัวผู้เสียภาษีในข้อมูลร้าน",
+    "promptpayQrFailed": "ไม่สามารถสร้าง QR Code ได้ กรุณาตรวจสอบ PromptPay ID",
+    "qrPaymentTitle": "สแกนจ่ายด้วย PromptPay",
+    "qrPaymentHint": "ให้ลูกค้าสแกน QR แล้วตรวจสอบยอดในแอปธนาคารก่อนยืนยัน",
+    "qrPaymentConfirm": "ยืนยันรับเงินแล้ว",
+    "qrPaymentCancel": "ยกเลิก"
   },
   "payment": {
     "cash": "เงินสด",
@@ -265,7 +271,11 @@
     "inviteLinkCopied": "คัดลอกลิงก์แล้ว",
     "inviteLinkCopyFailed": "ไม่สามารถคัดลอกลิงก์ได้",
     "confirmRemoveMember": "ลบสมาชิกคนนี้ออกจากทีม?",
-    "auditLog": "ประวัติการทำรายการ"
+    "auditLog": "ประวัติการทำรายการ",
+    "paymentSettings": "การชำระเงิน",
+    "promptpayId": "PromptPay ID",
+    "promptpayIdPlaceholder": "0812345678 หรือ เลขบัตรประชาชน 13 หลัก",
+    "promptpayIdHint": "ใช้สร้าง QR Code รับชำระเงิน หากไม่กรอกจะใช้เบอร์โทรหรือเลขประจำตัวผู้เสียภาษีจากข้อมูลร้านแทน"
   },
   "invitePage": {
     "title": "คำเชิญเข้าร่วมทีม",

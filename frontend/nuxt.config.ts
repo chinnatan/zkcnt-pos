@@ -21,6 +21,9 @@ export default defineNuxtConfig({
 
   vite: {
     plugins: [tailwindcss()],
+    optimizeDeps: {
+      include: ["promptpay-qr", "qrcode", "crc"],
+    },
   },
 
   dir: {
