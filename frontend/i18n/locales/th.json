@@ -77,6 +77,11 @@
     "perPiece": "/ ชิ้น",
     "appTagline": "ระบบ POS ทำงานออฟไลน์ได้"
   },
+  "pwa": {
+    "installTitle": "ติดตั้งแอป zKCNT POS",
+    "installDescription": "กด Share (ไอคอนลูกศรขึ้น) แล้วเลือก \"เพิ่มที่หน้าจอโฮม\" เพื่อใช้งานแบบแอป",
+    "dismiss": "ปิด"
+  },
   "nav": {
     "dashboard": "แดชบอร์ด",
     "pos": "เครื่อง POS",

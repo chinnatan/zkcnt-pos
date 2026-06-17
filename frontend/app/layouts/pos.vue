@@ -32,6 +32,7 @@
     <div class="flex-1 overflow-hidden">
       <slot />
     </div>
+    <LayoutPwaInstallBanner />
   </div>
 </template>
 

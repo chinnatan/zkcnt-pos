@@ -48,12 +48,19 @@ export default defineNuxtConfig({
         { name: "viewport", content: "width=device-width, initial-scale=1" },
         { name: "description", content: "Offline-First POS System" },
         { name: "theme-color", content: "#4f46e5" },
+        { name: "apple-mobile-web-app-capable", content: "yes" },
+        { name: "apple-mobile-web-app-title", content: "zKCNT POS" },
+        { name: "apple-mobile-web-app-status-bar-style", content: "default" },
       ],
       link: [
         {
           rel: "icon",
           type: "image/svg+xml",
           href: "/favicon.svg",
+        },
+        {
+          rel: "apple-touch-icon",
+          href: "/apple-touch-icon.png",
         },
       ],
     },
@@ -65,6 +72,8 @@ export default defineNuxtConfig({
       name: "zKCNT POS - Offline-First Point of Sale",
       short_name: "zKCNT POS",
       description: "Offline-First POS System",
+      start_url: "/",
+      scope: "/",
       theme_color: "#4f46e5",
       background_color: "#f9fafb",
       display: "standalone",

@@ -77,6 +77,11 @@
     "perPiece": "/ pc",
     "appTagline": "Offline-First Point of Sale"
   },
+  "pwa": {
+    "installTitle": "Install zKCNT POS",
+    "installDescription": "Tap Share, then choose \"Add to Home Screen\" to use it like an app",
+    "dismiss": "Dismiss"
+  },
   "nav": {
     "dashboard": "Dashboard",
     "pos": "POS Terminal",
