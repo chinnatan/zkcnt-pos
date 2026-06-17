@@ -22,6 +22,7 @@ import {
   mapOrderItem,
   mapProduct,
 } from "../lib/mappers";
+import { createLogger } from "../lib/logger";
 import {
   authMiddleware,
   type AuthVariables,
@@ -30,6 +31,8 @@ import {
   requireStoreMember,
   type StoreAccessVariables,
 } from "../middleware/store-access";
+
+const logger = createLogger("sync");
 
 type Vars = AuthVariables & StoreAccessVariables;
 
@@ -95,6 +98,14 @@ syncRoutes.get(
     // Filter order items to this store's orders
     const storeOrderIds = new Set(orderRows.map((o) => o.id));
     const filteredItems = itemRows.filter((i) => storeOrderIds.has(i.order));
+
+    logger.debug(
+      `sync delta storeId=${storeId} since=${since} ` +
+        `categories=${catRows.length} products=${prodRows.length} ` +
+        `customers=${custRows.length} inventory=${invRows.length} ` +
+        `discounts=${discRows.length} orders=${orderRows.length} ` +
+        `order_items=${filteredItems.length} inventory_transactions=${txRows.length}`,
+    );
 
     return c.json({
       categories: catRows.map(mapCategory),

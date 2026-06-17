@@ -1,5 +1,6 @@
 import type { ApiClient } from "~/lib/api/client";
 import { db } from "../db";
+import { createLogger } from "../logger";
 import {
   blobCacheId,
   getPendingFileUploads,
@@ -16,6 +17,8 @@ import {
   markError,
 } from "./queue";
 
+const logger = createLogger("sync");
+
 export class SyncEngine {
   private api: ApiClient;
   private storeId: string;
@@ -27,9 +30,26 @@ export class SyncEngine {
   }
 
   async pullAll(since?: string) {
-    const delta = await this.api.syncDelta(
-      this.storeId,
-      since ?? "1970-01-01T00:00:00.000Z",
+    const sinceValue = since ?? "1970-01-01T00:00:00.000Z";
+    logger.debug(`pullAll start storeId=${this.storeId} since=${sinceValue}`);
+
+    const delta = await this.api.syncDelta(this.storeId, sinceValue);
+
+    const counts = {
+      categories: delta.categories?.length ?? 0,
+      products: delta.products?.length ?? 0,
+      customers: delta.customers?.length ?? 0,
+      inventory: delta.inventory?.length ?? 0,
+      discounts: delta.discounts?.length ?? 0,
+      orders: delta.orders?.length ?? 0,
+      order_items: delta.order_items?.length ?? 0,
+    };
+
+    logger.debug(
+      `pullAll delta storeId=${this.storeId} ` +
+        Object.entries(counts)
+          .map(([key, count]) => `${key}=${count}`)
+          .join(" "),
     );
 
     if (delta.categories?.length) {
@@ -63,10 +83,14 @@ export class SyncEngine {
 
     try {
       const pending = await getPendingItems(this.storeId);
+      logger.debug(`drainSyncQueue pending=${pending.length} storeId=${this.storeId}`);
 
       for (const item of pending) {
         try {
           await markInFlight(item.id);
+          logger.debug(
+            `sync queue ${item.action} ${item.collection} ${item.record_id}`,
+          );
 
           let record: Record<string, unknown> | undefined;
 
@@ -132,8 +156,14 @@ export class SyncEngine {
           }
 
           await markSynced(item.id);
+          logger.debug(
+            `sync done ${item.action} ${item.collection} ${item.record_id}`,
+          );
         } catch (e: unknown) {
           const msg = e instanceof Error ? e.message : "Unknown sync error";
+          logger.warn(
+            `sync failed ${item.action} ${item.collection} ${item.record_id}: ${msg}`,
+          );
           await markError(item.id, msg);
         }
       }
@@ -144,6 +174,7 @@ export class SyncEngine {
 
   async drainFileQueue() {
     const pending = await getPendingFileUploads(this.storeId);
+    logger.debug(`drainFileQueue pending=${pending.length} storeId=${this.storeId}`);
 
     for (const item of pending) {
       if (item.record_id.startsWith("temp_")) continue;
@@ -181,8 +212,14 @@ export class SyncEngine {
         }
 
         await markFileSynced(item.id!);
+        logger.debug(
+          `file sync done ${item.collection} ${item.record_id} remove=${!!item.remove}`,
+        );
       } catch (e: unknown) {
         const msg = e instanceof Error ? e.message : "Unknown file sync error";
+        logger.warn(
+          `file sync failed ${item.collection} ${item.record_id}: ${msg}`,
+        );
         await markFileError(item.id!, msg);
       }
     }
@@ -194,12 +231,18 @@ export class SyncEngine {
       .equals(this.storeId)
       .toArray();
 
+    let prefetched = 0;
+    let skipped = 0;
+
     for (const product of products) {
       if (!product.image) continue;
 
       const cacheId = blobCacheId("products", product.id, "image");
       const existing = await db.fileBlobs.get(cacheId);
-      if (existing) continue;
+      if (existing) {
+        skipped++;
+        continue;
+      }
 
       try {
         const url = this.api.getFileUrl(product.image);
@@ -215,10 +258,15 @@ export class SyncEngine {
           blob,
           blob.type || "image/jpeg",
         );
+        prefetched++;
       } catch {
         // ignore individual prefetch failures
       }
     }
+
+    logger.debug(
+      `prefetchProductImages storeId=${this.storeId} prefetched=${prefetched} skipped=${skipped}`,
+    );
   }
 
   subscribeAll() {

@@ -6,8 +6,25 @@ const uploadsDir = join(dataDir, "uploads");
 
 mkdirSync(uploadsDir, { recursive: true });
 
+type LogLevel = "debug" | "info" | "warn" | "error" | "silent";
+
+function parseLogLevel(value: string | undefined): LogLevel {
+  const level = value?.toLowerCase();
+  if (
+    level === "debug" ||
+    level === "info" ||
+    level === "warn" ||
+    level === "error" ||
+    level === "silent"
+  ) {
+    return level;
+  }
+  return process.env.NODE_ENV === "production" ? "info" : "debug";
+}
+
 export const env = {
   port: Number(process.env.PORT ?? 3001),
+  logLevel: parseLogLevel(process.env.LOG_LEVEL),
   dataDir,
   dbPath: join(dataDir, "pos.db"),
   uploadsDir,

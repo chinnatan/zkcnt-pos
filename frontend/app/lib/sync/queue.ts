@@ -1,16 +1,23 @@
 import { db } from "../db";
 import type { SyncQueueItem } from "../types";
+import { createLogger } from "../logger";
+
+const logger = createLogger("sync-queue");
 
 export async function addToSyncQueue(
   item: Omit<SyncQueueItem, "id" | "status" | "retry_count" | "created_at" | "error_message">
 ) {
-  return db.syncQueue.add({
+  const id = await db.syncQueue.add({
     ...item,
     status: "pending",
     retry_count: 0,
     created_at: new Date().toISOString(),
     error_message: "",
   } as SyncQueueItem);
+  logger.debug(
+    `queued ${item.action} ${item.collection} ${item.record_id} id=${id}`,
+  );
+  return id;
 }
 
 export async function getPendingItems(storeId?: string): Promise<SyncQueueItem[]> {
@@ -35,9 +42,13 @@ export async function markSynced(id: number) {
 export async function markError(id: number, errorMessage: string) {
   const item = await db.syncQueue.get(id);
   if (!item) return;
+  const retryCount = (item.retry_count ?? 0) + 1;
+  logger.warn(
+    `sync error id=${id} ${item.collection} ${item.record_id} retry=${retryCount}: ${errorMessage}`,
+  );
   return db.syncQueue.update(id, {
-    status: (item.retry_count ?? 0) >= 5 ? "error" : "pending",
-    retry_count: (item.retry_count ?? 0) + 1,
+    status: retryCount >= 5 ? "error" : "pending",
+    retry_count: retryCount,
     error_message: errorMessage,
   });
 }

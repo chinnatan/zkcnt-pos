@@ -459,6 +459,9 @@
 
 <script setup lang="ts">
 import type { Product } from "~/lib/types";
+import { createLogger } from "~/lib/logger";
+
+const logger = createLogger("pos");
 
 definePageMeta({ layout: "pos", middleware: "auth" });
 
@@ -590,7 +593,7 @@ async function handleCheckout() {
     lastOrderTotal.value = total.value;
     showSuccessModal.value = true;
   } catch (err) {
-    console.error("Checkout failed:", err);
+    logger.error("Checkout failed:", err);
     alert(t("errors.saveFailed"));
   } finally {
     isCheckingOut.value = false;

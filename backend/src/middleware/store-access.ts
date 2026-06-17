@@ -3,7 +3,10 @@ import { createMiddleware } from "hono/factory";
 import { HTTPException } from "hono/http-exception";
 import { db } from "../db/client";
 import { storeMembers, stores } from "../db/schema";
+import { createLogger } from "../lib/logger";
 import type { AuthVariables } from "./auth";
+
+const logger = createLogger("store-access");
 
 export type StoreAccessVariables = AuthVariables & {
   storeId: string;
@@ -36,11 +39,15 @@ export const requireStoreMember = createMiddleware<{
 
   const membership = await getMembership(userId, storeId);
   if (!membership) {
+    logger.warn(`forbidden userId=${userId} storeId=${storeId}`);
     throw new HTTPException(403, { message: "Forbidden" });
   }
 
   c.set("storeId", storeId);
   c.set("memberRole", membership.role);
+  logger.debug(
+    `access granted userId=${userId} storeId=${storeId} role=${membership.role}`,
+  );
   await next();
 });
 
@@ -58,11 +65,15 @@ export const requireStoreManager = createMiddleware<{
     !membership ||
     (membership.role !== "owner" && membership.role !== "manager")
   ) {
+    logger.warn(`manager forbidden userId=${userId} storeId=${storeId}`);
     throw new HTTPException(403, { message: "Forbidden" });
   }
 
   c.set("storeId", storeId);
   c.set("memberRole", membership.role);
+  logger.debug(
+    `manager access userId=${userId} storeId=${storeId} role=${membership.role}`,
+  );
   await next();
 });
 
@@ -77,11 +88,15 @@ export const requireStoreOwner = createMiddleware<{
 
   const membership = await getMembership(userId, storeId);
   if (!membership || membership.role !== "owner") {
+    logger.warn(`owner forbidden userId=${userId} storeId=${storeId}`);
     throw new HTTPException(403, { message: "Forbidden" });
   }
 
   c.set("storeId", storeId);
   c.set("memberRole", membership.role);
+  logger.debug(
+    `owner access userId=${userId} storeId=${storeId} role=${membership.role}`,
+  );
   await next();
 });
 

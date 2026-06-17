@@ -1,4 +1,7 @@
 import { resolveApiBaseUrl, resolveUploadsBaseUrl } from "./url";
+import { createLogger } from "../logger";
+
+const logger = createLogger("api-client");
 
 export interface AuthUser {
   id: string;
@@ -98,9 +101,13 @@ export class ApiClient {
       ? path
       : `${this.baseUrl}${path.startsWith("/") ? path : `/${path}`}`;
 
+    const start = Date.now();
+    logger.debug(`${method} ${path}`);
+
     const res = await fetch(url, { method, headers: reqHeaders, body: payload });
 
     if (res.status === 401 && auth && this.authState?.refreshToken) {
+      logger.debug(`401 on ${method} ${path}, attempting token refresh`);
       const refreshed = await this.tryRefresh();
       if (refreshed) {
         return this.send<T>(path, options);
@@ -115,8 +122,11 @@ export class ApiClient {
       } catch {
         // ignore
       }
+      logger.warn(`${method} ${path} → ${res.status} ${Date.now() - start}ms: ${message}`);
       throw new Error(message);
     }
+
+    logger.debug(`${method} ${path} → ${res.status} ${Date.now() - start}ms`);
 
     if (res.status === 204) return undefined as T;
     return res.json() as Promise<T>;

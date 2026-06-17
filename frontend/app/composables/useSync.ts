@@ -1,5 +1,8 @@
 import { SyncEngine } from "~/lib/sync/engine";
 import { getPendingCount } from "~/lib/sync/queue";
+import { createLogger } from "~/lib/logger";
+
+const logger = createLogger("use-sync");
 
 let syncEngine: SyncEngine | null = null;
 const pendingSyncCount = ref(0);
@@ -24,6 +27,7 @@ export function useSync() {
   async function performSync() {
     if (!syncEngine || !isOnline.value) return;
     isSyncing.value = true;
+    logger.info(`sync start storeId=${activeStoreId.value ?? "none"}`);
     try {
       const since = lastSyncAt.value ?? "1970-01-01T00:00:00.000Z";
       await syncEngine.drainSyncQueue();
@@ -31,6 +35,7 @@ export function useSync() {
       await syncEngine.pullAll(since);
       await syncEngine.prefetchProductImages();
       lastSyncAt.value = new Date().toISOString();
+      logger.info(`sync complete storeId=${activeStoreId.value ?? "none"}`);
     } finally {
       isSyncing.value = false;
       await updatePendingCount();
@@ -42,6 +47,7 @@ export function useSync() {
   }
 
   watch(isOnline, (online) => {
+    logger.debug(`online status changed online=${online}`);
     if (online && syncEngine) {
       performSync();
     }

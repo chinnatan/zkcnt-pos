@@ -1,5 +1,8 @@
 import type { Store, StoreMember } from "~/lib/types";
 import { db } from "~/lib/db";
+import { createLogger } from "~/lib/logger";
+
+const logger = createLogger("use-store");
 
 const activeStore = ref<Store | null>(null);
 const userStores = ref<Store[]>([]);
@@ -51,7 +54,7 @@ async function cacheStores(stores: Store[], members: StoreMember[]) {
     await db.stores.bulkPut(stores);
     await db.storeMembers.bulkPut(members);
   } catch (e) {
-    console.warn("Failed to cache stores in Dexie:", e);
+    logger.warn("Failed to cache stores in Dexie:", e);
   }
 }
 
@@ -129,7 +132,7 @@ export function useStore() {
       await fetchMemberships(authUser.value.id);
       await applyStoreSelection();
     } catch (e: unknown) {
-      console.error("fetchUserStores failed:", e);
+      logger.error("fetchUserStores failed:", e);
       storesFetchError.value =
         e instanceof Error ? e.message : "errors.loadStoresFailed";
 

@@ -7,8 +7,11 @@ import { signAccessToken, signRefreshToken, verifyToken } from "../lib/jwt";
 import { mapUser } from "../lib/mappers";
 import { hashPassword, verifyPassword } from "../lib/password";
 import { generateId } from "../lib/id";
+import { createLogger } from "../lib/logger";
 import { nowIso } from "../lib/timestamps";
 import { authMiddleware, type AuthVariables } from "../middleware/auth";
+
+const logger = createLogger("auth");
 
 export const authRoutes = new Hono<{ Variables: AuthVariables }>();
 
@@ -62,6 +65,8 @@ authRoutes.post("/register", async (c) => {
   const token = await signAccessToken(id);
   const refreshToken = await signRefreshToken(id);
 
+  logger.info(`register success userId=${id} email=${email}`);
+
   return c.json({ token, refreshToken, user });
 });
 
@@ -77,12 +82,15 @@ authRoutes.post("/login", async (c) => {
   const rows = await db.select().from(users).where(eq(users.email, email)).limit(1);
   const row = rows[0];
   if (!row || !(await verifyPassword(password, row.passwordHash))) {
+    logger.warn(`login failed email=${email}`);
     throw new HTTPException(400, { message: "Invalid email or password" });
   }
 
   const user = mapUser(row);
   const token = await signAccessToken(row.id);
   const refreshToken = await signRefreshToken(row.id);
+
+  logger.info(`login success userId=${row.id} email=${email}`);
 
   return c.json({ token, refreshToken, user });
 });

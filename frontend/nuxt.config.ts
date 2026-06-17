@@ -117,6 +117,7 @@ export default defineNuxtConfig({
     public: {
       apiUrl: process.env.NUXT_PUBLIC_API_URL || "",
       appUrl: process.env.NUXT_PUBLIC_APP_URL || "http://localhost:3000",
+      logLevel: process.env.NUXT_PUBLIC_LOG_LEVEL || "",
     },
   },
 

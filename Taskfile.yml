@@ -57,6 +57,7 @@ tasks:
     env:
       NUXT_PUBLIC_API_URL: "{{.API_URL}}"
       NUXT_PUBLIC_APP_URL: "{{.APP_URL}}"
+      NUXT_PUBLIC_LOG_LEVEL: debug
     cmds:
       - bun run dev
     interactive: true
@@ -73,6 +74,7 @@ tasks:
     env:
       NUXT_PUBLIC_API_URL: "{{.API_URL}}"
       NUXT_PUBLIC_APP_URL: "{{.APP_URL}}"
+      NUXT_PUBLIC_LOG_LEVEL: debug
     cmds:
       - bun run dev
     interactive: true

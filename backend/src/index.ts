@@ -3,6 +3,7 @@ import { HTTPException } from "hono/http-exception";
 import { join } from "node:path";
 import { env } from "./env";
 import { runMigrate } from "./db/migrate";
+import { log } from "./lib/logger";
 
 runMigrate();
 import { authRoutes } from "./routes/auth";
@@ -32,11 +33,42 @@ app.use("*", async (c, next) => {
   c.header("Access-Control-Allow-Origin", "*");
 });
 
+const SKIP_REQUEST_LOG = ["/api/health"];
+
+app.use("*", async (c, next) => {
+  const path = c.req.path;
+  if (SKIP_REQUEST_LOG.includes(path) || path.startsWith("/uploads/")) {
+    await next();
+    return;
+  }
+
+  const start = Date.now();
+  await next();
+  const duration = Date.now() - start;
+
+  const parts = [
+    `${c.req.method} ${path}`,
+    `→ ${c.res.status}`,
+    `${duration}ms`,
+  ];
+
+  try {
+    const userId = c.get("userId" as never) as string | undefined;
+    const storeId = c.get("storeId" as never) as string | undefined;
+    if (userId) parts.push(`userId=${userId}`);
+    if (storeId) parts.push(`storeId=${storeId}`);
+  } catch {
+    // context keys not set on this route
+  }
+
+  log.debug(parts.join(" "));
+});
+
 app.onError((err, c) => {
   if (err instanceof HTTPException) {
     return c.json({ message: err.message }, err.status);
   }
-  console.error(err);
+  log.error(`${c.req.method} ${c.req.path}`, err);
   return c.json({ message: "Internal server error" }, 500);
 });
 
@@ -60,7 +92,7 @@ app.route("/api/stores", inventoryRoutes);
 app.route("/api/stores", orderRoutes);
 app.route("/api/stores", syncRoutes);
 
-console.log(`API listening on http://0.0.0.0:${env.port}`);
+log.info(`API listening on http://0.0.0.0:${env.port}`);
 
 export default {
   port: env.port,
