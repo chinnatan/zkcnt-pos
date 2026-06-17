@@ -3,6 +3,7 @@ import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
 import { db } from "../db/client";
 import { discounts } from "../db/schema";
+import { buildChanges, logAuditEvent } from "../lib/audit";
 import { generateId } from "../lib/id";
 import { mapDiscount } from "../lib/mappers";
 import { nowIso } from "../lib/timestamps";
@@ -41,6 +42,7 @@ discountRoutes.post(
   requireStoreMember,
   async (c) => {
     const storeId = c.req.param("storeId");
+    const userId = c.get("userId");
     const body = await c.req.json<Record<string, unknown>>();
     const now = nowIso();
     const id = generateId();
@@ -59,6 +61,16 @@ discountRoutes.post(
       updated: now,
     });
 
+    logAuditEvent(c, {
+      store: storeId,
+      actor: userId,
+      action: "discount.create",
+      entityType: "discount",
+      entityId: id,
+      summary: `สร้างส่วนลด "${String(body.name ?? "")}"`,
+      metadata: { type: body.type, value: Number(body.value ?? 0) },
+    });
+
     const rows = await db.select().from(discounts).where(eq(discounts.id, id)).limit(1);
     return c.json(mapDiscount(rows[0]!), 201);
   },
@@ -71,8 +83,17 @@ discountRoutes.patch(
   async (c) => {
     const storeId = c.req.param("storeId");
     const id = c.req.param("id");
+    const userId = c.get("userId");
     const body = await c.req.json<Record<string, unknown>>();
     const now = nowIso();
+
+    const existing = await db
+      .select()
+      .from(discounts)
+      .where(and(eq(discounts.id, id), eq(discounts.store, storeId)))
+      .limit(1);
+
+    if (!existing[0]) throw new HTTPException(404, { message: "Not found" });
 
     const updates: Partial<typeof discounts.$inferInsert> = { updated: now };
     if (body.name !== undefined) updates.name = String(body.name);
@@ -90,6 +111,24 @@ discountRoutes.patch(
 
     const rows = await db.select().from(discounts).where(eq(discounts.id, id)).limit(1);
     if (!rows[0]) throw new HTTPException(404, { message: "Not found" });
+
+    const changes = buildChanges(
+      existing[0] as unknown as Record<string, unknown>,
+      rows[0] as unknown as Record<string, unknown>,
+      ["name", "type", "value", "minPurchase", "isActive", "startDate", "endDate"],
+    );
+    if (Object.keys(changes).length > 0) {
+      logAuditEvent(c, {
+        store: storeId,
+        actor: userId,
+        action: "discount.update",
+        entityType: "discount",
+        entityId: id,
+        summary: `แก้ไขส่วนลด "${rows[0].name}"`,
+        changes,
+      });
+    }
+
     return c.json(mapDiscount(rows[0]));
   },
 );
@@ -101,10 +140,28 @@ discountRoutes.delete(
   async (c) => {
     const storeId = c.req.param("storeId");
     const id = c.req.param("id");
+    const userId = c.get("userId");
+
+    const existing = await db
+      .select()
+      .from(discounts)
+      .where(and(eq(discounts.id, id), eq(discounts.store, storeId)))
+      .limit(1);
 
     await db
       .delete(discounts)
       .where(and(eq(discounts.id, id), eq(discounts.store, storeId)));
+
+    if (existing[0]) {
+      logAuditEvent(c, {
+        store: storeId,
+        actor: userId,
+        action: "discount.delete",
+        entityType: "discount",
+        entityId: id,
+        summary: `ลบส่วนลด "${existing[0].name}"`,
+      });
+    }
 
     return c.json({ success: true });
   },

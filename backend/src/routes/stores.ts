@@ -10,6 +10,7 @@ import {
 } from "../db/schema";
 import { env } from "../env";
 import { sendInviteEmail } from "../lib/email";
+import { buildChanges, logAuditEvent } from "../lib/audit";
 import { generateId, generateToken } from "../lib/id";
 import {
   mapStore,
@@ -105,6 +106,15 @@ storeRoutes.post("/", authMiddleware, async (c) => {
     userId,
   );
 
+  logAuditEvent(c, {
+    store: row.id,
+    actor: userId,
+    action: "store.create",
+    entityType: "store",
+    entityId: row.id,
+    summary: `สร้างร้าน "${row.name}"`,
+  });
+
   return c.json(mapStore(row), 201);
 });
 
@@ -124,8 +134,17 @@ storeRoutes.patch(
   requireStoreMember,
   async (c) => {
     const storeId = c.req.param("storeId");
+    const userId = c.get("userId");
     const body = await c.req.json<Record<string, unknown>>();
     const now = nowIso();
+
+    const existing = await db
+      .select()
+      .from(stores)
+      .where(eq(stores.id, storeId))
+      .limit(1);
+
+    if (!existing[0]) throw new HTTPException(404, { message: "Store not found" });
 
     const updates: Partial<typeof stores.$inferInsert> = { updated: now };
     if (body.name !== undefined) updates.name = String(body.name);
@@ -137,6 +156,24 @@ storeRoutes.patch(
     await db.update(stores).set(updates).where(eq(stores.id, storeId));
 
     const rows = await db.select().from(stores).where(eq(stores.id, storeId)).limit(1);
+
+    const changes = buildChanges(
+      existing[0] as unknown as Record<string, unknown>,
+      rows[0] as unknown as Record<string, unknown>,
+      ["name", "address", "phone", "taxId", "settings"],
+    );
+    if (Object.keys(changes).length > 0) {
+      logAuditEvent(c, {
+        store: storeId,
+        actor: userId,
+        action: "store.update",
+        entityType: "store",
+        entityId: storeId,
+        summary: `แก้ไขข้อมูลร้าน "${rows[0]!.name}"`,
+        changes,
+      });
+    }
+
     return c.json(mapStore(rows[0]!));
   },
 );
@@ -265,6 +302,16 @@ storeRoutes.post(
       .where(eq(storeInvites.id, id))
       .limit(1);
 
+    logAuditEvent(c, {
+      store: storeId,
+      actor: userId,
+      action: "invite.create",
+      entityType: "store_invite",
+      entityId: id,
+      summary: `เชิญ ${email} เป็น ${role}`,
+      metadata: { email, role },
+    });
+
     return c.json(mapStoreInvite(rows[0]!), 201);
   },
 );
@@ -284,10 +331,28 @@ storeRoutes.patch(
       throw new HTTPException(400, { message: "status required" });
     }
 
+    const existing = await db
+      .select()
+      .from(storeInvites)
+      .where(and(eq(storeInvites.id, inviteId), eq(storeInvites.store, storeId)))
+      .limit(1);
+
     await db
       .update(storeInvites)
       .set({ status: body.status as "cancelled", updated: nowIso() })
       .where(and(eq(storeInvites.id, inviteId), eq(storeInvites.store, storeId)));
+
+    if (existing[0] && body.status === "cancelled") {
+      logAuditEvent(c, {
+        store: storeId,
+        actor: userId,
+        action: "invite.cancel",
+        entityType: "store_invite",
+        entityId: inviteId,
+        summary: `ยกเลิกคำเชิญ ${existing[0].email}`,
+        metadata: { email: existing[0].email },
+      });
+    }
 
     const rows = await db
       .select()
@@ -306,10 +371,29 @@ storeRoutes.delete(
   async (c) => {
     const storeId = c.req.param("storeId");
     const memberId = c.req.param("memberId");
+    const userId = c.get("userId");
+
+    const existing = await db
+      .select()
+      .from(storeMembers)
+      .where(and(eq(storeMembers.id, memberId), eq(storeMembers.store, storeId)))
+      .limit(1);
 
     await db
       .delete(storeMembers)
       .where(and(eq(storeMembers.id, memberId), eq(storeMembers.store, storeId)));
+
+    if (existing[0]) {
+      logAuditEvent(c, {
+        store: storeId,
+        actor: userId,
+        action: "member.remove",
+        entityType: "store_member",
+        entityId: memberId,
+        summary: `ลบสมาชิก (user: ${existing[0].user})`,
+        metadata: { user_id: existing[0].user, role: existing[0].role },
+      });
+    }
 
     return c.json({ success: true });
   },
@@ -373,6 +457,16 @@ memberRoutes.post("/add-by-email", authMiddleware, async (c) => {
     isActive: true,
     created: now,
     updated: now,
+  });
+
+  logAuditEvent(c, {
+    store: storeId,
+    actor: userId,
+    action: "member.add",
+    entityType: "store_member",
+    entityId: memberId,
+    summary: `เพิ่มสมาชิก ${email} เป็น ${role}`,
+    metadata: { email, role, user_id: targetUser.id },
   });
 
   return c.json({
@@ -498,6 +592,16 @@ inviteRoutes.post("/accept", authMiddleware, async (c) => {
     .update(storeInvites)
     .set({ status: "accepted", updated: now })
     .where(eq(storeInvites.id, invite.id));
+
+  logAuditEvent(c, {
+    store: invite.store,
+    actor: userId,
+    action: "invite.accept",
+    entityType: "store_invite",
+    entityId: invite.id,
+    summary: `${user.email} ยอมรับคำเชิญเป็น ${invite.role}`,
+    metadata: { email: user.email, role: invite.role },
+  });
 
   return c.json({ success: true, storeId: invite.store });
 });

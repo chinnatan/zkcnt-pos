@@ -299,6 +299,34 @@ export function mapInventoryTransaction(row: {
   });
 }
 
+export function mapAuditEvent(row: {
+  id: string;
+  store: string | null;
+  actor: string | null;
+  action: string;
+  entityType: string;
+  entityId: string;
+  summary: string;
+  changes: Record<string, { from: unknown; to: unknown }>;
+  metadata: Record<string, unknown>;
+  created: string;
+  actorName?: string | null;
+}) {
+  return {
+    id: row.id,
+    store: row.store,
+    actor: row.actor,
+    actor_name: row.actorName ?? null,
+    action: row.action,
+    entity_type: row.entityType,
+    entity_id: row.entityId,
+    summary: row.summary,
+    changes: row.changes,
+    metadata: row.metadata,
+    created: row.created,
+  };
+}
+
 export function mapDiscount(row: {
   id: string;
   store: string;

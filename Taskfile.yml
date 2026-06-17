@@ -65,7 +65,7 @@ tasks:
   local:backend:
     desc: Start backend container for local dev
     cmds:
-      - "{{.DEV_COMPOSE}} up backend -d"
+      - "{{.DEV_COMPOSE}} up backend -d --build"
 
   local:frontend:
     desc: Run frontend dev server only (requires backend running)

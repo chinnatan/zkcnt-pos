@@ -3,6 +3,7 @@ import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
 import { db } from "../db/client";
 import { customers } from "../db/schema";
+import { buildChanges, logAuditEvent } from "../lib/audit";
 import { generateId } from "../lib/id";
 import { mapCustomer } from "../lib/mappers";
 import { nowIso } from "../lib/timestamps";
@@ -41,6 +42,7 @@ customerRoutes.post(
   requireStoreMember,
   async (c) => {
     const storeId = c.req.param("storeId");
+    const userId = c.get("userId");
     const body = await c.req.json<Record<string, unknown>>();
     const now = nowIso();
     const id = generateId();
@@ -59,6 +61,15 @@ customerRoutes.post(
       updated: now,
     });
 
+    logAuditEvent(c, {
+      store: storeId,
+      actor: userId,
+      action: "customer.create",
+      entityType: "customer",
+      entityId: id,
+      summary: `สร้างลูกค้า "${String(body.name ?? "")}"`,
+    });
+
     const rows = await db.select().from(customers).where(eq(customers.id, id)).limit(1);
     return c.json(mapCustomer(rows[0]!), 201);
   },
@@ -71,8 +82,17 @@ customerRoutes.patch(
   async (c) => {
     const storeId = c.req.param("storeId");
     const id = c.req.param("id");
+    const userId = c.get("userId");
     const body = await c.req.json<Record<string, unknown>>();
     const now = nowIso();
+
+    const existing = await db
+      .select()
+      .from(customers)
+      .where(and(eq(customers.id, id), eq(customers.store, storeId)))
+      .limit(1);
+
+    if (!existing[0]) throw new HTTPException(404, { message: "Not found" });
 
     const updates: Partial<typeof customers.$inferInsert> = { updated: now };
     if (body.name !== undefined) updates.name = String(body.name);
@@ -90,6 +110,24 @@ customerRoutes.patch(
 
     const rows = await db.select().from(customers).where(eq(customers.id, id)).limit(1);
     if (!rows[0]) throw new HTTPException(404, { message: "Not found" });
+
+    const changes = buildChanges(
+      existing[0] as unknown as Record<string, unknown>,
+      rows[0] as unknown as Record<string, unknown>,
+      ["name", "phone", "email", "address", "note"],
+    );
+    if (Object.keys(changes).length > 0) {
+      logAuditEvent(c, {
+        store: storeId,
+        actor: userId,
+        action: "customer.update",
+        entityType: "customer",
+        entityId: id,
+        summary: `แก้ไขลูกค้า "${rows[0].name}"`,
+        changes,
+      });
+    }
+
     return c.json(mapCustomer(rows[0]));
   },
 );
@@ -101,10 +139,28 @@ customerRoutes.delete(
   async (c) => {
     const storeId = c.req.param("storeId");
     const id = c.req.param("id");
+    const userId = c.get("userId");
+
+    const existing = await db
+      .select()
+      .from(customers)
+      .where(and(eq(customers.id, id), eq(customers.store, storeId)))
+      .limit(1);
 
     await db
       .delete(customers)
       .where(and(eq(customers.id, id), eq(customers.store, storeId)));
+
+    if (existing[0]) {
+      logAuditEvent(c, {
+        store: storeId,
+        actor: userId,
+        action: "customer.delete",
+        entityType: "customer",
+        entityId: id,
+        summary: `ลบลูกค้า "${existing[0].name}"`,
+      });
+    }
 
     return c.json({ success: true });
   },

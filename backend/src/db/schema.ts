@@ -1,5 +1,6 @@
 import { sql } from "drizzle-orm";
 import {
+  index,
   integer,
   real,
   sqliteTable,
@@ -239,6 +240,33 @@ export const discounts = sqliteTable("discounts", {
   ...timestamps,
 });
 
+export const auditEvents = sqliteTable(
+  "audit_events",
+  {
+    id: text("id").primaryKey(),
+    store: text("store").references(() => stores.id),
+    actor: text("actor").references(() => users.id),
+    action: text("action").notNull(),
+    entityType: text("entity_type").notNull(),
+    entityId: text("entity_id").notNull(),
+    summary: text("summary").notNull(),
+    changes: text("changes", { mode: "json" })
+      .$type<Record<string, { from: unknown; to: unknown }>>()
+      .notNull()
+      .default({}),
+    metadata: text("metadata", { mode: "json" })
+      .$type<Record<string, unknown>>()
+      .notNull()
+      .default({}),
+    created: text("created").notNull(),
+  },
+  (t) => [
+    index("idx_audit_store_created").on(t.store, t.created),
+    index("idx_audit_entity").on(t.store, t.entityType, t.entityId),
+    index("idx_audit_actor").on(t.store, t.actor),
+  ],
+);
+
 export const schema = {
   users,
   stores,
@@ -252,4 +280,5 @@ export const schema = {
   inventory,
   inventoryTransactions,
   discounts,
+  auditEvents,
 };

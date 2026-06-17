@@ -126,6 +126,26 @@
               <span>{{ t('common.total') }}</span>
               <span>{{ formatCurrency(selectedOrder.total) }}</span>
             </div>
+
+            <div
+              v-if="isManager && selectedOrder.status === 'completed'"
+              class="mt-4 flex gap-2 border-t border-gray-100 pt-4"
+            >
+              <button
+                class="flex-1 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700 hover:bg-red-100 disabled:opacity-50"
+                :disabled="isUpdatingStatus"
+                @click="confirmStatusChange('voided')"
+              >
+                {{ t('ordersPage.voidOrder') }}
+              </button>
+              <button
+                class="flex-1 rounded-lg border border-yellow-200 bg-yellow-50 px-3 py-2 text-sm font-medium text-yellow-700 hover:bg-yellow-100 disabled:opacity-50"
+                :disabled="isUpdatingStatus"
+                @click="confirmStatusChange('refunded')"
+              >
+                {{ t('ordersPage.refundOrder') }}
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -141,12 +161,14 @@ definePageMeta({ middleware: "auth" });
 const { t } = useI18n();
 const { formatCurrency, formatDate } = useFormat();
 const { statusLabel, paymentLabel } = useLabels();
-const { orders, isLoading, fetchOrders, getOrderItems } = useOrders();
+const { orders, isLoading, fetchOrders, getOrderItems, updateOrderStatus } = useOrders();
+const { isManager } = useStore();
 
 const statusFilter = ref("");
 const selectedOrder = ref<Order | null>(null);
 const orderItems = ref<OrderItem[]>([]);
 const orderItemsLoading = ref(false);
+const isUpdatingStatus = ref(false);
 
 const filteredOrders = computed(() => {
   if (!statusFilter.value) return orders.value;
@@ -180,7 +202,31 @@ async function viewOrder(order: Order) {
   }
 }
 
-onMounted(() => {
-  fetchOrders(100);
+async function confirmStatusChange(status: "voided" | "refunded") {
+  if (!selectedOrder.value) return;
+  const label = status === "voided" ? t("ordersPage.voidOrder") : t("ordersPage.refundOrder");
+  const reason = window.prompt(t("ordersPage.reasonPrompt", { action: label }));
+  if (reason === null) return;
+
+  isUpdatingStatus.value = true;
+  try {
+    const updated = await updateOrderStatus(selectedOrder.value.id, status, reason);
+    selectedOrder.value = updated;
+    await fetchOrders(100);
+  } catch {
+    alert(t("errors.updateFailed"));
+  } finally {
+    isUpdatingStatus.value = false;
+  }
+}
+
+onMounted(async () => {
+  await fetchOrders(100);
+  const route = useRoute();
+  const viewId = route.query.view as string | undefined;
+  if (viewId) {
+    const order = orders.value.find((o) => o.id === viewId);
+    if (order) await viewOrder(order);
+  }
 });
 </script>

@@ -3,6 +3,7 @@ import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
 import { db } from "../db/client";
 import { categories, products } from "../db/schema";
+import { buildChanges, logAuditEvent } from "../lib/audit";
 import { generateId } from "../lib/id";
 import { mapCategory, mapProduct } from "../lib/mappers";
 import { nowIso } from "../lib/timestamps";
@@ -43,6 +44,7 @@ catalogRoutes.post(
   requireStoreMember,
   async (c) => {
     const storeId = c.req.param("storeId");
+    const userId = c.get("userId");
     const body = await c.req.json<Record<string, unknown>>();
     const now = nowIso();
     const id = generateId();
@@ -65,6 +67,15 @@ catalogRoutes.post(
       .where(eq(categories.id, id))
       .limit(1);
 
+    logAuditEvent(c, {
+      store: storeId,
+      actor: userId,
+      action: "category.create",
+      entityType: "category",
+      entityId: id,
+      summary: `สร้างหมวดหมู่ "${String(body.name ?? "")}"`,
+    });
+
     return c.json(mapCategory(rows[0]!), 201);
   },
 );
@@ -76,8 +87,17 @@ catalogRoutes.patch(
   async (c) => {
     const storeId = c.req.param("storeId");
     const id = c.req.param("id");
+    const userId = c.get("userId");
     const body = await c.req.json<Record<string, unknown>>();
     const now = nowIso();
+
+    const existing = await db
+      .select()
+      .from(categories)
+      .where(and(eq(categories.id, id), eq(categories.store, storeId)))
+      .limit(1);
+
+    if (!existing[0]) throw new HTTPException(404, { message: "Not found" });
 
     const updates: Partial<typeof categories.$inferInsert> = { updated: now };
     if (body.name !== undefined) updates.name = String(body.name);
@@ -98,6 +118,24 @@ catalogRoutes.patch(
       .limit(1);
 
     if (!rows[0]) throw new HTTPException(404, { message: "Not found" });
+
+    const changes = buildChanges(
+      existing[0] as unknown as Record<string, unknown>,
+      rows[0] as unknown as Record<string, unknown>,
+      ["name", "description", "sortOrder", "isActive"],
+    );
+    if (Object.keys(changes).length > 0) {
+      logAuditEvent(c, {
+        store: storeId,
+        actor: userId,
+        action: "category.update",
+        entityType: "category",
+        entityId: id,
+        summary: `แก้ไขหมวดหมู่ "${rows[0].name}"`,
+        changes,
+      });
+    }
+
     return c.json(mapCategory(rows[0]));
   },
 );
@@ -109,10 +147,28 @@ catalogRoutes.delete(
   async (c) => {
     const storeId = c.req.param("storeId");
     const id = c.req.param("id");
+    const userId = c.get("userId");
+
+    const existing = await db
+      .select()
+      .from(categories)
+      .where(and(eq(categories.id, id), eq(categories.store, storeId)))
+      .limit(1);
 
     await db
       .delete(categories)
       .where(and(eq(categories.id, id), eq(categories.store, storeId)));
+
+    if (existing[0]) {
+      logAuditEvent(c, {
+        store: storeId,
+        actor: userId,
+        action: "category.delete",
+        entityType: "category",
+        entityId: id,
+        summary: `ลบหมวดหมู่ "${existing[0].name}"`,
+      });
+    }
 
     return c.json({ success: true });
   },
@@ -141,6 +197,7 @@ catalogRoutes.post(
   requireStoreMember,
   async (c) => {
     const storeId = c.req.param("storeId");
+    const userId = c.get("userId");
     const contentType = c.req.header("content-type") ?? "";
     const now = nowIso();
     const id = generateId();
@@ -180,6 +237,17 @@ catalogRoutes.post(
     });
 
     const rows = await db.select().from(products).where(eq(products.id, id)).limit(1);
+
+    logAuditEvent(c, {
+      store: storeId,
+      actor: userId,
+      action: "product.create",
+      entityType: "product",
+      entityId: id,
+      summary: `สร้างสินค้า "${String(body.name ?? "")}" ฿${Number(body.price ?? 0).toFixed(2)}`,
+      metadata: { price: Number(body.price ?? 0), sku: String(body.sku ?? "") },
+    });
+
     return c.json(mapProduct(rows[0]!), 201);
   },
 );
@@ -191,6 +259,7 @@ catalogRoutes.patch(
   async (c) => {
     const storeId = c.req.param("storeId");
     const id = c.req.param("id");
+    const userId = c.get("userId");
     const contentType = c.req.header("content-type") ?? "";
     const now = nowIso();
 
@@ -243,6 +312,24 @@ catalogRoutes.patch(
       .where(and(eq(products.id, id), eq(products.store, storeId)));
 
     const rows = await db.select().from(products).where(eq(products.id, id)).limit(1);
+
+    const changes = buildChanges(
+      existing[0] as unknown as Record<string, unknown>,
+      rows[0] as unknown as Record<string, unknown>,
+      ["name", "price", "cost", "sku", "barcode", "isActive", "trackInventory"],
+    );
+    if (Object.keys(changes).length > 0) {
+      logAuditEvent(c, {
+        store: storeId,
+        actor: userId,
+        action: "product.update",
+        entityType: "product",
+        entityId: id,
+        summary: `แก้ไขสินค้า "${rows[0]!.name}"`,
+        changes,
+      });
+    }
+
     return c.json(mapProduct(rows[0]!));
   },
 );
@@ -254,6 +341,7 @@ catalogRoutes.delete(
   async (c) => {
     const storeId = c.req.param("storeId");
     const id = c.req.param("id");
+    const userId = c.get("userId");
 
     const existing = await db
       .select()
@@ -267,6 +355,17 @@ catalogRoutes.delete(
       .delete(products)
       .where(and(eq(products.id, id), eq(products.store, storeId)));
 
+    if (existing[0]) {
+      logAuditEvent(c, {
+        store: storeId,
+        actor: userId,
+        action: "product.delete",
+        entityType: "product",
+        entityId: id,
+        summary: `ลบสินค้า "${existing[0].name}"`,
+      });
+    }
+
     return c.json({ success: true });
   },
 );
@@ -278,6 +377,7 @@ catalogRoutes.post(
   async (c) => {
     const storeId = c.req.param("storeId");
     const id = c.req.param("id");
+    const userId = c.get("userId");
     const form = await c.req.parseBody();
     const file = form.image;
 
@@ -305,6 +405,19 @@ catalogRoutes.post(
       .where(eq(products.id, id));
 
     const rows = await db.select().from(products).where(eq(products.id, id)).limit(1);
+
+    if (existing[0].image !== imagePath) {
+      logAuditEvent(c, {
+        store: storeId,
+        actor: userId,
+        action: "product.update",
+        entityType: "product",
+        entityId: id,
+        summary: `อัปเดตรูปสินค้า "${existing[0].name}"`,
+        changes: { image: { from: existing[0].image, to: imagePath } },
+      });
+    }
+
     return c.json(mapProduct(rows[0]!));
   },
 );

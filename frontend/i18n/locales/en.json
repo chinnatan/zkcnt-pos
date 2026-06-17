@@ -202,7 +202,10 @@
     "title": "Orders",
     "noOrders": "No orders found",
     "orderDetail": "Order {number}",
-    "loadingItems": "Loading items..."
+    "loadingItems": "Loading items...",
+    "voidOrder": "Void order",
+    "refundOrder": "Refund order",
+    "reasonPrompt": "Reason for {action} (optional)"
   },
   "customersPage": {
     "title": "Customers",
@@ -252,7 +255,8 @@
     "copyInviteLink": "Copy link",
     "inviteLinkCopied": "Link copied to clipboard",
     "inviteLinkCopyFailed": "Could not copy link",
-    "confirmRemoveMember": "Remove this team member?"
+    "confirmRemoveMember": "Remove this team member?",
+    "auditLog": "Audit log"
   },
   "invitePage": {
     "title": "Team Invitation",
@@ -306,6 +310,29 @@
     "change": "Change",
     "thankYou": "Thank you!",
     "title": "Receipt"
+  },
+  "auditPage": {
+    "title": "Audit log",
+    "offlineHint": "Internet connection required to view audit log",
+    "since": "From",
+    "until": "To",
+    "actionFilter": "Action",
+    "allActions": "All actions",
+    "search": "Search",
+    "exportCsv": "Export CSV",
+    "reconciliation": "Sales reconciliation",
+    "ordersCount": "Orders (completed)",
+    "auditCount": "Audit order.create",
+    "bills": "bills",
+    "voided": "Voided",
+    "refunded": "Refunded",
+    "matchOk": "✓ Sales match audit log",
+    "matchFail": "✗ Sales do not match audit log — review required",
+    "noEvents": "No events in this period",
+    "actor": "Actor",
+    "action": "Action",
+    "summary": "Summary",
+    "showing": "Showing {shown} of {total} events"
   },
   "errors": {
     "invalidCredentials": "Invalid email or password",

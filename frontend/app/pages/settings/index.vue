@@ -7,6 +7,18 @@
     </div>
 
     <div v-else class="space-y-6">
+      <div v-if="isManager" class="rounded-xl bg-white p-4 shadow-sm">
+        <NuxtLink
+          to="/settings/audit"
+          class="flex items-center justify-between rounded-lg px-3 py-2 text-sm font-medium text-primary-700 hover:bg-primary-50"
+        >
+          <span>{{ t('settingsPage.auditLog') }}</span>
+          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+          </svg>
+        </NuxtLink>
+      </div>
+
       <div class="rounded-xl bg-white p-6 shadow-sm">
         <h3 class="mb-4 text-base font-semibold text-gray-800">{{ t('settingsPage.storeInfo') }}</h3>
         <form @submit.prevent="saveStoreInfo" class="space-y-4">

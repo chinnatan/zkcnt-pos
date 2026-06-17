@@ -8,6 +8,7 @@ import { mapUser } from "../lib/mappers";
 import { hashPassword, verifyPassword } from "../lib/password";
 import { generateId } from "../lib/id";
 import { createLogger } from "../lib/logger";
+import { logAuditEvent } from "../lib/audit";
 import { nowIso } from "../lib/timestamps";
 import { authMiddleware, type AuthVariables } from "../middleware/auth";
 
@@ -67,6 +68,15 @@ authRoutes.post("/register", async (c) => {
 
   logger.info(`register success userId=${id} email=${email}`);
 
+  logAuditEvent(c, {
+    actor: id,
+    action: "auth.register",
+    entityType: "user",
+    entityId: id,
+    summary: `ลงทะเบียนผู้ใช้ ${email}`,
+    metadata: { email },
+  });
+
   return c.json({ token, refreshToken, user });
 });
 
@@ -83,6 +93,13 @@ authRoutes.post("/login", async (c) => {
   const row = rows[0];
   if (!row || !(await verifyPassword(password, row.passwordHash))) {
     logger.warn(`login failed email=${email}`);
+    logAuditEvent(c, {
+      action: "auth.login_failed",
+      entityType: "user",
+      entityId: email,
+      summary: `เข้าสู่ระบบไม่สำเร็จ ${email}`,
+      metadata: { email },
+    });
     throw new HTTPException(400, { message: "Invalid email or password" });
   }
 
@@ -91,6 +108,15 @@ authRoutes.post("/login", async (c) => {
   const refreshToken = await signRefreshToken(row.id);
 
   logger.info(`login success userId=${row.id} email=${email}`);
+
+  logAuditEvent(c, {
+    actor: row.id,
+    action: "auth.login",
+    entityType: "user",
+    entityId: row.id,
+    summary: `เข้าสู่ระบบ ${email}`,
+    metadata: { email },
+  });
 
   return c.json({ token, refreshToken, user });
 });

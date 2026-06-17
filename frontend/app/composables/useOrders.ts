@@ -196,11 +196,40 @@ export function useOrders() {
     return local as OrderItem[];
   }
 
+  async function updateOrderStatus(
+    orderId: string,
+    status: "voided" | "refunded",
+    reason?: string,
+  ): Promise<Order> {
+    if (!activeStoreId.value) {
+      throw new Error("No active store");
+    }
+    if (!isOnline.value) {
+      throw new Error("Void/refund requires online connection");
+    }
+
+    const record = await $api.send<Order>(
+      `/stores/${activeStoreId.value}/orders/${orderId}`,
+      { method: "PATCH", body: { status, reason: reason ?? "" } },
+    );
+    await db.orders.put(record);
+    const idx = orders.value.findIndex((o) => o.id === orderId);
+    if (idx >= 0) {
+      orders.value = [
+        ...orders.value.slice(0, idx),
+        record,
+        ...orders.value.slice(idx + 1),
+      ];
+    }
+    return record;
+  }
+
   return {
     orders: readonly(orders),
     isLoading: readonly(isLoading),
     fetchOrders,
     createOrder,
     getOrderItems,
+    updateOrderStatus,
   };
 }

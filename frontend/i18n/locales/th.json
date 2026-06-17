@@ -202,7 +202,10 @@
     "title": "ออเดอร์",
     "noOrders": "ไม่พบออเดอร์",
     "orderDetail": "ออเดอร์ {number}",
-    "loadingItems": "กำลังโหลดรายการ..."
+    "loadingItems": "กำลังโหลดรายการ...",
+    "voidOrder": "ยกเลิกบิล",
+    "refundOrder": "คืนเงิน",
+    "reasonPrompt": "เหตุผลสำหรับ{action} (ไม่บังคับ)"
   },
   "customersPage": {
     "title": "ลูกค้า",
@@ -252,7 +255,8 @@
     "copyInviteLink": "คัดลอกลิงก์",
     "inviteLinkCopied": "คัดลอกลิงก์แล้ว",
     "inviteLinkCopyFailed": "ไม่สามารถคัดลอกลิงก์ได้",
-    "confirmRemoveMember": "ลบสมาชิกคนนี้ออกจากทีม?"
+    "confirmRemoveMember": "ลบสมาชิกคนนี้ออกจากทีม?",
+    "auditLog": "ประวัติการทำรายการ"
   },
   "invitePage": {
     "title": "คำเชิญเข้าร่วมทีม",
@@ -306,6 +310,29 @@
     "change": "เงินทอน",
     "thankYou": "ขอบคุณที่ใช้บริการ!",
     "title": "ใบเสร็จ"
+  },
+  "auditPage": {
+    "title": "ประวัติการทำรายการ",
+    "offlineHint": "ต้องเชื่อมต่ออินเทอร์เน็ตเพื่อดูประวัติการทำรายการ",
+    "since": "ตั้งแต่",
+    "until": "ถึง",
+    "actionFilter": "การกระทำ",
+    "allActions": "ทุกการกระทำ",
+    "search": "ค้นหา",
+    "exportCsv": "Export CSV",
+    "reconciliation": "ตรวจสอบยอดขาย",
+    "ordersCount": "ออเดอร์ (completed)",
+    "auditCount": "Audit order.create",
+    "bills": "บิล",
+    "voided": "ยกเลิก",
+    "refunded": "คืนเงิน",
+    "matchOk": "✓ ยอดขายตรงกับ audit log",
+    "matchFail": "✗ ยอดขายไม่ตรงกับ audit log — ควรตรวจสอบ",
+    "noEvents": "ไม่พบประวัติในช่วงเวลานี้",
+    "actor": "ผู้ทำ",
+    "action": "การกระทำ",
+    "summary": "รายละเอียด",
+    "showing": "แสดง {shown} จาก {total} รายการ"
   },
   "errors": {
     "invalidCredentials": "อีเมลหรือรหัสผ่านไม่ถูกต้อง",

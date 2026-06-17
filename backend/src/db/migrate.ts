@@ -1,5 +1,6 @@
 import { mkdirSync } from "node:fs";
 import { env } from "../env";
+import { generateId } from "../lib/id";
 import { sqlite } from "./client";
 
 const DDL = `
@@ -175,11 +176,79 @@ CREATE TABLE IF NOT EXISTS discounts (
   created TEXT NOT NULL,
   updated TEXT NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS audit_events (
+  id TEXT PRIMARY KEY,
+  store TEXT REFERENCES stores(id),
+  actor TEXT REFERENCES users(id),
+  action TEXT NOT NULL,
+  entity_type TEXT NOT NULL,
+  entity_id TEXT NOT NULL,
+  summary TEXT NOT NULL,
+  changes TEXT NOT NULL DEFAULT '{}',
+  metadata TEXT NOT NULL DEFAULT '{}',
+  created TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_audit_store_created ON audit_events(store, created);
+CREATE INDEX IF NOT EXISTS idx_audit_entity ON audit_events(store, entity_type, entity_id);
+CREATE INDEX IF NOT EXISTS idx_audit_actor ON audit_events(store, actor);
 `;
 
 export function runMigrate() {
   mkdirSync(env.dataDir, { recursive: true });
   sqlite.exec(DDL);
+  backfillOrderAuditEvents();
+}
+
+function backfillOrderAuditEvents() {
+  const orders = sqlite
+    .query<
+      {
+        id: string;
+        store: string;
+        cashier: string;
+        order_number: string;
+        total: number;
+        payment_method: string;
+        client_id: string;
+        created: string;
+      },
+      []
+    >(
+      `SELECT o.id, o.store, o.cashier, o.order_number, o.total, o.payment_method, o.client_id, o.created
+       FROM orders o
+       WHERE NOT EXISTS (
+         SELECT 1 FROM audit_events a
+         WHERE a.entity_id = o.id AND a.action = 'order.create'
+       )`,
+    )
+    .all();
+
+  const insert = sqlite.prepare(
+    `INSERT INTO audit_events (id, store, actor, action, entity_type, entity_id, summary, changes, metadata, created)
+     VALUES (?, ?, ?, 'order.create', 'order', ?, ?, '{}', ?, ?)`,
+  );
+
+  for (const order of orders) {
+    const metadata = JSON.stringify({
+      client_id: order.client_id,
+      order_number: order.order_number,
+      payment_method: order.payment_method,
+      total: order.total,
+      backfilled: true,
+    });
+    const summary = `สร้างบิล #${order.order_number} ฿${order.total.toFixed(2)} (backfill)`;
+    insert.run(
+      generateId(),
+      order.store,
+      order.cashier,
+      order.id,
+      summary,
+      metadata,
+      order.created,
+    );
+  }
 }
 
 if (import.meta.main) {

@@ -211,6 +211,31 @@ export interface SyncQueueItem {
   store: string;
 }
 
+// ─── Audit ───────────────────────────────────────────────────────────────────
+
+export interface AuditEvent {
+  id: string;
+  store: string | null;
+  actor: string | null;
+  actor_name: string | null;
+  action: string;
+  entity_type: string;
+  entity_id: string;
+  summary: string;
+  changes: Record<string, { from: unknown; to: unknown }>;
+  metadata: Record<string, unknown>;
+  created: string;
+}
+
+export interface AuditReconciliation {
+  period: { since: string; until: string };
+  orders: { count: number; total: number };
+  audit_order_create: { count: number; total: number };
+  match: boolean;
+  voided: { count: number; total: number };
+  refunded: { count: number; total: number };
+}
+
 // ─── Cart (UI-only, not stored in DB) ────────────────────────────────────────
 
 export interface CartItem {

@@ -18,8 +18,14 @@ import {
 } from "./routes/stores";
 import { orderRoutes } from "./routes/orders";
 import { syncRoutes } from "./routes/sync";
+import { auditRoutes } from "./routes/audit";
 
 const app = new Hono();
+
+app.use("*", async (c, next) => {
+  c.set("requestId" as never, crypto.randomUUID());
+  await next();
+});
 
 app.use("*", async (c, next) => {
   if (c.req.method === "OPTIONS") {
@@ -55,8 +61,10 @@ app.use("*", async (c, next) => {
   try {
     const userId = c.get("userId" as never) as string | undefined;
     const storeId = c.get("storeId" as never) as string | undefined;
+    const requestId = c.get("requestId" as never) as string | undefined;
     if (userId) parts.push(`userId=${userId}`);
     if (storeId) parts.push(`storeId=${storeId}`);
+    if (requestId) parts.push(`requestId=${requestId}`);
   } catch {
     // context keys not set on this route
   }
@@ -91,6 +99,7 @@ app.route("/api/stores", discountRoutes);
 app.route("/api/stores", inventoryRoutes);
 app.route("/api/stores", orderRoutes);
 app.route("/api/stores", syncRoutes);
+app.route("/api/stores", auditRoutes);
 
 log.info(`API listening on http://0.0.0.0:${env.port}`);
 

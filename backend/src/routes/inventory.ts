@@ -7,6 +7,7 @@ import {
   inventoryTransactions,
   products,
 } from "../db/schema";
+import { buildChanges, logAuditEvent } from "../lib/audit";
 import { generateId } from "../lib/id";
 import { mapInventory, mapInventoryTransaction, mapProduct } from "../lib/mappers";
 import { nowIso } from "../lib/timestamps";
@@ -65,8 +66,17 @@ inventoryRoutes.patch(
   async (c) => {
     const storeId = c.req.param("storeId");
     const id = c.req.param("id");
+    const userId = c.get("userId");
     const body = await c.req.json<Record<string, unknown>>();
     const now = nowIso();
+
+    const existing = await db
+      .select()
+      .from(inventory)
+      .where(and(eq(inventory.id, id), eq(inventory.store, storeId)))
+      .limit(1);
+
+    if (!existing[0]) throw new HTTPException(404, { message: "Not found" });
 
     const updates: Partial<typeof inventory.$inferInsert> = { updated: now };
     if (body.quantity !== undefined) updates.quantity = Number(body.quantity);
@@ -79,9 +89,32 @@ inventoryRoutes.patch(
       .set(updates)
       .where(and(eq(inventory.id, id), eq(inventory.store, storeId)));
 
-    const rows = await db.select().from(inventory).where(eq(inventory.id, id)).limit(1);
-    if (!rows[0]) throw new HTTPException(404, { message: "Not found" });
-    return c.json(mapInventory(rows[0]));
+    const rows = await db
+      .select()
+      .from(inventory)
+      .where(eq(inventory.id, id))
+      .limit(1);
+
+    const changes = buildChanges(
+      existing[0] as unknown as Record<string, unknown>,
+      rows[0] as unknown as Record<string, unknown>,
+      ["quantity", "lowStockThreshold"],
+    );
+
+    if (Object.keys(changes).length > 0) {
+      logAuditEvent(c, {
+        store: storeId,
+        actor: userId,
+        action: "inventory.update",
+        entityType: "inventory",
+        entityId: id,
+        summary: `ปรับสต็อกสินค้า (product: ${existing[0].product})`,
+        changes,
+        metadata: { product_id: existing[0].product },
+      });
+    }
+
+    return c.json(mapInventory(rows[0]!));
   },
 );
 
@@ -91,21 +124,40 @@ inventoryRoutes.post(
   requireStoreMember,
   async (c) => {
     const storeId = c.req.param("storeId");
+    const userId = c.get("userId");
     const body = await c.req.json<Record<string, unknown>>();
     const now = nowIso();
     const id = generateId();
+    const productId = String(body.product ?? "");
 
     await db.insert(inventory).values({
       id,
       store: storeId,
-      product: String(body.product ?? ""),
+      product: productId,
       quantity: Number(body.quantity ?? 0),
       lowStockThreshold: Number(body.low_stock_threshold ?? 0),
       created: now,
       updated: now,
     });
 
-    const rows = await db.select().from(inventory).where(eq(inventory.id, id)).limit(1);
+    logAuditEvent(c, {
+      store: storeId,
+      actor: userId,
+      action: "inventory.create",
+      entityType: "inventory",
+      entityId: id,
+      summary: `สร้างสต็อกสินค้า (product: ${productId})`,
+      metadata: {
+        product_id: productId,
+        quantity: Number(body.quantity ?? 0),
+      },
+    });
+
+    const rows = await db
+      .select()
+      .from(inventory)
+      .where(eq(inventory.id, id))
+      .limit(1);
     return c.json(mapInventory(rows[0]!), 201);
   },
 );
@@ -122,13 +174,16 @@ inventoryRoutes.post(
     const id = generateId();
 
     const productId = String(body.product ?? "");
+    const txType =
+      (body.type as "stock_in" | "stock_out" | "adjustment" | "sale") ??
+      "adjustment";
     const afterQty = Number(body.after_qty ?? body.quantity ?? 0);
 
     await db.insert(inventoryTransactions).values({
       id,
       store: storeId,
       product: productId,
-      type: (body.type as "stock_in" | "stock_out" | "adjustment" | "sale") ?? "adjustment",
+      type: txType,
       quantity: Number(body.quantity ?? 0),
       beforeQty: Number(body.before_qty ?? 0),
       afterQty,
@@ -139,7 +194,6 @@ inventoryRoutes.post(
       updated: now,
     });
 
-    // Upsert inventory quantity
     const existing = await db
       .select()
       .from(inventory)
@@ -162,6 +216,23 @@ inventoryRoutes.post(
         updated: now,
       });
     }
+
+    logAuditEvent(c, {
+      store: storeId,
+      actor: userId,
+      action: "inventory_transaction.create",
+      entityType: "inventory_transaction",
+      entityId: id,
+      summary: `บันทึกการเคลื่อนไหวสต็อก (${txType}) product: ${productId}`,
+      metadata: {
+        type: txType,
+        product_id: productId,
+        quantity: Number(body.quantity ?? 0),
+        before_qty: Number(body.before_qty ?? 0),
+        after_qty: afterQty,
+        reference: String(body.reference ?? ""),
+      },
+    });
 
     const rows = await db
       .select()

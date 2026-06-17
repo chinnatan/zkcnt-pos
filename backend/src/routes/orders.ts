@@ -9,6 +9,7 @@ import {
   orders,
   products,
 } from "../db/schema";
+import { logAuditEvent } from "../lib/audit";
 import { generateId } from "../lib/id";
 import { mapOrder, mapOrderItem } from "../lib/mappers";
 import { nowIso } from "../lib/timestamps";
@@ -17,6 +18,7 @@ import {
   type AuthVariables,
 } from "../middleware/auth";
 import {
+  requireStoreManager,
   requireStoreMember,
   type StoreAccessVariables,
 } from "../middleware/store-access";
@@ -24,6 +26,72 @@ import {
 type Vars = AuthVariables & StoreAccessVariables;
 
 export const orderRoutes = new Hono<{ Variables: Vars }>();
+
+async function reverseInventoryForOrder(
+  storeId: string,
+  orderId: string,
+  userId: string,
+  note: string,
+) {
+  const items = await db
+    .select()
+    .from(orderItems)
+    .where(eq(orderItems.order, orderId));
+  const now = nowIso();
+
+  for (const item of items) {
+    const productRows = await db
+      .select()
+      .from(products)
+      .where(eq(products.id, item.product))
+      .limit(1);
+
+    if (!productRows[0]?.trackInventory) continue;
+
+    const invRows = await db
+      .select()
+      .from(inventory)
+      .where(
+        and(eq(inventory.store, storeId), eq(inventory.product, item.product)),
+      )
+      .limit(1);
+
+    const beforeQty = invRows[0]?.quantity ?? 0;
+    const afterQty = beforeQty + item.quantity;
+
+    if (invRows[0]) {
+      await db
+        .update(inventory)
+        .set({ quantity: afterQty, updated: now })
+        .where(eq(inventory.id, invRows[0].id));
+    } else {
+      await db.insert(inventory).values({
+        id: generateId(),
+        store: storeId,
+        product: item.product,
+        quantity: afterQty,
+        lowStockThreshold: 0,
+        created: now,
+        updated: now,
+      });
+    }
+
+    await db.insert(inventoryTransactions).values({
+      id: generateId(),
+      store: storeId,
+      product: item.product,
+      type: "adjustment",
+      quantity: item.quantity,
+      beforeQty,
+      afterQty,
+      reference: orderId,
+      note,
+      createdBy: userId,
+      created: now,
+      updated: now,
+    });
+  }
+}
 
 orderRoutes.get(
   "/:storeId/orders",
@@ -59,6 +127,83 @@ orderRoutes.get(
   },
 );
 
+orderRoutes.patch(
+  "/:storeId/orders/:orderId",
+  authMiddleware,
+  requireStoreManager,
+  async (c) => {
+    const storeId = c.req.param("storeId");
+    const orderId = c.req.param("orderId");
+    const userId = c.get("userId");
+    const body = await c.req.json<{ status?: string; reason?: string }>();
+
+    const newStatus = body.status;
+    if (newStatus !== "voided" && newStatus !== "refunded") {
+      throw new HTTPException(400, {
+        message: "status must be voided or refunded",
+      });
+    }
+
+    const orderRows = await db
+      .select()
+      .from(orders)
+      .where(and(eq(orders.id, orderId), eq(orders.store, storeId)))
+      .limit(1);
+
+    const order = orderRows[0];
+    if (!order) {
+      throw new HTTPException(404, { message: "Order not found" });
+    }
+
+    if (order.status !== "completed") {
+      throw new HTTPException(400, {
+        message: "Only completed orders can be voided or refunded",
+      });
+    }
+
+    const now = nowIso();
+    await db
+      .update(orders)
+      .set({ status: newStatus, updated: now })
+      .where(eq(orders.id, orderId));
+
+    const reason = body.reason?.trim() ?? "";
+    const note =
+      newStatus === "voided"
+        ? `Void order ${order.orderNumber}${reason ? `: ${reason}` : ""}`
+        : `Refund order ${order.orderNumber}${reason ? `: ${reason}` : ""}`;
+
+    await reverseInventoryForOrder(storeId, orderId, userId, note);
+
+    const action = newStatus === "voided" ? "order.void" : "order.refund";
+    logAuditEvent(c, {
+      store: storeId,
+      actor: userId,
+      action,
+      entityType: "order",
+      entityId: orderId,
+      summary: `${newStatus === "voided" ? "ยกเลิก" : "คืนเงิน"}บิล #${order.orderNumber} ฿${order.total.toFixed(2)}`,
+      changes: {
+        status: { from: "completed", to: newStatus },
+        ...(reason ? { reason: { from: "", to: reason } } : {}),
+      },
+      metadata: {
+        order_number: order.orderNumber,
+        total: order.total,
+        reason,
+      },
+    });
+
+    const updated = await db
+      .select()
+      .from(orders)
+      .where(eq(orders.id, orderId))
+      .limit(1);
+
+    return c.json(mapOrder(updated[0]!));
+  },
+);
+
 orderRoutes.post(
   "/:storeId/orders",
   authMiddleware,
@@ -77,23 +222,30 @@ orderRoutes.post(
 
     const now = nowIso();
     const orderId = generateId();
+    const orderNumber = String(orderData.order_number ?? `ORD-${Date.now()}`);
+    const clientId = String(orderData.client_id ?? generateId());
+    const total = Number(orderData.total ?? 0);
+    const paymentMethod =
+      (orderData.payment_method as "cash" | "qr") ?? "cash";
 
     await db.insert(orders).values({
       id: orderId,
       store: storeId,
-      orderNumber: String(orderData.order_number ?? `ORD-${Date.now()}`),
-      clientId: String(orderData.client_id ?? generateId()),
+      orderNumber,
+      clientId,
       customer: orderData.customer ? String(orderData.customer) : null,
       cashier: String(orderData.cashier ?? userId),
       subtotal: Number(orderData.subtotal ?? 0),
       discountAmount: Number(orderData.discount_amount ?? 0),
       discountType: String(orderData.discount_type ?? ""),
       taxAmount: Number(orderData.tax_amount ?? 0),
-      total: Number(orderData.total ?? 0),
-      paymentMethod: (orderData.payment_method as "cash" | "qr") ?? "cash",
+      total,
+      paymentMethod,
       paymentReceived: Number(orderData.payment_received ?? 0),
       changeAmount: Number(orderData.change_amount ?? 0),
-      status: (orderData.status as "completed" | "voided" | "refunded") ?? "completed",
+      status:
+        (orderData.status as "completed" | "voided" | "refunded") ??
+        "completed",
       note: String(orderData.note ?? ""),
       syncedAt: String(orderData.synced_at ?? now),
       created: now,
@@ -118,7 +270,6 @@ orderRoutes.post(
         updated: now,
       });
 
-      // Update inventory for tracked products
       const productRows = await db
         .select()
         .from(products)
@@ -161,24 +312,43 @@ orderRoutes.post(
       }
     }
 
-    const rows = await db.select().from(orders).where(eq(orders.id, orderId)).limit(1);
+    logAuditEvent(c, {
+      store: storeId,
+      actor: userId,
+      action: "order.create",
+      entityType: "order",
+      entityId: orderId,
+      summary: `สร้างบิล #${orderNumber} ฿${total.toFixed(2)}`,
+      metadata: {
+        client_id: clientId,
+        order_number: orderNumber,
+        payment_method: paymentMethod,
+        total,
+        item_count: items.length,
+      },
+    });
+
+    const rows = await db
+      .select()
+      .from(orders)
+      .where(eq(orders.id, orderId))
+      .limit(1);
     return c.json(mapOrder(rows[0]!), 201);
   },
 );
 
-// Single order item create (for offline sync)
 orderRoutes.post(
   "/:storeId/order-items",
   authMiddleware,
   requireStoreMember,
   async (c) => {
     const storeId = c.req.param("storeId");
+    const userId = c.get("userId");
     const body = await c.req.json<Record<string, unknown>>();
     const now = nowIso();
     const id = generateId();
     const orderId = String(body.order ?? "");
 
-    // Verify order belongs to store
     const orderRows = await db
       .select()
       .from(orders)
@@ -203,7 +373,26 @@ orderRoutes.post(
       updated: now,
     });
 
-    const rows = await db.select().from(orderItems).where(eq(orderItems.id, id)).limit(1);
+    logAuditEvent(c, {
+      store: storeId,
+      actor: userId,
+      action: "order_item.create",
+      entityType: "order_item",
+      entityId: id,
+      summary: `เพิ่มรายการ "${String(body.product_name ?? "")}" ในบิล #${orderRows[0].orderNumber}`,
+      metadata: {
+        order_id: orderId,
+        order_number: orderRows[0].orderNumber,
+        product: String(body.product ?? ""),
+        quantity: Number(body.quantity ?? 1),
+      },
+    });
+
+    const rows = await db
+      .select()
+      .from(orderItems)
+      .where(eq(orderItems.id, id))
+      .limit(1);
     return c.json(mapOrderItem(rows[0]!), 201);
   },
 );
