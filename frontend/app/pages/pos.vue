@@ -1,36 +1,9 @@
 <template>
   <div class="flex h-full flex-col">
-    <!-- Mobile Tabs -->
-    <div class="flex shrink-0 border-b border-gray-200 bg-white lg:hidden">
-      <button
-        class="flex-1 py-3 text-center text-sm font-semibold transition-colors"
-        :class="
-          mobileTab === 'products'
-            ? 'border-b-2 border-primary-600 text-primary-600'
-            : 'text-gray-500'
-        "
-        @click="mobileTab = 'products'"
-      >
-        {{ t('pos.productsTab') }}
-      </button>
-      <button
-        class="flex-1 py-3 text-center text-sm font-semibold transition-colors"
-        :class="
-          mobileTab === 'cart'
-            ? 'border-b-2 border-primary-600 text-primary-600'
-            : 'text-gray-500'
-        "
-        @click="mobileTab = 'cart'"
-      >
-        {{ t('pos.cartTab', { count: itemCount }) }}
-      </button>
-    </div>
-
     <div class="flex flex-1 overflow-hidden">
       <!-- LEFT: Product Grid -->
       <div
         class="flex flex-col overflow-hidden bg-white"
-        :class="mobileTab === 'products' ? 'flex' : 'hidden lg:flex'"
         style="flex: 2"
       >
         <!-- Search + Category Filters -->
@@ -86,7 +59,10 @@
         </div>
 
         <!-- Product Grid -->
-        <div class="flex-1 overflow-y-auto p-4">
+        <div
+          class="flex-1 overflow-y-auto p-4"
+          :class="itemCount > 0 ? 'pb-24 lg:pb-4' : ''"
+        >
           <div v-if="isLoading" class="flex h-full items-center justify-center">
             <div class="text-center text-gray-400">
               <svg
@@ -177,255 +153,27 @@
         </div>
       </div>
 
-      <!-- RIGHT: Cart -->
+      <!-- RIGHT: Cart (desktop sidebar) -->
       <div
-        class="flex flex-col border-l border-gray-200 bg-white"
-        :class="mobileTab === 'cart' ? 'flex' : 'hidden lg:flex'"
+        class="hidden flex-col border-l border-gray-200 bg-white lg:flex"
         style="flex: 1"
       >
-        <!-- Cart Header -->
-        <div
-          class="flex shrink-0 items-center justify-between border-b border-gray-200 px-4 py-3"
-        >
-          <h2 class="text-base font-bold text-gray-800">
-            {{ t('pos.orderItems') }}
-            <span
-              v-if="itemCount > 0"
-              class="ml-1 inline-flex h-6 min-w-6 items-center justify-center rounded-full bg-primary-600 px-1.5 text-xs font-bold text-white"
-            >
-              {{ itemCount }}
-            </span>
-          </h2>
-          <button
-            v-if="cartItems.length > 0"
-            class="rounded-lg px-3 py-1.5 text-xs font-medium text-danger-500 transition-colors hover:bg-red-50"
-            @click="clearCart"
-          >
-            {{ t('pos.clearAll') }}
-          </button>
-        </div>
-
-        <!-- Cart Items -->
-        <div class="flex-1 overflow-y-auto">
-          <div v-if="cartItems.length === 0" class="flex h-full items-center justify-center p-8">
-            <div class="text-center text-gray-400">
-              <svg
-                class="mx-auto h-12 w-12"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="1.5"
-                  d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z"
-                />
-              </svg>
-              <p class="mt-2 text-sm">{{ t('pos.emptyCart') }}</p>
-              <p class="mt-1 text-xs">{{ t('pos.tapToAdd') }}</p>
-            </div>
-          </div>
-
-          <div v-else class="divide-y divide-gray-100">
-            <div
-              v-for="item in cartItems"
-              :key="item.product.id"
-              class="flex items-start gap-3 px-4 py-3"
-            >
-              <div class="min-w-0 flex-1">
-                <p class="truncate text-sm font-medium text-gray-800">
-                  {{ item.product.name }}
-                </p>
-                <p class="mt-0.5 text-xs text-gray-500">
-                  {{ formatCurrency(item.product.price) }} {{ t('common.perPiece') }}
-                </p>
-                <div class="mt-2 flex items-center gap-2">
-                  <button
-                    class="flex h-8 w-8 items-center justify-center rounded-lg border border-gray-300 text-gray-600 transition-colors hover:bg-gray-100 active:bg-gray-200"
-                    @click="updateQuantity(item.product.id, item.quantity - 1)"
-                  >
-                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" />
-                    </svg>
-                  </button>
-                  <span class="w-8 text-center text-sm font-semibold">
-                    {{ item.quantity }}
-                  </span>
-                  <button
-                    class="flex h-8 w-8 items-center justify-center rounded-lg border border-gray-300 text-gray-600 transition-colors hover:bg-gray-100 active:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-40"
-                    :disabled="!canIncreaseQty(item.product, item.quantity)"
-                    @click="handleUpdateQuantity(item.product.id, item.quantity + 1)"
-                  >
-                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                    </svg>
-                  </button>
-                </div>
-              </div>
-              <div class="flex flex-col items-end gap-1">
-                <span class="text-sm font-bold text-gray-800">
-                  {{ formatCurrency(item.product.price * item.quantity - item.discount) }}
-                </span>
-                <button
-                  class="rounded p-1 text-gray-400 transition-colors hover:bg-red-50 hover:text-danger-500"
-                  @click="removeItem(item.product.id)"
-                >
-                  <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                    />
-                  </svg>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Cart Footer -->
-        <div
-          v-if="cartItems.length > 0"
-          class="shrink-0 border-t border-gray-200 bg-gray-50"
-        >
-          <div class="space-y-3 p-4">
-            <!-- Subtotal -->
-            <div class="flex items-center justify-between text-sm">
-              <span class="text-gray-600">{{ t('pos.subtotal') }}</span>
-              <span class="font-medium">{{ formatCurrency(subtotal) }}</span>
-            </div>
-
-            <!-- Discount -->
-            <div class="space-y-2">
-              <label class="text-xs font-medium text-gray-500">{{ t('pos.discountLabel') }}</label>
-              <div class="flex gap-2">
-                <input
-                  :value="cartDiscount"
-                  type="number"
-                  min="0"
-                  placeholder="0"
-                  class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20"
-                  @input="onDiscountInput"
-                />
-                <select
-                  :value="cartDiscountType"
-                  class="shrink-0 rounded-lg border border-gray-300 px-2 py-2 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20"
-                  @change="onDiscountTypeChange"
-                >
-                  <option value="fixed">฿</option>
-                  <option value="percent">%</option>
-                </select>
-              </div>
-            </div>
-
-            <!-- Discount Amount Display -->
-            <div
-              v-if="discountAmount > 0"
-              class="flex items-center justify-between text-sm"
-            >
-              <span class="text-danger-500">{{ t('pos.discountLabel') }}</span>
-              <span class="font-medium text-danger-500">
-                -{{ formatCurrency(discountAmount) }}
-              </span>
-            </div>
-
-            <!-- Total -->
-            <div
-              class="flex items-center justify-between border-t border-gray-300 pt-3 text-lg"
-            >
-              <span class="font-bold text-gray-800">{{ t('pos.netTotal') }}</span>
-              <span class="font-bold text-primary-600">
-                {{ formatCurrency(total) }}
-              </span>
-            </div>
-
-            <!-- Payment Method -->
-            <div class="space-y-2">
-              <label class="text-xs font-medium text-gray-500">
-                {{ t('pos.paymentMethod') }}
-              </label>
-              <div class="grid grid-cols-2 gap-2">
-                <button
-                  v-for="method in paymentMethods"
-                  :key="method.value"
-                  class="rounded-lg border py-2.5 text-center text-xs font-semibold transition-colors"
-                  :class="
-                    paymentMethod === method.value
-                      ? 'border-primary-600 bg-primary-50 text-primary-700'
-                      : 'border-gray-300 text-gray-600 hover:bg-gray-100'
-                  "
-                  @click="paymentMethod = method.value"
-                >
-                  {{ method.label }}
-                </button>
-              </div>
-            </div>
-
-            <!-- Payment Received (cash only) -->
-            <div v-if="paymentMethod === 'cash'" class="space-y-2">
-              <label class="text-xs font-medium text-gray-500">
-                {{ t('pos.paymentReceived') }}
-              </label>
-              <input
-                :value="paymentReceived"
-                type="number"
-                min="0"
-                placeholder="0.00"
-                class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-right text-lg font-bold outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20"
-                @input="onPaymentReceivedInput"
-              />
-
-              <!-- Quick cash buttons -->
-              <div class="grid grid-cols-4 gap-1.5">
-                <button
-                  v-for="amount in quickCashAmounts"
-                  :key="amount"
-                  class="rounded-lg border border-gray-200 bg-white py-2 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-100 active:bg-gray-200"
-                  @click="paymentReceived = amount"
-                >
-                  {{ amount.toLocaleString() }}
-                </button>
-              </div>
-
-              <!-- Change -->
-              <div
-                v-if="paymentReceived > 0"
-                class="flex items-center justify-between rounded-lg bg-green-50 px-3 py-2"
-              >
-                <span class="text-sm font-medium text-green-700">{{ t('pos.change') }}</span>
-                <span class="text-lg font-bold text-green-700">
-                  {{ formatCurrency(changeAmount) }}
-                </span>
-              </div>
-            </div>
-
-            <p
-              v-if="paymentMethod === 'qr' && !hasPromptPayId"
-              class="rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-700"
-            >
-              {{ t('pos.promptpayNotConfigured') }}
-            </p>
-
-            <!-- Checkout Button -->
-            <button
-              class="w-full rounded-xl py-4 text-base font-bold text-white shadow-lg transition-all active:scale-[0.98] disabled:opacity-50 disabled:shadow-none"
-              :class="
-                isCheckingOut
-                  ? 'bg-gray-400'
-                  : 'bg-primary-600 hover:bg-primary-700'
-              "
-              :disabled="isCheckingOut || !canCheckout"
-              @click="handleCheckout"
-            >
-              <span v-if="isCheckingOut">{{ t('pos.checkingOut') }}</span>
-              <span v-else>{{ t('pos.payAmount', { amount: formatCurrency(total) }) }}</span>
-            </button>
-          </div>
-        </div>
+        <PosCartPanel
+          :is-checking-out="isCheckingOut"
+          @checkout="handleCheckout"
+        />
       </div>
     </div>
+
+    <!-- Mobile cart bar + bottom sheet -->
+    <PosMobileCartBar @open="showMobileCart = true" />
+
+    <PosMobileCartSheet v-model:show="showMobileCart">
+      <PosCartPanel
+        :is-checking-out="isCheckingOut"
+        @checkout="handleCheckout"
+      />
+    </PosMobileCartSheet>
 
     <!-- Success Modal -->
     <Teleport to="body">
@@ -509,22 +257,18 @@ const {
   fetchInventory,
   getAvailableQty,
   canAddToCart,
-  maxCartQty,
   isOutOfStock,
   validateCartItems,
 } = usePosStock();
 const {
   cartItems,
   addItem,
-  removeItem,
-  updateQuantity,
   subtotal,
   discountAmount,
   total,
   changeAmount,
   itemCount,
   clearCart,
-  cartDiscount,
   cartDiscountType,
   selectedCustomerId,
   paymentMethod,
@@ -536,7 +280,7 @@ const { alert } = useDialog();
 const { activeStore } = useStore();
 const { generateQrDataUrl, resolvePromptPayId } = usePromptPayQr();
 
-const mobileTab = ref<"products" | "cart">("products");
+const showMobileCart = ref(false);
 const searchQuery = ref("");
 const selectedCategory = ref<string | null>(null);
 const isCheckingOut = ref(false);
@@ -550,19 +294,6 @@ const lastOrderTotal = ref(0);
 const resolvedPromptPayId = computed(() =>
   resolvePromptPayId(activeStore.value),
 );
-
-const hasPromptPayId = computed(() => Boolean(resolvedPromptPayId.value));
-
-const paymentMethods = computed(() => [
-  { value: "cash" as const, label: t("payment.cash") },
-  { value: "qr" as const, label: t("payment.qr") },
-]);
-
-const quickCashAmounts = computed(() => {
-  const roundedTotal = Math.ceil(total.value);
-  const amounts = [roundedTotal, 100, 500, 1000, 5000];
-  return [...new Set(amounts)].sort((a, b) => a - b).filter((a) => a > 0);
-});
 
 const filteredProducts = computed(() => {
   let result = products.value.filter((p: Product) => p.is_active !== false);
@@ -598,11 +329,6 @@ function getCartQty(productId: string): number {
   return cartItems.value.find((item) => item.product.id === productId)?.quantity ?? 0;
 }
 
-function canIncreaseQty(product: Product, currentQty: number): boolean {
-  if (!product.track_inventory) return true;
-  return currentQty < maxCartQty(product);
-}
-
 function showStockAlert(message: string) {
   void alert(message);
 }
@@ -615,18 +341,6 @@ function stockErrorMessage(shortages: { name: string; available: number; request
     available: first.available,
     requested: first.requested,
   });
-}
-
-function onDiscountInput(e: Event) {
-  cartDiscount.value = Number((e.target as HTMLInputElement).value);
-}
-
-function onDiscountTypeChange(e: Event) {
-  cartDiscountType.value = (e.target as HTMLSelectElement).value as "percent" | "fixed";
-}
-
-function onPaymentReceivedInput(e: Event) {
-  paymentReceived.value = Number((e.target as HTMLInputElement).value);
 }
 
 function handleAddItem(product: Product) {
@@ -646,21 +360,6 @@ function handleAddItem(product: Product) {
   }
 
   addItem(product);
-}
-
-function handleUpdateQuantity(productId: string, quantity: number) {
-  const item = cartItems.value.find((i) => i.product.id === productId);
-  if (!item) return;
-
-  const capped = Math.min(quantity, maxCartQty(item.product));
-  if (quantity > capped && item.product.track_inventory) {
-    showStockAlert(
-      t("pos.cannotAddExceedsStock", {
-        available: getAvailableQty(productId),
-      }),
-    );
-  }
-  updateQuantity(productId, capped);
 }
 
 async function handleCheckout() {
@@ -746,6 +445,7 @@ async function completeCheckout() {
     lastOrderNumber.value = order.order_number || order.id || "";
     lastOrderTotal.value = total.value;
     showQrModal.value = false;
+    showMobileCart.value = false;
     showSuccessModal.value = true;
     await fetchInventory();
   } catch (err) {
@@ -767,7 +467,7 @@ function handlePrintReceipt() {
 function handleNewOrder() {
   clearCart();
   showSuccessModal.value = false;
-  mobileTab.value = "products";
+  showMobileCart.value = false;
 }
 
 onMounted(async () => {

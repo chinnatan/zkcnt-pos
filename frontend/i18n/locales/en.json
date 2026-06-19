@@ -130,6 +130,8 @@
   "pos": {
     "productsTab": "Products",
     "cartTab": "Cart ({count})",
+    "viewCart": "View cart",
+    "closeCart": "Close",
     "searchPlaceholder": "Search products (name, SKU, barcode)...",
     "allCategories": "All",
     "loadingProducts": "Loading products...",

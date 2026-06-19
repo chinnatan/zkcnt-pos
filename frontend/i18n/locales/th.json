@@ -130,6 +130,8 @@
   "pos": {
     "productsTab": "สินค้า",
     "cartTab": "ตะกร้า ({count})",
+    "viewCart": "ดูตะกร้า",
+    "closeCart": "ปิด",
     "searchPlaceholder": "ค้นหาสินค้า (ชื่อ, SKU, บาร์โค้ด)...",
     "allCategories": "ทั้งหมด",
     "loadingProducts": "กำลังโหลดสินค้า...",
