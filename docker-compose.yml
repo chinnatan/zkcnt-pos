@@ -8,6 +8,8 @@ services:
       - DATA_DIR=/data
       - JWT_SECRET=${JWT_SECRET:-dev-secret-change-in-production}
       - APP_URL=${NUXT_PUBLIC_APP_URL:-http://localhost:3000}
+      - RESEND_API_KEY=${RESEND_API_KEY:-}
+      - RESEND_FROM=${RESEND_FROM:-}
     networks:
       - pos-network
 

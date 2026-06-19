@@ -19,7 +19,12 @@
         />
       </div>
       <div>
-        <label class="mb-1 block text-sm font-medium text-gray-700">{{ t('common.password') }}</label>
+        <div class="mb-1 flex items-center justify-between">
+          <label class="text-sm font-medium text-gray-700">{{ t('common.password') }}</label>
+          <NuxtLink to="/forgot-password" class="text-xs font-medium text-primary-600 hover:text-primary-700">
+            {{ t('auth.forgotPassword') }}
+          </NuxtLink>
+        </div>
         <input
           v-model="password"
           type="password"

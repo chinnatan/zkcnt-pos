@@ -109,7 +109,21 @@
     "noAccount": "Don't have an account?",
     "createOne": "Create one",
     "hasAccount": "Already have an account?",
-    "signInLink": "Sign in"
+    "signInLink": "Sign in",
+    "forgotPassword": "Forgot password?",
+    "forgotPasswordDesc": "Enter the email you registered with and we'll send you a reset link",
+    "sendResetLink": "Send reset link",
+    "sendingResetLink": "Sending...",
+    "resetLinkSent": "If an account exists with that email, we've sent a password reset link. Please check your inbox.",
+    "backToSignIn": "Back to sign in",
+    "resetPassword": "Reset password",
+    "resetPasswordFor": "Set a new password for {email}",
+    "newPassword": "New password",
+    "confirmPassword": "Confirm password",
+    "resettingPassword": "Resetting...",
+    "passwordResetSuccess": "Password reset successfully. Please sign in with your new password.",
+    "tokenExpired": "This reset link is invalid or has expired",
+    "passwordMismatch": "Passwords do not match"
   },
   "dashboard": {
     "noStoreTitle": "No store selected",
@@ -429,6 +443,7 @@
   "errors": {
     "invalidCredentials": "Invalid email or password",
     "registrationFailed": "Registration failed",
+    "passwordResetFailed": "Password reset failed",
     "saveFailed": "Could not save order. Please try again.",
     "inviteFailed": "Failed to invite member",
     "createStoreFailed": "Failed to create store",

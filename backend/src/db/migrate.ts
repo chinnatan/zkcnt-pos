@@ -54,6 +54,17 @@ CREATE TABLE IF NOT EXISTS store_invites (
 
 CREATE INDEX IF NOT EXISTS idx_store_invites_store_email ON store_invites(store, email);
 
+CREATE TABLE IF NOT EXISTS password_reset_tokens (
+  id TEXT PRIMARY KEY,
+  user TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  token TEXT NOT NULL UNIQUE,
+  expires TEXT NOT NULL,
+  used INTEGER NOT NULL DEFAULT 0,
+  created TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_password_reset_tokens_user ON password_reset_tokens(user);
+
 CREATE TABLE IF NOT EXISTS categories (
   id TEXT PRIMARY KEY,
   store TEXT NOT NULL REFERENCES stores(id) ON DELETE CASCADE,

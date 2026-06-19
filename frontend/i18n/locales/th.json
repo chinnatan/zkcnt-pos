@@ -109,7 +109,21 @@
     "noAccount": "ยังไม่มีบัญชี?",
     "createOne": "สร้างบัญชี",
     "hasAccount": "มีบัญชีอยู่แล้ว?",
-    "signInLink": "เข้าสู่ระบบ"
+    "signInLink": "เข้าสู่ระบบ",
+    "forgotPassword": "ลืมรหัสผ่าน?",
+    "forgotPasswordDesc": "กรอกอีเมลที่ใช้ลงทะเบียน เราจะส่งลิงก์รีเซ็ตรหัสผ่านให้คุณ",
+    "sendResetLink": "ส่งลิงก์รีเซ็ตรหัสผ่าน",
+    "sendingResetLink": "กำลังส่ง...",
+    "resetLinkSent": "หากมีบัญชีที่ใช้อีเมลนี้ เราได้ส่งลิงก์รีเซ็ตรหัสผ่านไปแล้ว กรุณาตรวจสอบอีเมลของคุณ",
+    "backToSignIn": "กลับไปเข้าสู่ระบบ",
+    "resetPassword": "รีเซ็ตรหัสผ่าน",
+    "resetPasswordFor": "ตั้งรหัสผ่านใหม่สำหรับ {email}",
+    "newPassword": "รหัสผ่านใหม่",
+    "confirmPassword": "ยืนยันรหัสผ่าน",
+    "resettingPassword": "กำลังรีเซ็ต...",
+    "passwordResetSuccess": "รีเซ็ตรหัสผ่านสำเร็จแล้ว กรุณาเข้าสู่ระบบด้วยรหัสผ่านใหม่",
+    "tokenExpired": "ลิงก์รีเซ็ตรหัสผ่านหมดอายุหรือไม่ถูกต้อง",
+    "passwordMismatch": "รหัสผ่านไม่ตรงกัน"
   },
   "dashboard": {
     "noStoreTitle": "ยังไม่ได้เลือกร้าน",
@@ -429,6 +443,7 @@
   "errors": {
     "invalidCredentials": "อีเมลหรือรหัสผ่านไม่ถูกต้อง",
     "registrationFailed": "สมัครสมาชิกไม่สำเร็จ",
+    "passwordResetFailed": "รีเซ็ตรหัสผ่านไม่สำเร็จ",
     "saveFailed": "ไม่สามารถบันทึกรายการได้ กรุณาลองใหม่อีกครั้ง",
     "inviteFailed": "เชิญสมาชิกไม่สำเร็จ",
     "createStoreFailed": "สร้างร้านไม่สำเร็จ",

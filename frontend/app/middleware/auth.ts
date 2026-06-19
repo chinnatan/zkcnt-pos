@@ -6,6 +6,8 @@ export default defineNuxtRouteMiddleware((to) => {
   const isPublicPage =
     to.path === "/login" ||
     to.path === "/register" ||
+    to.path === "/forgot-password" ||
+    to.path.startsWith("/reset-password/") ||
     to.path.startsWith("/invite/");
 
   if (isPublicPage) {

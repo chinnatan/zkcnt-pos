@@ -21,6 +21,24 @@ export const users = sqliteTable("users", {
   ...timestamps,
 });
 
+export const passwordResetTokens = sqliteTable(
+  "password_reset_tokens",
+  {
+    id: text("id").primaryKey(),
+    user: text("user")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    token: text("token").notNull(),
+    expires: text("expires").notNull(),
+    used: integer("used").notNull().default(0),
+    created: text("created").notNull(),
+  },
+  (t) => [
+    uniqueIndex("idx_password_reset_tokens_token").on(t.token),
+    index("idx_password_reset_tokens_user").on(t.user),
+  ],
+);
+
 export const stores = sqliteTable(
   "stores",
   {
@@ -269,6 +287,7 @@ export const auditEvents = sqliteTable(
 
 export const schema = {
   users,
+  passwordResetTokens,
   stores,
   storeMembers,
   storeInvites,

@@ -37,7 +37,9 @@ export type AuditAction =
   | "invite.accept"
   | "auth.register"
   | "auth.login"
-  | "auth.login_failed";
+  | "auth.login_failed"
+  | "auth.password_reset_requested"
+  | "auth.password_reset_completed";
 
 export interface AuditEventInput {
   store?: string | null;

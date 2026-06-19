@@ -186,6 +186,29 @@ export class ApiClient {
     return this.send<AuthUser>("/auth/me");
   }
 
+  async requestPasswordReset(email: string) {
+    return this.send<{ message: string }>("/auth/forgot-password", {
+      method: "POST",
+      body: { email },
+      auth: false,
+    });
+  }
+
+  async validateResetToken(token: string) {
+    return this.send<{ valid: boolean; email?: string }>(
+      `/auth/reset-password/${encodeURIComponent(token)}`,
+      { auth: false },
+    );
+  }
+
+  async resetPassword(token: string, password: string) {
+    return this.send<{ message: string }>("/auth/reset-password", {
+      method: "POST",
+      body: { token, password },
+      auth: false,
+    });
+  }
+
   getFileUrl(relativePath: string, thumb?: string): string {
     if (!relativePath) return "";
     if (relativePath.startsWith("http")) return relativePath;
