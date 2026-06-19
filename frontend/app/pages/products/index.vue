@@ -16,6 +16,8 @@ const selectedCategoryId = ref<string | null>(null);
 const activeTab = ref<"products" | "categories">("products");
 
 const showProductModal = ref(false);
+const showBulkAddModal = ref(false);
+const showImportExportModal = ref(false);
 const editingProduct = ref<Product | null>(null);
 const showDeleteConfirm = ref(false);
 const deletingProduct = ref<Product | null>(null);
@@ -243,22 +245,40 @@ onUnmounted(() => {
           <h1 class="text-2xl font-bold text-gray-900">{{ t('productsPage.title') }}</h1>
           <p class="mt-1 text-sm text-gray-500">{{ t('productsPage.subtitle') }}</p>
         </div>
-        <button
-          v-if="activeTab === 'products'"
-          class="inline-flex items-center gap-2 rounded-lg bg-primary-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
-          @click="openAddProduct"
-        >
-          <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
-          {{ t('productsPage.addProduct') }}
-        </button>
-        <button
-          v-else
-          class="inline-flex items-center gap-2 rounded-lg bg-primary-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
-          @click="openAddCategory"
-        >
-          <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
-          {{ t('productsPage.addCategory') }}
-        </button>
+        <div class="flex flex-wrap gap-2">
+          <button
+            v-if="activeTab === 'products'"
+            class="inline-flex items-center gap-2 rounded-lg bg-primary-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+            @click="openAddProduct"
+          >
+            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+            {{ t('productsPage.addProduct') }}
+          </button>
+          <button
+            v-if="activeTab === 'products'"
+            class="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 shadow-sm transition hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+            @click="showBulkAddModal = true"
+          >
+            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" /></svg>
+            {{ t('productsPage.bulkAdd') }}
+          </button>
+          <button
+            v-if="activeTab === 'products'"
+            class="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 shadow-sm transition hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+            @click="showImportExportModal = true"
+          >
+            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+            {{ t('productsPage.importExport') }}
+          </button>
+          <button
+            v-else
+            class="inline-flex items-center gap-2 rounded-lg bg-primary-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+            @click="openAddCategory"
+          >
+            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+            {{ t('productsPage.addCategory') }}
+          </button>
+        </div>
       </div>
 
       <!-- Tabs -->
@@ -767,5 +787,19 @@ onUnmounted(() => {
         </div>
       </Transition>
     </Teleport>
+
+    <ProductBulkAddModal
+      v-model="showBulkAddModal"
+      :products="products ?? []"
+      :categories="categories ?? []"
+      @saved="fetchProducts"
+    />
+
+    <ProductImportExportModal
+      v-model="showImportExportModal"
+      :products="products ?? []"
+      :categories="categories ?? []"
+      @saved="fetchProducts"
+    />
   </div>
 </template>

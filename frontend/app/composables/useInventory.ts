@@ -2,14 +2,14 @@ import { db } from "~/lib/db";
 import { addToSyncQueue } from "~/lib/sync/queue";
 import type { Inventory, InventoryTransaction } from "~/lib/types";
 
+const inventoryItems = ref<Inventory[]>([]);
+const isLoading = ref(false);
+
 export function useInventory() {
   const { $api } = useNuxtApp();
   const { activeStoreId } = useStore();
   const { isOnline } = useOnlineStatus();
   const { authUser } = useAuth();
-
-  const inventoryItems = ref<Inventory[]>([]);
-  const isLoading = ref(false);
 
   async function fetchInventory() {
     if (!activeStoreId.value) return;

@@ -19,6 +19,7 @@ import {
 import { orderRoutes } from "./routes/orders";
 import { syncRoutes } from "./routes/sync";
 import { auditRoutes } from "./routes/audit";
+import { reportRoutes } from "./routes/reports";
 
 const app = new Hono();
 
@@ -100,6 +101,7 @@ app.route("/api/stores", inventoryRoutes);
 app.route("/api/stores", orderRoutes);
 app.route("/api/stores", syncRoutes);
 app.route("/api/stores", auditRoutes);
+app.route("/api/stores", reportRoutes);
 
 log.info(`API listening on http://0.0.0.0:${env.port}`);
 

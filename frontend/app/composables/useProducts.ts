@@ -13,6 +13,18 @@ export type ProductInput = Partial<Product> & {
   removeImage?: boolean;
 };
 
+export interface BulkCreateResult {
+  created: Product[];
+  skipped: { index: number; sku: string; reason: string }[];
+  failed: { index: number; message: string }[];
+}
+
+interface BulkCreateApiResponse {
+  created: Product[];
+  skipped: { index: number; sku: string; reason: string }[];
+  errors: { index: number; message: string }[];
+}
+
 function buildProductBody(data: ProductInput): Record<string, unknown> | FormData {
   const { imageFile, removeImage, ...rest } = data;
   if (!imageFile && !removeImage) return rest;
@@ -353,6 +365,52 @@ export function useProducts() {
     await fetchCategories();
   }
 
+  async function bulkCreateProducts(items: ProductInput[]): Promise<BulkCreateResult> {
+    if (!activeStoreId.value) throw new Error("No active store");
+    const storeId = activeStoreId.value;
+
+    if (isOnline.value) {
+      const payload = items.map(({ imageFile: _i, removeImage: _r, ...rest }) => ({
+        ...rest,
+        store: storeId,
+      }));
+
+      const result = await $api.send<BulkCreateApiResponse>(
+        `/stores/${storeId}/products/bulk`,
+        { method: "POST", body: { items: payload } },
+      );
+
+      if (result.created.length > 0) {
+        await db.products.bulkPut(result.created);
+      }
+      await fetchProducts();
+
+      return {
+        created: result.created,
+        skipped: result.skipped,
+        failed: result.errors,
+      };
+    }
+
+    const created: Product[] = [];
+    const skipped: BulkCreateResult["skipped"] = [];
+    const failed: BulkCreateResult["failed"] = [];
+
+    for (let index = 0; index < items.length; index++) {
+      try {
+        const record = await createProduct({ ...items[index]!, store: storeId });
+        created.push(record as Product);
+      } catch (e) {
+        failed.push({
+          index,
+          message: e instanceof Error ? e.message : "unknown_error",
+        });
+      }
+    }
+
+    return { created, skipped, failed };
+  }
+
   return {
     products: readonly(products),
     categories: readonly(categories),
@@ -360,6 +418,7 @@ export function useProducts() {
     fetchProducts,
     fetchCategories,
     createProduct,
+    bulkCreateProducts,
     updateProduct,
     deleteProduct,
     createCategory,

@@ -191,6 +191,135 @@ catalogRoutes.get(
   },
 );
 
+const BULK_IMPORT_MAX = 500;
+
+interface BulkProductItem {
+  name?: string;
+  sku?: string;
+  barcode?: string;
+  description?: string;
+  price?: number;
+  cost?: number;
+  category?: string;
+  unit?: string;
+  track_inventory?: boolean;
+  is_active?: boolean;
+}
+
+catalogRoutes.post(
+  "/:storeId/products/bulk",
+  authMiddleware,
+  requireStoreMember,
+  async (c) => {
+    const storeId = c.req.param("storeId");
+    const userId = c.get("userId");
+    const body = await c.req.json<{ items?: BulkProductItem[] }>();
+    const items = body.items ?? [];
+
+    if (items.length === 0) {
+      throw new HTTPException(400, { message: "No items provided" });
+    }
+    if (items.length > BULK_IMPORT_MAX) {
+      throw new HTTPException(400, {
+        message: `Maximum ${BULK_IMPORT_MAX} items per request`,
+      });
+    }
+
+    const existingRows = await db
+      .select({ sku: products.sku })
+      .from(products)
+      .where(eq(products.store, storeId));
+
+    const existingSkus = new Set(
+      existingRows
+        .map((r) => r.sku?.trim().toLowerCase())
+        .filter((sku) => sku),
+    );
+    const seenSkus = new Set<string>();
+
+    const created: ReturnType<typeof mapProduct>[] = [];
+    const skipped: { index: number; sku: string; reason: string }[] = [];
+    const errors: { index: number; message: string }[] = [];
+
+    await db.transaction(async (tx) => {
+      for (let index = 0; index < items.length; index++) {
+        const item = items[index]!;
+        const name = String(item.name ?? "").trim();
+        const sku = String(item.sku ?? "").trim();
+        const price = Number(item.price ?? NaN);
+
+        if (!name) {
+          errors.push({ index, message: "missing_name" });
+          continue;
+        }
+        if (!Number.isFinite(price) || price < 0) {
+          errors.push({ index, message: "invalid_price" });
+          continue;
+        }
+
+        const skuKey = sku.toLowerCase();
+        if (skuKey) {
+          if (existingSkus.has(skuKey)) {
+            skipped.push({ index, sku, reason: "duplicate_sku_existing" });
+            continue;
+          }
+          if (seenSkus.has(skuKey)) {
+            skipped.push({ index, sku, reason: "duplicate_sku_file" });
+            continue;
+          }
+          seenSkus.add(skuKey);
+        }
+
+        const now = nowIso();
+        const id = generateId();
+
+        await tx.insert(products).values({
+          id,
+          store: storeId,
+          name,
+          sku,
+          barcode: String(item.barcode ?? ""),
+          description: String(item.description ?? ""),
+          price,
+          cost: Number(item.cost ?? 0),
+          category: item.category ? String(item.category) : null,
+          image: "",
+          unit: String(item.unit ?? ""),
+          trackInventory: Boolean(item.track_inventory),
+          isActive: item.is_active !== false,
+          created: now,
+          updated: now,
+        });
+
+        const rows = await tx
+          .select()
+          .from(products)
+          .where(eq(products.id, id))
+          .limit(1);
+
+        if (rows[0]) {
+          created.push(mapProduct(rows[0]));
+          if (skuKey) existingSkus.add(skuKey);
+        }
+      }
+    });
+
+    if (created.length > 0) {
+      logAuditEvent(c, {
+        store: storeId,
+        actor: userId,
+        action: "product.bulk_import",
+        entityType: "product",
+        entityId: storeId,
+        summary: `นำเข้าสินค้า ${created.length} รายการ (ข้าม ${skipped.length})`,
+        metadata: { created: created.length, skipped: skipped.length, errors: errors.length },
+      });
+    }
+
+    return c.json({ created, skipped, errors }, 201);
+  },
+);
+
 catalogRoutes.post(
   "/:storeId/products",
   authMiddleware,

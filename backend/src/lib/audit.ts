@@ -19,6 +19,7 @@ export type AuditAction =
   | "category.update"
   | "category.delete"
   | "product.create"
+  | "product.bulk_import"
   | "product.update"
   | "product.delete"
   | "customer.create"
