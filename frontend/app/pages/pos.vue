@@ -26,13 +26,13 @@
               v-model="searchQuery"
               type="text"
               :placeholder="t('pos.searchPlaceholder')"
-              class="w-full rounded-xl border border-gray-300 bg-gray-50 py-3 pl-10 pr-4 text-sm outline-none transition-colors focus:border-primary-500 focus:bg-white focus:ring-2 focus:ring-primary-500/20"
+              class="touch-pos w-full rounded-xl border border-gray-300 bg-gray-50 py-3 pl-10 pr-4 text-base outline-none transition-colors focus:border-primary-500 focus:bg-white focus:ring-2 focus:ring-primary-500/20"
             />
           </div>
 
           <div class="flex gap-2 overflow-x-auto pb-1">
             <button
-              class="shrink-0 rounded-lg px-4 py-2 text-sm font-medium transition-colors"
+              class="touch-pos shrink-0 rounded-lg px-4 py-2 text-sm font-medium transition-colors"
               :class="
                 selectedCategory === null
                   ? 'bg-primary-600 text-white shadow-sm'
@@ -45,7 +45,7 @@
             <button
               v-for="cat in categories"
               :key="cat.id"
-              class="shrink-0 rounded-lg px-4 py-2 text-sm font-medium transition-colors"
+              class="touch-pos shrink-0 rounded-lg px-4 py-2 text-sm font-medium transition-colors"
               :class="
                 selectedCategory === cat.id
                   ? 'bg-primary-600 text-white shadow-sm'
@@ -117,11 +117,11 @@
             <button
               v-for="product in filteredProducts"
               :key="product.id"
-              class="group flex flex-col items-center rounded-xl border border-gray-200 bg-white p-4 text-center shadow-sm transition-all"
+              class="touch-pos group flex flex-col items-center rounded-xl border border-gray-200 bg-white p-4 text-center shadow-sm transition-colors"
               :class="
                 isOutOfStock(product)
                   ? 'cursor-not-allowed opacity-50'
-                  : 'hover:border-primary-300 hover:shadow-md active:scale-[0.97]'
+                  : 'hover:border-primary-300 hover:shadow-md active:bg-primary-50 lg:active:scale-[0.97]'
               "
               :disabled="isOutOfStock(product)"
               @click="handleAddItem(product)"

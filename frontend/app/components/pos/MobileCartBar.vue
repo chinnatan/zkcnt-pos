@@ -2,7 +2,7 @@
   <button
     v-if="itemCount > 0"
     type="button"
-    class="fixed inset-x-0 bottom-0 z-40 border-t border-gray-200 bg-white px-4 py-3 shadow-lg lg:hidden"
+    class="touch-pos fixed inset-x-0 bottom-0 z-40 border-t border-gray-200 bg-white px-4 py-3 shadow-lg lg:hidden"
     style="padding-bottom: max(0.75rem, env(safe-area-inset-bottom))"
     @click="emit('open')"
   >
