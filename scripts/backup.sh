@@ -29,11 +29,12 @@ rm -rf "$STAGING_DIR"
 mkdir -p "$STAGING_DIR"
 
 echo "Creating online SQLite snapshot (VACUUM INTO)..."
-docker compose -f "$COMPOSE_FILE" exec -T backend bun -e "
-  const db = new Bun.SQLite('/data/pos.db');
-  db.exec(\"VACUUM INTO '/data/.backup-staging/pos.db'\");
-  db.close();
-"
+docker compose -f "$COMPOSE_FILE" exec -T backend bun -e '
+import { Database } from "bun:sqlite";
+const db = new Database("/data/pos.db");
+db.exec("VACUUM INTO '"'"'/data/.backup-staging/pos.db'"'"'");
+db.close();
+'
 
 if [[ -d "$DATA_DIR/uploads" ]]; then
   echo "Copying uploads..."
