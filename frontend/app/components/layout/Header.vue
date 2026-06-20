@@ -1,7 +1,7 @@
 <template>
   <header class="flex h-14 shrink-0 items-center justify-between border-b border-gray-200 bg-white px-4 lg:px-6">
     <div class="flex items-center gap-3">
-      <button class="rounded p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 lg:hidden" @click="toggleSidebar">
+      <button class="rounded p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 lg:hidden" @click="toggle">
         <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
         </svg>
@@ -54,6 +54,7 @@ const route = useRoute();
 const { t } = useI18n();
 const { authUser, logout } = useAuth();
 const { isOnline } = useOnlineStatus();
+const { toggle } = useSidebar();
 const showUserMenu = ref(false);
 
 const pageTitle = computed(() => {
@@ -76,12 +77,6 @@ const userInitial = computed(() => {
   const name = authUser.value?.name || authUser.value?.email || "U";
   return name.charAt(0).toUpperCase();
 });
-
-function toggleSidebar() {
-  const sidebar = document.querySelector("aside");
-  sidebar?.classList.toggle("-translate-x-full");
-  sidebar?.classList.toggle("translate-x-0");
-}
 
 onMounted(() => {
   document.addEventListener("click", (e) => {
