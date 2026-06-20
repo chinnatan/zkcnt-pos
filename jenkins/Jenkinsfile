@@ -1,0 +1,46 @@
+pipeline {
+  agent any
+
+  triggers {
+    cron('0 3 * * *')
+  }
+
+  environment {
+    PROJECT_DIR = '/home/pi/Desktop/zkcnt-pos'
+    RCLONE_REMOTE = 'gdrive:Backups/zkcnt-pos'
+  }
+
+  stages {
+    stage('Backup') {
+      steps {
+        dir(env.PROJECT_DIR) {
+          sh 'task backup'
+        }
+      }
+    }
+
+    stage('Upload to Google Drive') {
+      steps {
+        sh '''
+          LATEST=$(ls -t ${PROJECT_DIR}/backups/zkcnt-*.tar.gz | head -1)
+          rclone copy "$LATEST" ${RCLONE_REMOTE}/
+        '''
+      }
+    }
+
+    stage('Cleanup Remote') {
+      steps {
+        sh 'rclone delete ${RCLONE_REMOTE} --min-age 30d'
+      }
+    }
+  }
+
+  post {
+    failure {
+      echo 'Backup failed!'
+    }
+    success {
+      echo 'Backup uploaded successfully'
+    }
+  }
+}

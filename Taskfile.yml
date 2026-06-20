@@ -131,3 +131,21 @@ tasks:
     cmds:
       - "{{.PROD_COMPOSE}} logs -f"
     interactive: true
+
+  # ─── Backup ───
+
+  backup:
+    desc: Create online backup archive (pos.db + uploads + .env)
+    cmds:
+      - bash scripts/backup.sh
+
+  backup:upload:
+    desc: Backup then upload to Google Drive via rclone
+    cmds:
+      - bash scripts/backup.sh
+      - rclone copy backups/ ${RCLONE_REMOTE:-gdrive:Backups/zkcnt-pos}/ --include "zkcnt-*.tar.gz" --max-age 1h
+
+  restore:
+    desc: "Restore from backup archive (usage: task restore -- backups/zkcnt-....tar.gz)"
+    cmds:
+      - bash scripts/restore.sh {{.CLI_ARGS}}

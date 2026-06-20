@@ -75,6 +75,9 @@ task local
 | `task prod` | **Production** — รัน stack แบบ detached (Nginx + built frontend) |
 | `task prod:down` | หยุดและลบ prod containers |
 | `task prod:logs` | ดู logs ของ prod stack |
+| `task backup` | สร้าง backup archive (pos.db + uploads + .env) แบบ online |
+| `task backup:upload` | Backup แล้วอัปโหลดไป Google Drive ผ่าน rclone |
+| `task restore -- <archive>` | กู้คืนจาก backup archive |
 
 ### โหมดการรัน
 
@@ -153,6 +156,72 @@ docker compose -f docker-compose.prod.yml logs -f
 # Build บน Pi ช้า — ปกติสำหรับ ARM64, ใช้ manual deploy ตอนที่ Pi ว่างได้
 ```
 
+## Backup & Restore
+
+ระบบ backup ใช้ `VACUUM INTO` สร้าง SQLite snapshot ขณะ backend รันอยู่ (ไม่ต้องหยุด service) แล้วรวม `uploads/` และ `.env` เป็น `tar.gz`
+
+### Manual backup
+
+```bash
+# สร้าง backup local (เก็บใน backups/)
+task backup
+
+# backup แล้วอัปโหลดไป Google Drive
+task backup:upload
+```
+
+Environment variables (optional):
+
+| Variable | Default | คำอธิบาย |
+|---|---|---|
+| `BACKUP_DIR` | `./backups` | โฟลเดอร์เก็บ archive |
+| `BACKUP_RETENTION_DAYS` | `7` | ลบ local backup เก่ากว่ากี่วัน |
+| `RCLONE_REMOTE` | `gdrive:Backups/zkcnt-pos` | rclone remote สำหรับ upload |
+| `COMPOSE_FILE` | `docker-compose.prod.yml` | compose file ที่ใช้ |
+
+### Restore
+
+```bash
+# กู้คืน pos.db + uploads (จะถามยืนยันก่อน)
+task restore -- backups/zkcnt-20250620_030000.tar.gz
+
+# กู้คืนรวม .env ด้วย (non-interactive)
+bash scripts/restore.sh --yes --with-env backups/zkcnt-20250620_030000.tar.gz
+```
+
+ก่อน restore จะสร้าง safety backup อัตโนมัติที่ `backups/pre-restore-*.tar.gz` หาก DB เก่ากว่าโค้ดปัจจุบัน ให้รัน `task backend:migrate` หลัง restore
+
+### rclone setup (ครั้งเดียวบน Pi)
+
+```bash
+rclone config   # สร้าง remote ชื่อ "gdrive"
+rclone ls gdrive:Backups/zkcnt-pos/
+```
+
+### Jenkins (Docker บน Pi)
+
+ใช้ pipeline จาก [jenkins/Jenkinsfile](jenkins/Jenkinsfile) — รัน backup ทุกวัน 03:00 แล้ว upload ไป Google Drive
+
+Jenkins container ต้อง mount:
+
+| Mount | เหตุผล |
+|---|---|
+| `/var/run/docker.sock` | `docker compose exec` เข้า backend container |
+| `/home/pi/Desktop/zkcnt-pos:/home/pi/Desktop/zkcnt-pos` | เข้าถึง project และโฟลเดอร์ backups |
+| `~/.config/rclone:/var/jenkins_home/.config/rclone` | rclone credentials |
+
+ปรับ `PROJECT_DIR` ใน Jenkinsfile ให้ตรง path บน Pi
+
+### ทดสอบ restore เป็นระยะ
+
+```bash
+# 1. download archive จาก Google Drive
+rclone copy gdrive:Backups/zkcnt-pos/zkcnt-YYYYMMDD_HHMMSS.tar.gz backups/
+
+# 2. restore บน dev/staging
+task restore -- backups/zkcnt-YYYYMMDD_HHMMSS.tar.gz
+```
+
 ## Project Structure
 
 ```
@@ -174,6 +243,9 @@ zkcnt-pos/
 │   ├── data/               # pos.db + uploads (gitignored)
 │   └── Dockerfile
 ├── nginx/                  # Production reverse proxy
+├── scripts/                # backup.sh, restore.sh
+├── jenkins/                # Jenkins pipeline template
+├── backups/                # Local backup archives (gitignored)
 ├── .cursor/
 │   ├── rules/              # Cursor AI rules
 │   └── skills/             # Cursor AI skills
