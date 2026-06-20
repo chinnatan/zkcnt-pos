@@ -143,7 +143,7 @@ tasks:
     desc: Backup then upload to Google Drive via rclone
     cmds:
       - bash scripts/backup.sh
-      - rclone copy backups/ ${RCLONE_REMOTE:-gdrive:Backups/zkcnt-pos}/ --include "zkcnt-*.tar.gz" --max-age 1h
+      - rclone copy backups/ ${RCLONE_REMOTE:-gdrive:zkcnt_com/zkcnt-pos}/ --include "zkcnt-*.tar.gz" --max-age 1h
 
   restore:
     desc: "Restore from backup archive (usage: task restore -- backups/zkcnt-....tar.gz)"

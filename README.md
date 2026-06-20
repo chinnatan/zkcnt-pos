@@ -176,7 +176,7 @@ Environment variables (optional):
 |---|---|---|
 | `BACKUP_DIR` | `./backups` | โฟลเดอร์เก็บ archive |
 | `BACKUP_RETENTION_DAYS` | `7` | ลบ local backup เก่ากว่ากี่วัน |
-| `RCLONE_REMOTE` | `gdrive:Backups/zkcnt-pos` | rclone remote สำหรับ upload |
+| `RCLONE_REMOTE` | `gdrive:zkcnt_com/zkcnt-pos` | rclone remote สำหรับ upload |
 | `COMPOSE_FILE` | `docker-compose.prod.yml` | compose file ที่ใช้ |
 
 ### Restore
@@ -195,7 +195,7 @@ bash scripts/restore.sh --yes --with-env backups/zkcnt-20250620_030000.tar.gz
 
 ```bash
 rclone config   # สร้าง remote ชื่อ "gdrive"
-rclone ls gdrive:Backups/zkcnt-pos/
+rclone ls gdrive:zkcnt_com/zkcnt-pos/
 ```
 
 ### Jenkins (Docker บน Pi)
@@ -216,7 +216,7 @@ Jenkins container ต้อง mount:
 
 ```bash
 # 1. download archive จาก Google Drive
-rclone copy gdrive:Backups/zkcnt-pos/zkcnt-YYYYMMDD_HHMMSS.tar.gz backups/
+rclone copy gdrive:zkcnt_com/zkcnt-pos/zkcnt-YYYYMMDD_HHMMSS.tar.gz backups/
 
 # 2. restore บน dev/staging
 task restore -- backups/zkcnt-YYYYMMDD_HHMMSS.tar.gz

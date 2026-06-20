@@ -7,7 +7,7 @@ pipeline {
 
   environment {
     PROJECT_DIR = '/home/pi/Desktop/zkcnt-pos'
-    RCLONE_REMOTE = 'gdrive:Backups/zkcnt-pos'
+    RCLONE_REMOTE = 'gdrive:zkcnt_com/zkcnt-pos'
   }
 
   stages {
