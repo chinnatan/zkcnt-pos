@@ -166,9 +166,8 @@ const { formatCurrency, formatTime } = useFormat();
 const { statusLabel, paymentLabel } = useLabels();
 const { activeStore, activeStoreId } = useStore();
 const { isOnline } = useOnlineStatus();
-const { pendingSyncCount, initSync } = useSync();
+const { pendingSyncCount } = useSync();
 const { orders, fetchOrders } = useOrders();
-const { setup: setupOnlineStatus } = useOnlineStatus();
 
 const todaySales = ref(0);
 const todayOrderCount = ref(0);
@@ -207,9 +206,7 @@ async function loadDashboardData() {
 }
 
 onMounted(() => {
-  setupOnlineStatus();
   if (activeStoreId.value) {
-    initSync();
     loadDashboardData();
   }
 });

@@ -104,7 +104,12 @@ export class ApiClient {
     const start = Date.now();
     logger.debug(`${method} ${path}`);
 
-    const res = await fetch(url, { method, headers: reqHeaders, body: payload });
+    const res = await fetch(url, {
+      method,
+      headers: reqHeaders,
+      body: payload,
+      signal: AbortSignal.timeout(15_000),
+    });
 
     if (res.status === 401 && auth && this.authState?.refreshToken) {
       logger.debug(`401 on ${method} ${path}, attempting token refresh`);

@@ -226,10 +226,16 @@ async function handleDeleteCategory() {
   deletingCategory.value = null;
 }
 
-onMounted(() => {
-  fetchProducts();
-  fetchCategories();
-});
+watch(
+  activeStoreId,
+  (id) => {
+    if (id) {
+      fetchProducts();
+      fetchCategories();
+    }
+  },
+  { immediate: true },
+);
 
 onUnmounted(() => {
   if (imagePreview.value) URL.revokeObjectURL(imagePreview.value);

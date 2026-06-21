@@ -125,11 +125,21 @@ export function useStore() {
 
     if (!authUser.value) return;
 
+    const userId = authUser.value.id;
+
     isLoadingStores.value = true;
     storesFetchError.value = null;
 
     try {
-      await fetchMemberships(authUser.value.id);
+      if (import.meta.client && !navigator.onLine) {
+        await loadFromCache(userId);
+        if (userStores.value.length === 0) {
+          storesFetchError.value = "errors.loadStoresFailed";
+        }
+        return;
+      }
+
+      await fetchMemberships(userId);
       await applyStoreSelection();
     } catch (e: unknown) {
       logger.error("fetchUserStores failed:", e);
@@ -137,7 +147,7 @@ export function useStore() {
         e instanceof Error ? e.message : "errors.loadStoresFailed";
 
       try {
-        await loadFromCache(authUser.value.id);
+        await loadFromCache(userId);
         if (userStores.value.length > 0) {
           storesFetchError.value = null;
         }

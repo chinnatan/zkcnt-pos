@@ -103,8 +103,8 @@ export function useProducts() {
         await db.products.bulkPut(records);
       } else {
         const local = await db.products
-          .where("[store+is_active]")
-          .equals([activeStoreId.value, 1])
+          .where("store")
+          .equals(activeStoreId.value)
           .toArray();
         products.value = local as Product[];
       }

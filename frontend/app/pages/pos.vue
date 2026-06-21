@@ -277,7 +277,7 @@ const {
 } = useCart();
 const { createOrder } = useOrders();
 const { alert } = useDialog();
-const { activeStore } = useStore();
+const { activeStore, activeStoreId } = useStore();
 const { generateQrDataUrl, resolvePromptPayId } = usePromptPayQr();
 
 const showMobileCart = ref(false);
@@ -470,9 +470,15 @@ function handleNewOrder() {
   showMobileCart.value = false;
 }
 
-onMounted(async () => {
-  await Promise.all([fetchProducts(), fetchCategories(), fetchInventory()]);
-});
+watch(
+  activeStoreId,
+  (id) => {
+    if (id) {
+      void Promise.all([fetchProducts(), fetchCategories(), fetchInventory()]);
+    }
+  },
+  { immediate: true },
+);
 </script>
 
 <style scoped>
