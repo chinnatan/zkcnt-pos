@@ -15,6 +15,10 @@ export default defineNuxtConfig({
     strategy: "no_prefix",
     langDir: "locales",
     detectBrowserLanguage: false,
+    experimental: {
+      // Prerender locale JSON as static files so offline cold start works
+      prerenderMessages: true,
+    },
   },
 
   css: ["~/assets/css/main.css"],
@@ -72,6 +76,8 @@ export default defineNuxtConfig({
 
   pwa: {
     registerType: "autoUpdate",
+    injectRegister: "auto",
+    registerWebManifestInRouteRules: true,
     manifest: {
       name: "zKCNT POS - Offline-First Point of Sale",
       short_name: "zKCNT POS",
@@ -104,9 +110,13 @@ export default defineNuxtConfig({
     workbox: {
       navigateFallback: "/",
       navigateFallbackDenylist: [/^\/api/, /^\/uploads/],
-      globPatterns: ["**/*.{js,css,html,png,svg,ico,woff2}"],
+      globPatterns: [
+        "**/*.{js,css,html,png,svg,ico,woff2,json,webmanifest}",
+      ],
       skipWaiting: true,
       clientsClaim: true,
+      cleanupOutdatedCaches: true,
+      maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
       runtimeCaching: [
         {
           urlPattern: /^https?:\/\/.*\/api\/.*/i,
@@ -141,4 +151,11 @@ export default defineNuxtConfig({
   },
 
   ssr: false,
+
+  nitro: {
+    // Precache app shell for PWA offline cold start (required even with ssr: false)
+    prerender: {
+      routes: ["/"],
+    },
+  },
 });
