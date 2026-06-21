@@ -1,10 +1,11 @@
-export default defineNuxtPlugin(async () => {
+export default defineNuxtPlugin(() => {
   const { initAuth, isAuthenticated } = useAuth();
   const { fetchUserStores } = useStore();
 
   initAuth();
 
   if (isAuthenticated.value) {
-    await fetchUserStores();
+    // Do not block app mount — critical for offline PWA cold start
+    void fetchUserStores();
   }
 });

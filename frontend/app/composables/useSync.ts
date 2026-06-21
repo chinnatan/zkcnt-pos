@@ -5,6 +5,7 @@ import { createLogger } from "~/lib/logger";
 const logger = createLogger("use-sync");
 
 let syncEngine: SyncEngine | null = null;
+let syncWatchesInitialized = false;
 const pendingSyncCount = ref(0);
 const isSyncing = ref(false);
 const lastSyncAt = ref<string | null>(null);
@@ -46,16 +47,24 @@ export function useSync() {
     pendingSyncCount.value = await getPendingCount(activeStoreId.value ?? undefined);
   }
 
-  watch(isOnline, (online) => {
-    logger.debug(`online status changed online=${online}`);
-    if (online && syncEngine) {
-      performSync();
-    }
-  });
+  if (import.meta.client && !syncWatchesInitialized) {
+    syncWatchesInitialized = true;
 
-  watch(activeStoreId, () => {
-    initSync();
-  });
+    watch(isOnline, (online) => {
+      logger.debug(`online status changed online=${online}`);
+      if (online && syncEngine) {
+        performSync();
+      }
+    });
+
+    watch(
+      activeStoreId,
+      (id) => {
+        if (id) initSync();
+      },
+      { immediate: true },
+    );
+  }
 
   function cleanup() {
     syncEngine = null;

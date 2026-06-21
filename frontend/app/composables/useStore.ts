@@ -131,28 +131,30 @@ export function useStore() {
     storesFetchError.value = null;
 
     try {
+      await loadFromCache(userId);
+
       if (import.meta.client && !navigator.onLine) {
-        await loadFromCache(userId);
         if (userStores.value.length === 0) {
           storesFetchError.value = "errors.loadStoresFailed";
         }
         return;
       }
 
-      await fetchMemberships(userId);
-      await applyStoreSelection();
+      try {
+        await fetchMemberships(userId);
+        await applyStoreSelection();
+      } catch (e: unknown) {
+        logger.warn("fetchMemberships failed, using cache:", e);
+        if (userStores.value.length === 0) {
+          storesFetchError.value =
+            e instanceof Error ? e.message : "errors.loadStoresFailed";
+        }
+      }
     } catch (e: unknown) {
       logger.error("fetchUserStores failed:", e);
-      storesFetchError.value =
-        e instanceof Error ? e.message : "errors.loadStoresFailed";
-
-      try {
-        await loadFromCache(userId);
-        if (userStores.value.length > 0) {
-          storesFetchError.value = null;
-        }
-      } catch {
-        // cache load failed too
+      if (userStores.value.length === 0) {
+        storesFetchError.value =
+          e instanceof Error ? e.message : "errors.loadStoresFailed";
       }
     } finally {
       isLoadingStores.value = false;

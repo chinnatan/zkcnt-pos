@@ -103,7 +103,10 @@ export default defineNuxtConfig({
     },
     workbox: {
       navigateFallback: "/",
+      navigateFallbackDenylist: [/^\/api/, /^\/uploads/],
       globPatterns: ["**/*.{js,css,html,png,svg,ico,woff2}"],
+      skipWaiting: true,
+      clientsClaim: true,
       runtimeCaching: [
         {
           urlPattern: /^https?:\/\/.*\/api\/.*/i,
