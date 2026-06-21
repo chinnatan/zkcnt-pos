@@ -78,6 +78,14 @@ export default defineNuxtConfig({
     registerType: "autoUpdate",
     injectRegister: "auto",
     registerWebManifestInRouteRules: true,
+    strategies: "injectManifest",
+    srcDir: "sw",
+    filename: "sw.ts",
+    injectManifest: {
+      globPatterns: [
+        "**/*.{js,css,html,png,svg,ico,woff2,json,webmanifest}",
+      ],
+    },
     manifest: {
       name: "zKCNT POS - Offline-First Point of Sale",
       short_name: "zKCNT POS",
@@ -107,33 +115,6 @@ export default defineNuxtConfig({
         },
       ],
     },
-    workbox: {
-      navigateFallback: "/",
-      navigateFallbackDenylist: [/^\/api/, /^\/uploads/],
-      globPatterns: [
-        "**/*.{js,css,html,png,svg,ico,woff2,json,webmanifest}",
-      ],
-      skipWaiting: true,
-      clientsClaim: true,
-      cleanupOutdatedCaches: true,
-      maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
-      runtimeCaching: [
-        {
-          urlPattern: /^https?:\/\/.*\/api\/.*/i,
-          handler: "NetworkFirst",
-          options: {
-            cacheName: "api-cache",
-            expiration: {
-              maxEntries: 100,
-              maxAgeSeconds: 60 * 60 * 24, // 24 hours
-            },
-            cacheableResponse: {
-              statuses: [0, 200],
-            },
-          },
-        },
-      ],
-    },
     client: {
       installPrompt: true,
     },
@@ -153,9 +134,9 @@ export default defineNuxtConfig({
   ssr: false,
 
   nitro: {
-    // Precache app shell for PWA offline cold start (required even with ssr: false)
+    // Precache app shell + common entry routes for PWA offline cold start
     prerender: {
-      routes: ["/"],
+      routes: ["/", "/pos", "/login"],
     },
   },
 });
