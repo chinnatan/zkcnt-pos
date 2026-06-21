@@ -1,11 +1,11 @@
 <template>
   <div class="space-y-6">
-    <div class="flex flex-wrap items-center justify-between gap-3">
+    <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
       <h2 class="text-lg font-semibold text-gray-800">{{ t('reportsPage.title') }}</h2>
-      <div class="flex flex-wrap items-center gap-2">
+      <div class="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center">
         <select
           v-model="period"
-          class="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none"
+          class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-primary-500 focus:outline-none sm:w-auto"
         >
           <option value="today">{{ t('reportsPage.today') }}</option>
           <option value="week">{{ t('reportsPage.thisWeek') }}</option>
@@ -16,17 +16,17 @@
           <input
             v-model="customSince"
             type="datetime-local"
-            class="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none"
+            class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-primary-500 focus:outline-none sm:w-auto"
           />
           <input
             v-model="customUntil"
             type="datetime-local"
-            class="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none"
+            class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-primary-500 focus:outline-none sm:w-auto"
           />
         </template>
         <button
           type="button"
-          class="rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+          class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 sm:w-auto"
           :disabled="!data || isLoading"
           @click="exportCsv"
         >
@@ -264,34 +264,65 @@
             <div v-if="data.cashierLeaderboard.length === 0" class="py-6 text-center text-gray-400">
               {{ t('reportsPage.noData') }}
             </div>
-            <div v-else class="overflow-x-auto">
-              <table class="w-full text-sm">
-                <thead>
-                  <tr class="border-b text-left text-gray-500">
-                    <th class="pb-2 pr-4">#</th>
-                    <th class="pb-2 pr-4">{{ t('reportsPage.cashier') }}</th>
-                    <th class="pb-2 pr-4 text-right">{{ t('reportsPage.totalOrders') }}</th>
-                    <th class="pb-2 pr-4 text-right">{{ t('reportsPage.totalSales') }}</th>
-                    <th class="pb-2 pr-4 text-right">{{ t('reportsPage.averageOrder') }}</th>
-                    <th class="pb-2 text-right">{{ t('reportsPage.voidRefund') }}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr
-                    v-for="(c, i) in data.cashierLeaderboard"
-                    :key="c.cashierId"
-                    class="border-b border-gray-50"
-                  >
-                    <td class="py-2 pr-4 font-medium">{{ i + 1 }}</td>
-                    <td class="py-2 pr-4">{{ c.name }}</td>
-                    <td class="py-2 pr-4 text-right">{{ c.orderCount }}</td>
-                    <td class="py-2 pr-4 text-right">{{ formatCurrency(c.total) }}</td>
-                    <td class="py-2 pr-4 text-right">{{ formatCurrency(c.avgOrder) }}</td>
-                    <td class="py-2 text-right text-red-600">{{ c.voidCount }} ({{ formatCurrency(c.voidTotal) }})</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+            <UiMobileDataList v-else>
+              <template #table>
+                <div class="overflow-x-auto">
+                  <table class="w-full text-sm">
+                    <thead>
+                      <tr class="border-b text-left text-gray-500">
+                        <th class="pb-2 pr-4">#</th>
+                        <th class="pb-2 pr-4">{{ t('reportsPage.cashier') }}</th>
+                        <th class="pb-2 pr-4 text-right">{{ t('reportsPage.totalOrders') }}</th>
+                        <th class="pb-2 pr-4 text-right">{{ t('reportsPage.totalSales') }}</th>
+                        <th class="pb-2 pr-4 text-right">{{ t('reportsPage.averageOrder') }}</th>
+                        <th class="pb-2 text-right">{{ t('reportsPage.voidRefund') }}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr
+                        v-for="(c, i) in data.cashierLeaderboard"
+                        :key="c.cashierId"
+                        class="border-b border-gray-50"
+                      >
+                        <td class="py-2 pr-4 font-medium">{{ i + 1 }}</td>
+                        <td class="py-2 pr-4">{{ c.name }}</td>
+                        <td class="py-2 pr-4 text-right">{{ c.orderCount }}</td>
+                        <td class="py-2 pr-4 text-right">{{ formatCurrency(c.total) }}</td>
+                        <td class="py-2 pr-4 text-right">{{ formatCurrency(c.avgOrder) }}</td>
+                        <td class="py-2 text-right text-red-600">{{ c.voidCount }} ({{ formatCurrency(c.voidTotal) }})</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </template>
+              <template #cards>
+                <UiMobileDataCard
+                  v-for="(c, i) in data.cashierLeaderboard"
+                  :key="c.cashierId"
+                  :title="c.name"
+                  :subtitle="`#${i + 1}`"
+                >
+                  <template #fields>
+                    <div>
+                      <span class="text-gray-400">{{ t('reportsPage.totalOrders') }}</span>
+                      <p class="font-medium text-gray-900">{{ c.orderCount }}</p>
+                    </div>
+                    <div>
+                      <span class="text-gray-400">{{ t('reportsPage.totalSales') }}</span>
+                      <p class="font-semibold text-gray-900">{{ formatCurrency(c.total) }}</p>
+                    </div>
+                    <div>
+                      <span class="text-gray-400">{{ t('reportsPage.averageOrder') }}</span>
+                      <p class="text-gray-600">{{ formatCurrency(c.avgOrder) }}</p>
+                    </div>
+                    <div>
+                      <span class="text-gray-400">{{ t('reportsPage.voidRefund') }}</span>
+                      <p class="text-red-600">{{ c.voidCount }} ({{ formatCurrency(c.voidTotal) }})</p>
+                    </div>
+                  </template>
+                </UiMobileDataCard>
+              </template>
+            </UiMobileDataList>
           </div>
         </div>
       </div>

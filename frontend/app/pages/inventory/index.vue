@@ -28,45 +28,88 @@
         {{ t('stock.noData') }}
       </div>
 
-      <div v-else class="overflow-x-auto">
-        <table class="w-full text-left text-sm">
-          <thead class="border-b border-gray-200 bg-gray-50 text-xs uppercase text-gray-500">
-            <tr>
-              <th class="px-4 py-3">{{ t('common.product') }}</th>
-              <th class="px-4 py-3">{{ t('common.sku') }}</th>
-              <th class="px-4 py-3 text-right">{{ t('common.quantity') }}</th>
-              <th class="px-4 py-3 text-right">{{ t('common.threshold') }}</th>
-              <th class="px-4 py-3">{{ t('common.status') }}</th>
-              <th class="px-4 py-3">{{ t('common.actions') }}</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-gray-100">
-            <tr v-for="item in inventoryWithProducts" :key="item.id" class="hover:bg-gray-50">
-              <td class="px-4 py-3 font-medium text-gray-900">{{ item.productName }}</td>
-              <td class="px-4 py-3 text-gray-500">{{ item.productSku || '-' }}</td>
-              <td class="px-4 py-3 text-right font-semibold" :class="item.quantity <= item.low_stock_threshold ? 'text-danger-500' : ''">
-                {{ item.quantity }}
-              </td>
-              <td class="px-4 py-3 text-right text-gray-500">{{ item.low_stock_threshold }}</td>
-              <td class="px-4 py-3">
+      <div v-else>
+        <UiMobileDataList>
+          <template #table>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-sm">
+                <thead class="border-b border-gray-200 bg-gray-50 text-xs uppercase text-gray-500">
+                  <tr>
+                    <th class="px-4 py-3">{{ t('common.product') }}</th>
+                    <th class="px-4 py-3">{{ t('common.sku') }}</th>
+                    <th class="px-4 py-3 text-right">{{ t('common.quantity') }}</th>
+                    <th class="px-4 py-3 text-right">{{ t('common.threshold') }}</th>
+                    <th class="px-4 py-3">{{ t('common.status') }}</th>
+                    <th class="px-4 py-3">{{ t('common.actions') }}</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                  <tr v-for="item in inventoryWithProducts" :key="item.id" class="hover:bg-gray-50">
+                    <td class="px-4 py-3 font-medium text-gray-900">{{ item.productName }}</td>
+                    <td class="px-4 py-3 text-gray-500">{{ item.productSku || '-' }}</td>
+                    <td class="px-4 py-3 text-right font-semibold" :class="item.quantity <= item.low_stock_threshold ? 'text-danger-500' : ''">
+                      {{ item.quantity }}
+                    </td>
+                    <td class="px-4 py-3 text-right text-gray-500">{{ item.low_stock_threshold }}</td>
+                    <td class="px-4 py-3">
+                      <span
+                        class="rounded-full px-2 py-0.5 text-xs font-medium"
+                        :class="item.quantity <= 0 ? 'bg-red-100 text-red-700' : item.quantity <= item.low_stock_threshold ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700'"
+                      >
+                        {{ stockStatusLabel(item.quantity, item.low_stock_threshold) }}
+                      </span>
+                    </td>
+                    <td class="px-4 py-3">
+                      <button
+                        class="rounded px-2 py-1 text-xs text-primary-600 hover:bg-primary-50"
+                        @click="openAdjust(item)"
+                      >
+                        {{ t('stock.adjust') }}
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </template>
+          <template #cards>
+            <UiMobileDataCard
+              v-for="item in inventoryWithProducts"
+              :key="item.id"
+              :title="item.productName"
+              :subtitle="item.productSku || t('common.noSku')"
+            >
+              <template #badge>
                 <span
                   class="rounded-full px-2 py-0.5 text-xs font-medium"
                   :class="item.quantity <= 0 ? 'bg-red-100 text-red-700' : item.quantity <= item.low_stock_threshold ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700'"
                 >
                   {{ stockStatusLabel(item.quantity, item.low_stock_threshold) }}
                 </span>
-              </td>
-              <td class="px-4 py-3">
+              </template>
+              <template #fields>
+                <div>
+                  <span class="text-gray-400">{{ t('common.quantity') }}</span>
+                  <p class="font-semibold" :class="item.quantity <= item.low_stock_threshold ? 'text-danger-500' : 'text-gray-900'">
+                    {{ item.quantity }}
+                  </p>
+                </div>
+                <div>
+                  <span class="text-gray-400">{{ t('common.threshold') }}</span>
+                  <p class="text-gray-600">{{ item.low_stock_threshold }}</p>
+                </div>
+              </template>
+              <template #actions>
                 <button
-                  class="rounded px-2 py-1 text-xs text-primary-600 hover:bg-primary-50"
+                  class="w-full rounded-lg bg-primary-50 px-3 py-2.5 text-sm font-medium text-primary-700 hover:bg-primary-100"
                   @click="openAdjust(item)"
                 >
                   {{ t('stock.adjust') }}
                 </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+              </template>
+            </UiMobileDataCard>
+          </template>
+        </UiMobileDataList>
       </div>
     </div>
 

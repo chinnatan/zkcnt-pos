@@ -3,9 +3,10 @@
     <Transition name="cart-sheet">
       <div
         v-if="show"
-        class="fixed inset-0 z-50 lg:hidden"
+        class="fixed inset-0 z-50 md:hidden"
         role="dialog"
         aria-modal="true"
+        :aria-labelledby="titleId"
       >
         <div
           class="absolute inset-0 bg-black/50"
@@ -13,14 +14,18 @@
         />
 
         <div
+          ref="panelRef"
           class="absolute inset-x-0 bottom-0 flex max-h-[90vh] flex-col rounded-t-2xl bg-white shadow-2xl"
           style="padding-bottom: env(safe-area-inset-bottom)"
+          @touchstart.passive="onTouchStart"
+          @touchmove.passive="onTouchMove"
+          @touchend="onTouchEnd"
         >
           <div class="relative flex shrink-0 flex-col items-center border-b border-gray-200 px-4 py-3">
-            <div class="mb-1 h-1 w-10 rounded-full bg-gray-300" />
+            <div class="mb-1 h-1 w-10 cursor-grab rounded-full bg-gray-300 active:cursor-grabbing" />
             <button
               type="button"
-              class="absolute right-3 top-2 rounded-lg p-2 text-gray-500 transition-colors hover:bg-gray-100"
+              class="touch-pos absolute right-3 top-2 flex h-11 w-11 items-center justify-center rounded-lg text-gray-500 transition-colors hover:bg-gray-100"
               :aria-label="t('pos.closeCart')"
               @click="close"
             >
@@ -44,6 +49,11 @@ const show = defineModel<boolean>("show", { default: false });
 
 const { t } = useI18n();
 
+const titleId = "mobile-cart-sheet-title";
+const panelRef = ref<HTMLElement | null>(null);
+const touchStartY = ref(0);
+const touchDeltaY = ref(0);
+
 function close() {
   show.value = false;
 }
@@ -54,12 +64,43 @@ function onKeydown(e: KeyboardEvent) {
   }
 }
 
+function onTouchStart(e: TouchEvent) {
+  touchStartY.value = e.touches[0]?.clientY ?? 0;
+  touchDeltaY.value = 0;
+}
+
+function onTouchMove(e: TouchEvent) {
+  const y = e.touches[0]?.clientY ?? 0;
+  touchDeltaY.value = y - touchStartY.value;
+  if (touchDeltaY.value > 0 && panelRef.value) {
+    panelRef.value.style.transform = `translateY(${touchDeltaY.value}px)`;
+  }
+}
+
+function onTouchEnd() {
+  if (panelRef.value) {
+    panelRef.value.style.transform = "";
+  }
+  if (touchDeltaY.value > 80) {
+    close();
+  }
+  touchDeltaY.value = 0;
+}
+
+watch(show, (open) => {
+  if (!import.meta.client) return;
+  document.body.style.overflow = open ? "hidden" : "";
+});
+
 onMounted(() => {
   window.addEventListener("keydown", onKeydown);
 });
 
 onUnmounted(() => {
   window.removeEventListener("keydown", onKeydown);
+  if (import.meta.client) {
+    document.body.style.overflow = "";
+  }
 });
 </script>
 

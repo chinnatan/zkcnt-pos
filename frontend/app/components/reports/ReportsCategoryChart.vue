@@ -1,5 +1,5 @@
 <template>
-  <div class="mx-auto h-56 max-w-xs">
+  <div class="mx-auto h-48 max-w-xs sm:h-56">
     <Doughnut v-if="chartData" :data="chartData" :options="options" />
   </div>
 </template>

@@ -15,7 +15,7 @@
       </h2>
       <button
         v-if="cartItems.length > 0"
-        class="rounded-lg px-3 py-1.5 text-xs font-medium text-danger-500 transition-colors hover:bg-red-50"
+        class="touch-pos rounded-lg px-3 py-2 text-xs font-medium text-danger-500 transition-colors hover:bg-red-50"
         @click="clearCart"
       >
         {{ t('pos.clearAll') }}
@@ -59,7 +59,7 @@
             </p>
             <div class="mt-2 flex items-center gap-2">
               <button
-                class="touch-pos flex h-8 w-8 items-center justify-center rounded-lg border border-gray-300 text-gray-600 transition-colors hover:bg-gray-100 active:bg-gray-200"
+                class="touch-pos flex h-11 w-11 items-center justify-center rounded-lg border border-gray-300 text-gray-600 transition-colors hover:bg-gray-100 active:bg-gray-200"
                 @click="updateQuantity(item.product.id, item.quantity - 1)"
               >
                 <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -70,7 +70,7 @@
                 {{ item.quantity }}
               </span>
               <button
-                class="touch-pos flex h-8 w-8 items-center justify-center rounded-lg border border-gray-300 text-gray-600 transition-colors hover:bg-gray-100 active:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-40"
+                class="touch-pos flex h-11 w-11 items-center justify-center rounded-lg border border-gray-300 text-gray-600 transition-colors hover:bg-gray-100 active:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-40"
                 :disabled="!canIncreaseQty(item.product, item.quantity)"
                 @click="handleUpdateQuantity(item.product.id, item.quantity + 1)"
               >
@@ -85,7 +85,7 @@
               {{ formatCurrency(item.product.price * item.quantity - item.discount) }}
             </span>
             <button
-              class="rounded p-1 text-gray-400 transition-colors hover:bg-red-50 hover:text-danger-500"
+              class="touch-pos flex h-11 w-11 items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-red-50 hover:text-danger-500"
               @click="removeItem(item.product.id)"
             >
               <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -192,7 +192,7 @@
             <button
               v-for="amount in quickCashAmounts"
               :key="amount"
-                  class="touch-pos rounded-lg border border-gray-200 bg-white py-2 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-100 active:bg-gray-200"
+                  class="touch-pos rounded-lg border border-gray-200 bg-white py-2.5 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-100 active:bg-gray-200"
               @click="paymentReceived = amount"
             >
               {{ amount.toLocaleString() }}

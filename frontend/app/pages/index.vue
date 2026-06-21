@@ -121,35 +121,69 @@
         <div v-if="orders.length === 0" class="py-8 text-center text-gray-400">
           {{ t('dashboard.noOrders') }}
         </div>
-        <div v-else class="overflow-x-auto">
-          <table class="w-full text-left text-sm">
-            <thead class="border-b border-gray-200 text-xs uppercase text-gray-500">
-              <tr>
-                <th class="px-4 py-3">{{ t('dashboard.orderNumber') }}</th>
-                <th class="px-4 py-3">{{ t('common.total') }}</th>
-                <th class="px-4 py-3">{{ t('common.payment') }}</th>
-                <th class="px-4 py-3">{{ t('common.status') }}</th>
-                <th class="px-4 py-3">{{ t('common.time') }}</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-gray-100">
-              <tr v-for="order in orders.slice(0, 10)" :key="order.id" class="hover:bg-gray-50">
-                <td class="px-4 py-3 font-medium text-gray-900">{{ order.order_number }}</td>
-                <td class="px-4 py-3">{{ formatCurrency(order.total) }}</td>
-                <td class="px-4 py-3">
-                  <span class="rounded-full px-2 py-0.5 text-xs font-medium" :class="paymentBadge(order.payment_method)">
-                    {{ paymentLabel(order.payment_method) }}
-                  </span>
-                </td>
-                <td class="px-4 py-3">
+        <div v-else>
+          <UiMobileDataList>
+            <template #table>
+              <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm">
+                  <thead class="border-b border-gray-200 text-xs uppercase text-gray-500">
+                    <tr>
+                      <th class="px-4 py-3">{{ t('dashboard.orderNumber') }}</th>
+                      <th class="px-4 py-3">{{ t('common.total') }}</th>
+                      <th class="px-4 py-3">{{ t('common.payment') }}</th>
+                      <th class="px-4 py-3">{{ t('common.status') }}</th>
+                      <th class="px-4 py-3">{{ t('common.time') }}</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-gray-100">
+                    <tr v-for="order in orders.slice(0, 10)" :key="order.id" class="hover:bg-gray-50">
+                      <td class="px-4 py-3 font-medium text-gray-900">{{ order.order_number }}</td>
+                      <td class="px-4 py-3">{{ formatCurrency(order.total) }}</td>
+                      <td class="px-4 py-3">
+                        <span class="rounded-full px-2 py-0.5 text-xs font-medium" :class="paymentBadge(order.payment_method)">
+                          {{ paymentLabel(order.payment_method) }}
+                        </span>
+                      </td>
+                      <td class="px-4 py-3">
+                        <span class="rounded-full px-2 py-0.5 text-xs font-medium" :class="statusBadge(order.status)">
+                          {{ statusLabel(order.status) }}
+                        </span>
+                      </td>
+                      <td class="px-4 py-3 text-gray-500">{{ formatTime(order.created) }}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </template>
+            <template #cards>
+              <UiMobileDataCard
+                v-for="order in orders.slice(0, 10)"
+                :key="order.id"
+                :title="order.order_number"
+                :subtitle="formatTime(order.created)"
+              >
+                <template #badge>
                   <span class="rounded-full px-2 py-0.5 text-xs font-medium" :class="statusBadge(order.status)">
                     {{ statusLabel(order.status) }}
                   </span>
-                </td>
-                <td class="px-4 py-3 text-gray-500">{{ formatTime(order.created) }}</td>
-              </tr>
-            </tbody>
-          </table>
+                </template>
+                <template #fields>
+                  <div>
+                    <span class="text-gray-400">{{ t('common.total') }}</span>
+                    <p class="font-semibold text-gray-900">{{ formatCurrency(order.total) }}</p>
+                  </div>
+                  <div>
+                    <span class="text-gray-400">{{ t('common.payment') }}</span>
+                    <p>
+                      <span class="rounded-full px-2 py-0.5 text-xs font-medium" :class="paymentBadge(order.payment_method)">
+                        {{ paymentLabel(order.payment_method) }}
+                      </span>
+                    </p>
+                  </div>
+                </template>
+              </UiMobileDataCard>
+            </template>
+          </UiMobileDataList>
         </div>
       </div>
     </div>

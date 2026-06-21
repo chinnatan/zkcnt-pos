@@ -1,7 +1,7 @@
 <template>
   <div
     v-if="showInstallBanner"
-    class="fixed inset-x-0 bottom-0 z-50 border-t border-primary-200 bg-primary-50 px-4 py-3 shadow-lg"
+    class="fixed inset-x-0 bottom-16 z-50 border-t border-primary-200 bg-primary-50 px-4 py-3 shadow-lg lg:bottom-0"
   >
     <div class="mx-auto flex max-w-lg items-start gap-3">
       <div class="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary-600 text-white">

@@ -31,38 +31,77 @@
         {{ t('customersPage.noCustomers') }}
       </div>
 
-      <div v-else class="overflow-x-auto">
-        <table class="w-full text-left text-sm">
-          <thead class="border-b border-gray-200 bg-gray-50 text-xs uppercase text-gray-500">
-            <tr>
-              <th class="px-4 py-3">{{ t('common.name') }}</th>
-              <th class="px-4 py-3">{{ t('common.phone') }}</th>
-              <th class="px-4 py-3">{{ t('common.email') }}</th>
-              <th class="px-4 py-3 text-right">{{ t('customersPage.totalSpent') }}</th>
-              <th class="px-4 py-3 text-right">{{ t('common.visits') }}</th>
-              <th class="px-4 py-3">{{ t('common.actions') }}</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-gray-100">
-            <tr v-for="customer in filteredCustomers" :key="customer.id" class="hover:bg-gray-50">
-              <td class="px-4 py-3 font-medium text-gray-900">{{ customer.name }}</td>
-              <td class="px-4 py-3 text-gray-500">{{ customer.phone || '-' }}</td>
-              <td class="px-4 py-3 text-gray-500">{{ customer.email || '-' }}</td>
-              <td class="px-4 py-3 text-right">{{ formatCurrency(customer.total_spent) }}</td>
-              <td class="px-4 py-3 text-right">{{ customer.visit_count }}</td>
-              <td class="px-4 py-3">
-                <div class="flex gap-1">
-                  <button class="rounded px-2 py-1 text-xs text-primary-600 hover:bg-primary-50" @click="openModal(customer)">
-                    {{ t('common.edit') }}
-                  </button>
-                  <button class="rounded px-2 py-1 text-xs text-red-600 hover:bg-red-50" @click="handleDelete(customer.id)">
-                    {{ t('common.delete') }}
-                  </button>
+      <div v-else>
+        <UiMobileDataList>
+          <template #table>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-sm">
+                <thead class="border-b border-gray-200 bg-gray-50 text-xs uppercase text-gray-500">
+                  <tr>
+                    <th class="px-4 py-3">{{ t('common.name') }}</th>
+                    <th class="px-4 py-3">{{ t('common.phone') }}</th>
+                    <th class="px-4 py-3">{{ t('common.email') }}</th>
+                    <th class="px-4 py-3 text-right">{{ t('customersPage.totalSpent') }}</th>
+                    <th class="px-4 py-3 text-right">{{ t('common.visits') }}</th>
+                    <th class="px-4 py-3">{{ t('common.actions') }}</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                  <tr v-for="customer in filteredCustomers" :key="customer.id" class="hover:bg-gray-50">
+                    <td class="px-4 py-3 font-medium text-gray-900">{{ customer.name }}</td>
+                    <td class="px-4 py-3 text-gray-500">{{ customer.phone || '-' }}</td>
+                    <td class="px-4 py-3 text-gray-500">{{ customer.email || '-' }}</td>
+                    <td class="px-4 py-3 text-right">{{ formatCurrency(customer.total_spent) }}</td>
+                    <td class="px-4 py-3 text-right">{{ customer.visit_count }}</td>
+                    <td class="px-4 py-3">
+                      <div class="flex gap-1">
+                        <button class="rounded px-2 py-1 text-xs text-primary-600 hover:bg-primary-50" @click="openModal(customer)">
+                          {{ t('common.edit') }}
+                        </button>
+                        <button class="rounded px-2 py-1 text-xs text-red-600 hover:bg-red-50" @click="handleDelete(customer.id)">
+                          {{ t('common.delete') }}
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </template>
+          <template #cards>
+            <UiMobileDataCard
+              v-for="customer in filteredCustomers"
+              :key="customer.id"
+              :title="customer.name"
+              :subtitle="customer.phone || customer.email || '-'"
+            >
+              <template #fields>
+                <div>
+                  <span class="text-gray-400">{{ t('customersPage.totalSpent') }}</span>
+                  <p class="font-medium text-gray-900">{{ formatCurrency(customer.total_spent) }}</p>
                 </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+                <div>
+                  <span class="text-gray-400">{{ t('common.visits') }}</span>
+                  <p class="text-gray-600">{{ customer.visit_count }}</p>
+                </div>
+              </template>
+              <template #actions>
+                <button
+                  class="rounded-lg px-3 py-2 text-xs font-medium text-primary-600 hover:bg-primary-50"
+                  @click="openModal(customer)"
+                >
+                  {{ t('common.edit') }}
+                </button>
+                <button
+                  class="rounded-lg px-3 py-2 text-xs font-medium text-red-600 hover:bg-red-50"
+                  @click="handleDelete(customer.id)"
+                >
+                  {{ t('common.delete') }}
+                </button>
+              </template>
+            </UiMobileDataCard>
+          </template>
+        </UiMobileDataList>
       </div>
     </div>
 

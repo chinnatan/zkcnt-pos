@@ -465,59 +465,105 @@ onUnmounted(() => {
 
       <!-- Categories Tab -->
       <template v-else>
-        <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-          <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-gray-50">
-              <tr>
-                <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">{{ t('productsPage.categoryName') }}</th>
-                <th class="hidden px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 sm:table-cell">{{ t('common.description') }}</th>
-                <th class="px-6 py-3 text-center text-xs font-semibold uppercase tracking-wider text-gray-500">{{ t('common.sortOrder') }}</th>
-                <th class="px-6 py-3 text-center text-xs font-semibold uppercase tracking-wider text-gray-500">{{ t('common.status') }}</th>
-                <th class="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">{{ t('productsPage.manage') }}</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-gray-100">
-              <tr v-for="cat in categories" :key="cat.id" class="transition hover:bg-gray-50/80">
-                <td class="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900">{{ cat.name }}</td>
-                <td class="hidden max-w-xs truncate px-6 py-4 text-sm text-gray-500 sm:table-cell">{{ cat.description || "-" }}</td>
-                <td class="whitespace-nowrap px-6 py-4 text-center text-sm text-gray-500">{{ cat.sort_order ?? 0 }}</td>
-                <td class="whitespace-nowrap px-6 py-4 text-center">
-                  <span
-                    class="inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium"
-                    :class="cat.is_active ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'"
-                  >
-                    {{ cat.is_active ? t('common.active') : t('common.inactive') }}
-                  </span>
-                </td>
-                <td class="whitespace-nowrap px-6 py-4 text-right">
-                  <div class="flex items-center justify-end gap-2">
-                    <button
-                      class="rounded-lg p-1.5 text-gray-400 transition hover:bg-gray-100 hover:text-primary-600"
-                      :title="t('common.edit')"
-                      @click="openEditCategory(cat)"
-                    >
-                      <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
-                    </button>
-                    <button
-                      class="rounded-lg p-1.5 text-gray-400 transition hover:bg-red-50 hover:text-red-600"
-                      :title="t('common.delete')"
-                      @click="confirmDeleteCategory(cat)"
-                    >
-                      <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                    </button>
-                  </div>
-                </td>
-              </tr>
-              <tr v-if="(categories ?? []).length === 0">
-                <td colspan="5" class="px-6 py-16 text-center">
-                  <svg class="mx-auto h-12 w-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z" /></svg>
-                  <p class="mt-3 text-sm font-medium text-gray-500">{{ t('productsPage.noCategories') }}</p>
-                  <button class="mt-2 text-sm font-medium text-primary-600 hover:text-primary-700" @click="openAddCategory">{{ t('productsPage.addFirstCategory') }}</button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+        <UiMobileDataList>
+          <template #table>
+            <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+              <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">{{ t('productsPage.categoryName') }}</th>
+                    <th class="hidden px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 sm:table-cell">{{ t('common.description') }}</th>
+                    <th class="px-6 py-3 text-center text-xs font-semibold uppercase tracking-wider text-gray-500">{{ t('common.sortOrder') }}</th>
+                    <th class="px-6 py-3 text-center text-xs font-semibold uppercase tracking-wider text-gray-500">{{ t('common.status') }}</th>
+                    <th class="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">{{ t('productsPage.manage') }}</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                  <tr v-for="cat in categories" :key="cat.id" class="transition hover:bg-gray-50/80">
+                    <td class="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900">{{ cat.name }}</td>
+                    <td class="hidden max-w-xs truncate px-6 py-4 text-sm text-gray-500 sm:table-cell">{{ cat.description || "-" }}</td>
+                    <td class="whitespace-nowrap px-6 py-4 text-center text-sm text-gray-500">{{ cat.sort_order ?? 0 }}</td>
+                    <td class="whitespace-nowrap px-6 py-4 text-center">
+                      <span
+                        class="inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium"
+                        :class="cat.is_active ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'"
+                      >
+                        {{ cat.is_active ? t('common.active') : t('common.inactive') }}
+                      </span>
+                    </td>
+                    <td class="whitespace-nowrap px-6 py-4 text-right">
+                      <div class="flex items-center justify-end gap-2">
+                        <button
+                          class="rounded-lg p-1.5 text-gray-400 transition hover:bg-gray-100 hover:text-primary-600"
+                          :title="t('common.edit')"
+                          @click="openEditCategory(cat)"
+                        >
+                          <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                        </button>
+                        <button
+                          class="rounded-lg p-1.5 text-gray-400 transition hover:bg-red-50 hover:text-red-600"
+                          :title="t('common.delete')"
+                          @click="confirmDeleteCategory(cat)"
+                        >
+                          <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr v-if="(categories ?? []).length === 0">
+                    <td colspan="5" class="px-6 py-16 text-center">
+                      <svg class="mx-auto h-12 w-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z" /></svg>
+                      <p class="mt-3 text-sm font-medium text-gray-500">{{ t('productsPage.noCategories') }}</p>
+                      <button class="mt-2 text-sm font-medium text-primary-600 hover:text-primary-700" @click="openAddCategory">{{ t('productsPage.addFirstCategory') }}</button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </template>
+          <template #cards>
+            <div v-if="(categories ?? []).length === 0" class="rounded-xl bg-white p-8 text-center shadow-sm">
+              <svg class="mx-auto h-12 w-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z" /></svg>
+              <p class="mt-3 text-sm font-medium text-gray-500">{{ t('productsPage.noCategories') }}</p>
+              <button class="mt-2 text-sm font-medium text-primary-600 hover:text-primary-700" @click="openAddCategory">{{ t('productsPage.addFirstCategory') }}</button>
+            </div>
+            <UiMobileDataCard
+              v-for="cat in categories"
+              :key="cat.id"
+              :title="cat.name"
+              :subtitle="cat.description || '-'"
+            >
+              <template #badge>
+                <span
+                  class="inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium"
+                  :class="cat.is_active ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'"
+                >
+                  {{ cat.is_active ? t('common.active') : t('common.inactive') }}
+                </span>
+              </template>
+              <template #fields>
+                <div>
+                  <span class="text-gray-400">{{ t('common.sortOrder') }}</span>
+                  <p class="text-gray-600">{{ cat.sort_order ?? 0 }}</p>
+                </div>
+              </template>
+              <template #actions>
+                <button
+                  class="rounded-lg px-3 py-2 text-xs font-medium text-primary-600 hover:bg-primary-50"
+                  @click="openEditCategory(cat)"
+                >
+                  {{ t('common.edit') }}
+                </button>
+                <button
+                  class="rounded-lg px-3 py-2 text-xs font-medium text-red-600 hover:bg-red-50"
+                  @click="confirmDeleteCategory(cat)"
+                >
+                  {{ t('common.delete') }}
+                </button>
+              </template>
+            </UiMobileDataCard>
+          </template>
+        </UiMobileDataList>
       </template>
     </div>
 

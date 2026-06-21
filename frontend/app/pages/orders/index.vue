@@ -24,50 +24,95 @@
         {{ t('ordersPage.noOrders') }}
       </div>
 
-      <div v-else class="overflow-x-auto">
-        <table class="w-full text-left text-sm">
-          <thead class="border-b border-gray-200 bg-gray-50 text-xs uppercase text-gray-500">
-            <tr>
-              <th class="px-4 py-3">{{ t('dashboard.orderNumber') }}</th>
-              <th class="px-4 py-3">{{ t('common.date') }}</th>
-              <th class="px-4 py-3">{{ t('common.subtotal') }}</th>
-              <th class="px-4 py-3">{{ t('common.discount') }}</th>
-              <th class="px-4 py-3">{{ t('common.total') }}</th>
-              <th class="px-4 py-3">{{ t('common.payment') }}</th>
-              <th class="px-4 py-3">{{ t('common.status') }}</th>
-              <th class="px-4 py-3">{{ t('common.actions') }}</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-gray-100">
-            <tr v-for="order in filteredOrders" :key="order.id" class="hover:bg-gray-50">
-              <td class="px-4 py-3 font-medium text-gray-900">{{ order.order_number }}</td>
-              <td class="px-4 py-3 text-gray-500">{{ formatDate(order.created) }}</td>
-              <td class="px-4 py-3">{{ formatCurrency(order.subtotal) }}</td>
-              <td class="px-4 py-3 text-danger-500">
-                {{ order.discount_amount > 0 ? `-${formatCurrency(order.discount_amount)}` : '-' }}
-              </td>
-              <td class="px-4 py-3 font-semibold">{{ formatCurrency(order.total) }}</td>
-              <td class="px-4 py-3">
-                <span class="rounded-full px-2 py-0.5 text-xs font-medium" :class="paymentBadge(order.payment_method)">
-                  {{ paymentLabel(order.payment_method) }}
-                </span>
-              </td>
-              <td class="px-4 py-3">
-                <span class="rounded-full px-2 py-0.5 text-xs font-medium" :class="statusBadge(order.status)">
-                  {{ statusLabel(order.status) }}
-                </span>
-              </td>
-              <td class="px-4 py-3">
+      <div v-else>
+        <UiMobileDataList>
+          <template #table>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-sm">
+                <thead class="border-b border-gray-200 bg-gray-50 text-xs uppercase text-gray-500">
+                  <tr>
+                    <th class="px-4 py-3">{{ t('dashboard.orderNumber') }}</th>
+                    <th class="px-4 py-3">{{ t('common.date') }}</th>
+                    <th class="px-4 py-3">{{ t('common.subtotal') }}</th>
+                    <th class="px-4 py-3">{{ t('common.discount') }}</th>
+                    <th class="px-4 py-3">{{ t('common.total') }}</th>
+                    <th class="px-4 py-3">{{ t('common.payment') }}</th>
+                    <th class="px-4 py-3">{{ t('common.status') }}</th>
+                    <th class="px-4 py-3">{{ t('common.actions') }}</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                  <tr v-for="order in filteredOrders" :key="order.id" class="hover:bg-gray-50">
+                    <td class="px-4 py-3 font-medium text-gray-900">{{ order.order_number }}</td>
+                    <td class="px-4 py-3 text-gray-500">{{ formatDate(order.created) }}</td>
+                    <td class="px-4 py-3">{{ formatCurrency(order.subtotal) }}</td>
+                    <td class="px-4 py-3 text-danger-500">
+                      {{ order.discount_amount > 0 ? `-${formatCurrency(order.discount_amount)}` : '-' }}
+                    </td>
+                    <td class="px-4 py-3 font-semibold">{{ formatCurrency(order.total) }}</td>
+                    <td class="px-4 py-3">
+                      <span class="rounded-full px-2 py-0.5 text-xs font-medium" :class="paymentBadge(order.payment_method)">
+                        {{ paymentLabel(order.payment_method) }}
+                      </span>
+                    </td>
+                    <td class="px-4 py-3">
+                      <span class="rounded-full px-2 py-0.5 text-xs font-medium" :class="statusBadge(order.status)">
+                        {{ statusLabel(order.status) }}
+                      </span>
+                    </td>
+                    <td class="px-4 py-3">
+                      <button
+                        class="rounded px-2 py-1 text-xs text-primary-600 hover:bg-primary-50"
+                        @click="viewOrder(order)"
+                      >
+                        {{ t('common.view') }}
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </template>
+          <template #cards>
+            <UiMobileDataCard
+              v-for="order in filteredOrders"
+              :key="order.id"
+              :title="order.order_number"
+              :subtitle="formatDate(order.created)"
+            >
+              <template #badge>
+                <div class="flex flex-col items-end gap-1">
+                  <span class="rounded-full px-2 py-0.5 text-xs font-medium" :class="statusBadge(order.status)">
+                    {{ statusLabel(order.status) }}
+                  </span>
+                  <span class="rounded-full px-2 py-0.5 text-xs font-medium" :class="paymentBadge(order.payment_method)">
+                    {{ paymentLabel(order.payment_method) }}
+                  </span>
+                </div>
+              </template>
+              <template #fields>
+                <div>
+                  <span class="text-gray-400">{{ t('common.total') }}</span>
+                  <p class="font-semibold text-gray-900">{{ formatCurrency(order.total) }}</p>
+                </div>
+                <div>
+                  <span class="text-gray-400">{{ t('common.discount') }}</span>
+                  <p class="text-gray-600">
+                    {{ order.discount_amount > 0 ? `-${formatCurrency(order.discount_amount)}` : '-' }}
+                  </p>
+                </div>
+              </template>
+              <template #actions>
                 <button
-                  class="rounded px-2 py-1 text-xs text-primary-600 hover:bg-primary-50"
+                  class="w-full rounded-lg bg-primary-50 px-3 py-2.5 text-sm font-medium text-primary-700 hover:bg-primary-100"
                   @click="viewOrder(order)"
                 >
                   {{ t('common.view') }}
                 </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+              </template>
+            </UiMobileDataCard>
+          </template>
+        </UiMobileDataList>
       </div>
     </div>
 

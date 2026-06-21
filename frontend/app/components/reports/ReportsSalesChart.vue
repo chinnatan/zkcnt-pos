@@ -1,5 +1,5 @@
 <template>
-  <div class="h-64">
+  <div class="h-48 sm:h-64">
     <Bar v-if="chartData" :data="chartData" :options="options" />
   </div>
 </template>

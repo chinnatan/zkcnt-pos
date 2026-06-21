@@ -32,7 +32,7 @@
 
           <div class="flex gap-2 overflow-x-auto pb-1">
             <button
-              class="touch-pos shrink-0 rounded-lg px-4 py-2 text-sm font-medium transition-colors"
+              class="touch-pos shrink-0 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors"
               :class="
                 selectedCategory === null
                   ? 'bg-primary-600 text-white shadow-sm'
@@ -45,7 +45,7 @@
             <button
               v-for="cat in categories"
               :key="cat.id"
-              class="touch-pos shrink-0 rounded-lg px-4 py-2 text-sm font-medium transition-colors"
+              class="touch-pos shrink-0 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors"
               :class="
                 selectedCategory === cat.id
                   ? 'bg-primary-600 text-white shadow-sm'
@@ -61,7 +61,7 @@
         <!-- Product Grid -->
         <div
           class="flex-1 overflow-y-auto p-4"
-          :class="itemCount > 0 ? 'pb-24 lg:pb-4' : ''"
+          :class="itemCount > 0 ? 'pb-24 md:pb-4' : ''"
         >
           <div v-if="isLoading" class="flex h-full items-center justify-center">
             <div class="text-center text-gray-400">
@@ -155,7 +155,7 @@
 
       <!-- RIGHT: Cart (desktop sidebar) -->
       <div
-        class="hidden flex-col border-l border-gray-200 bg-white lg:flex"
+        class="hidden flex-col border-l border-gray-200 bg-white md:flex"
         style="flex: 1"
       >
         <PosCartPanel
@@ -212,13 +212,13 @@
 
           <div class="flex gap-3">
             <button
-              class="flex-1 rounded-xl border border-gray-300 py-3 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-50"
+              class="touch-pos flex-1 rounded-xl border border-gray-300 py-3.5 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-50"
               @click="handlePrintReceipt"
             >
               {{ t('pos.printReceipt') }}
             </button>
             <button
-              class="flex-1 rounded-xl bg-primary-600 py-3 text-sm font-semibold text-white transition-colors hover:bg-primary-700"
+              class="touch-pos flex-1 rounded-xl bg-primary-600 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-primary-700"
               @click="handleNewOrder"
             >
               {{ t('pos.newOrder') }}

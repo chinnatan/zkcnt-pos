@@ -2,11 +2,11 @@
   <Teleport to="body">
     <div
       v-if="show"
-      class="fixed inset-0 z-[110] flex items-center justify-center bg-black/50 p-4"
+      class="fixed inset-0 z-[110] flex items-center justify-center overflow-y-auto bg-black/50 p-4"
       @click.self="$emit('cancel')"
     >
       <div
-        class="w-full max-w-sm animate-[scaleIn_0.2s_ease-out] rounded-2xl bg-white p-6 text-center shadow-2xl"
+        class="my-auto w-full max-w-sm animate-[scaleIn_0.2s_ease-out] rounded-2xl bg-white p-6 text-center shadow-2xl"
       >
         <h3 class="mb-1 text-lg font-bold text-gray-800">
           {{ t("pos.qrPaymentTitle") }}
@@ -17,7 +17,7 @@
 
         <div
           v-if="loading"
-          class="mx-auto mb-4 flex h-[280px] w-[280px] items-center justify-center rounded-xl bg-gray-50"
+          class="mx-auto mb-4 flex aspect-square w-full max-w-[280px] items-center justify-center rounded-xl bg-gray-50"
         >
           <svg
             class="h-8 w-8 animate-spin text-primary-600"
@@ -44,9 +44,7 @@
           v-else-if="dataUrl"
           :src="dataUrl"
           :alt="t('pos.qrPaymentTitle')"
-          class="mx-auto mb-4 rounded-xl border border-gray-100"
-          width="280"
-          height="280"
+          class="mx-auto mb-4 w-full max-w-[280px] rounded-xl border border-gray-100"
         />
 
         <p class="mb-6 text-sm text-gray-500">
@@ -56,14 +54,14 @@
         <div class="flex gap-3">
           <button
             type="button"
-            class="flex-1 rounded-xl border border-gray-300 py-3 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-50"
+            class="touch-pos flex-1 rounded-xl border border-gray-300 py-3.5 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-50"
             @click="$emit('cancel')"
           >
             {{ t("pos.qrPaymentCancel") }}
           </button>
           <button
             type="button"
-            class="flex-1 rounded-xl bg-primary-600 py-3 text-sm font-semibold text-white transition-colors hover:bg-primary-700 disabled:opacity-50"
+            class="touch-pos flex-1 rounded-xl bg-primary-600 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-primary-700 disabled:opacity-50"
             :disabled="loading || !dataUrl || confirming"
             @click="$emit('confirm')"
           >

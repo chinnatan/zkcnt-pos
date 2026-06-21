@@ -114,6 +114,15 @@ export default defineNuxtConfig({
           purpose: "any maskable",
         },
       ],
+      shortcuts: [
+        {
+          name: "Open POS",
+          short_name: "POS",
+          description: "Open the point of sale screen",
+          url: "/pos",
+          icons: [{ src: "/pwa-192x192.png", sizes: "192x192" }],
+        },
+      ],
     },
     client: {
       installPrompt: true,
