@@ -29,7 +29,7 @@ export const env = {
   dbPath: join(dataDir, "pos.db"),
   uploadsDir,
   jwtSecret: process.env.JWT_SECRET ?? "dev-secret-change-in-production",
-  appUrl: (process.env.APP_URL ?? "http://localhost:3000").replace(/\/$/, ""),
+  appUrl: (process.env.APP_URL ?? "http://localhost:4000").replace(/\/$/, ""),
   resend: {
     apiKey: process.env.RESEND_API_KEY ?? "",
     from: process.env.RESEND_FROM ?? "",

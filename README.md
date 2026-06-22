@@ -49,8 +49,8 @@ task local
 ```
 
 เปิดใช้งาน:
-- **Frontend**: http://localhost:3000
-- **Backend API**: http://localhost:3001/api/health
+- **Frontend**: http://localhost:4000
+- **Backend API**: http://localhost:4001/api/health
 - **DB Admin** (optional): `task db-admin` → http://localhost:8080
 
 ## Task Commands
@@ -90,7 +90,7 @@ task local
 ## First-Time Setup
 
 1. รัน `task local` หรือ `task dev`
-2. เปิดแอปที่ http://localhost:3000
+2. เปิดแอปที่ http://localhost:4000
 3. Register user account ใหม่
 4. สร้างร้านแรก (Create Store)
 5. เพิ่มสินค้าและเริ่มขาย!
@@ -101,8 +101,9 @@ Copy จาก `.env.example`:
 
 ```env
 # API URL (local dev — browser ต้องเข้าถึงได้)
-API_URL=http://localhost:3001
-NUXT_PUBLIC_API_URL=http://localhost:3001
+API_URL=http://localhost:4001
+NUXT_PUBLIC_API_URL=http://localhost:4001
+NUXT_PUBLIC_APP_URL=http://localhost:4000
 
 # JWT secret (เปลี่ยนใน production)
 JWT_SECRET=change-me-in-production
@@ -115,7 +116,7 @@ DB_ADMIN_USER=admin
 DB_ADMIN_PASS=changeme
 ```
 
-Frontend อ่านค่า `NUXT_PUBLIC_API_URL` — ในโหมด `task local` จะถูก set อัตโนมัติเป็น `http://localhost:3001`
+Frontend อ่านค่า `NUXT_PUBLIC_API_URL` — ในโหมด `task local` จะถูก set อัตโนมัติเป็น `http://localhost:4001`
 
 บน Pi production ให้ `NUXT_PUBLIC_API_URL` ว่าง — client จะใช้ `window.location.origin + '/api'` ผ่าน Nginx proxy
 

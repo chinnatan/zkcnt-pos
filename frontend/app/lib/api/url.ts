@@ -9,7 +9,7 @@ export function resolveApiBaseUrl(configured?: string): string {
     return `${window.location.origin}/api`;
   }
 
-  return "http://localhost:3001/api";
+  return "http://localhost:4001/api";
 }
 
 export function resolveUploadsBaseUrl(apiBase: string): string {

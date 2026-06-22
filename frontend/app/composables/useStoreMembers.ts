@@ -47,7 +47,7 @@ export function useStoreMembers() {
   );
 
   const appUrl = computed(
-    () => (config.public.appUrl as string) || "http://localhost:3000",
+    () => (config.public.appUrl as string) || "http://localhost:4000",
   );
 
   async function fetchStoreMembers(storeId?: string) {

@@ -47,8 +47,8 @@ task local    # installs deps + starts backend + frontend
 
 | Service | URL |
 |---------|-----|
-| Frontend | http://localhost:3000 |
-| Backend API | http://localhost:3001/api/health |
+| Frontend | http://localhost:4000 |
+| Backend API | http://localhost:4001/api/health |
 | DB Admin (optional) | http://localhost:8080 |
 | Production (Nginx) | http://localhost |
 
@@ -63,11 +63,11 @@ task local    # installs deps + starts backend + frontend
 
 ## Troubleshooting
 
-### Port 3000 or 3001 already in use
+### Port 4000 or 4001 already in use
 
 ```bash
-lsof -i :3000
-lsof -i :3001
+lsof -i :4000
+lsof -i :4001
 # Kill the process or stop conflicting containers:
 task local:stop
 task dev:down
@@ -77,8 +77,8 @@ task dev:down
 
 1. Ensure backend container is running: `docker ps | grep backend`
 2. Start it: `task local:backend`
-3. Wait for http://localhost:3001/api/health to respond before opening frontend
-4. Verify env: `NUXT_PUBLIC_API_URL=http://localhost:3001`
+3. Wait for http://localhost:4001/api/health to respond before opening frontend
+4. Verify env: `NUXT_PUBLIC_API_URL=http://localhost:4001`
 
 ### Bun install fails or postinstall blocked
 

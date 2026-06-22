@@ -18,8 +18,8 @@ Always prefer `task` commands over raw docker/bun commands in docs and scripts.
 | DB admin | `task db-admin` | Browse SQLite (dev only) |
 
 ### URLs
-- Frontend: http://localhost:3000
-- Backend API: http://localhost:3001/api/health
+- Frontend: http://localhost:4000
+- Backend API: http://localhost:4001/api/health
 - DB Admin (optional): http://localhost:8080
 - Production (via Nginx): http://localhost (port 80)
 

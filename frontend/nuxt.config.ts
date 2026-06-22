@@ -132,10 +132,14 @@ export default defineNuxtConfig({
     },
   },
 
+  devServer: {
+    port: Number(process.env.NUXT_DEV_PORT || 4000),
+  },
+
   runtimeConfig: {
     public: {
       apiUrl: process.env.NUXT_PUBLIC_API_URL || "",
-      appUrl: process.env.NUXT_PUBLIC_APP_URL || "http://localhost:3000",
+      appUrl: process.env.NUXT_PUBLIC_APP_URL || "http://localhost:4000",
       logLevel: process.env.NUXT_PUBLIC_LOG_LEVEL || "",
     },
   },
