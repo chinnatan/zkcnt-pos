@@ -1,18 +1,25 @@
+import { mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { unlinkSync } from "node:fs";
 import { env } from "../env";
 
-export function saveUpload(
+function ensureUploadDir(collection: string, recordId: string): string {
+  const dir = join(env.uploadsDir, collection, recordId);
+  mkdirSync(dir, { recursive: true });
+  return dir;
+}
+
+export async function saveUpload(
   collection: string,
   recordId: string,
   field: string,
   file: File,
-): string {
+): Promise<string> {
   const ext = file.name.split(".").pop() || "bin";
   const relative = `${collection}/${recordId}/${field}.${ext}`;
   const fullPath = join(env.uploadsDir, relative);
-  const dir = join(env.uploadsDir, collection, recordId);
-  Bun.write(fullPath, file);
+  ensureUploadDir(collection, recordId);
+  await Bun.write(fullPath, file);
   return relative;
 }
 
@@ -26,6 +33,7 @@ export async function saveUploadFromBlob(
   const ext = filename?.split(".").pop() || "bin";
   const relative = `${collection}/${recordId}/${field}.${ext}`;
   const fullPath = join(env.uploadsDir, relative);
+  ensureUploadDir(collection, recordId);
   await Bun.write(fullPath, blob);
   return relative;
 }

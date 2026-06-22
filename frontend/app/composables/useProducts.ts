@@ -6,6 +6,7 @@ import {
   storeFileBlob,
 } from "~/lib/files/blobs";
 import { addToSyncQueue } from "~/lib/sync/queue";
+import type { ApiClient } from "~/lib/api/client";
 import type { Product, Category } from "~/lib/types";
 
 export type ProductInput = Partial<Product> & {
@@ -35,22 +36,24 @@ interface BulkCreateApiResponse {
   errors: { index: number; message: string }[];
 }
 
-function buildProductBody(data: ProductInput): Record<string, unknown> | FormData {
-  const { imageFile, removeImage, ...rest } = data;
-  if (!imageFile && !removeImage) return rest;
+async function uploadProductImageOnline(
+  api: ApiClient,
+  storeId: string,
+  productId: string,
+  imageFile: File | null | undefined,
+  removeImage: boolean | undefined,
+): Promise<Product | null> {
+  if (!imageFile && !removeImage) return null;
 
   const form = new FormData();
-  for (const [key, value] of Object.entries(rest)) {
-    if (value === undefined || value === null) continue;
-    if (typeof value === "boolean") {
-      form.append(key, value ? "true" : "false");
-    } else {
-      form.append(key, String(value));
-    }
+  if (imageFile) {
+    form.append("image", imageFile);
+  } else if (removeImage) {
+    form.append("image", "");
+    form.append("remove", "true");
   }
-  if (imageFile) form.append("image", imageFile);
-  else if (removeImage) form.append("image", "");
-  return form;
+
+  return (await api.uploadProductImage(storeId, productId, form)) as Product;
 }
 
 async function queueOfflineImageUpload(
@@ -157,15 +160,23 @@ export function useProducts() {
   async function createProduct(data: ProductInput) {
     if (!activeStoreId.value) throw new Error("No active store");
 
-    const { imageFile, ...fields } = data;
+    const { imageFile, removeImage, ...fields } = data;
     const productData = { ...fields, store: activeStoreId.value };
-    const body = buildProductBody(data);
 
     if (isOnline.value) {
-      const record = await $api.send<Product>(
-        `/stores/${activeStoreId.value}/products`,
-        { method: "POST", body },
+      const storeId = activeStoreId.value;
+      let record = await $api.send<Product>(
+        `/stores/${storeId}/products`,
+        { method: "POST", body: productData },
       );
+      const withImage = await uploadProductImageOnline(
+        $api,
+        storeId,
+        record.id,
+        imageFile,
+        removeImage,
+      );
+      if (withImage) record = withImage;
       await db.products.put(record);
       await fetchProducts();
       return record;
@@ -229,13 +240,21 @@ export function useProducts() {
 
   async function updateProduct(id: string, data: ProductInput) {
     const { imageFile, removeImage, ...fields } = data;
-    const body = buildProductBody(data);
 
     if (isOnline.value) {
-      const record = await $api.send<Product>(
-        `/stores/${activeStoreId.value}/products/${id}`,
-        { method: "PATCH", body },
+      const storeId = activeStoreId.value!;
+      let record = await $api.send<Product>(
+        `/stores/${storeId}/products/${id}`,
+        { method: "PATCH", body: fields },
       );
+      const withImage = await uploadProductImageOnline(
+        $api,
+        storeId,
+        id,
+        imageFile,
+        removeImage,
+      );
+      if (withImage) record = withImage;
       await db.products.put(record);
       await fetchProducts();
       return record;

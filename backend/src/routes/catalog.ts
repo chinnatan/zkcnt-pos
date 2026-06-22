@@ -7,7 +7,30 @@ import { buildChanges, logAuditEvent } from "../lib/audit";
 import { generateId } from "../lib/id";
 import { mapCategory, mapProduct } from "../lib/mappers";
 import { nowIso } from "../lib/timestamps";
+import { createLogger } from "../lib/logger";
 import { deleteUpload, saveUpload } from "../lib/uploads";
+
+const logger = createLogger("catalog");
+
+function isUploadFile(value: unknown): value is File {
+  return value instanceof File && value.size > 0;
+}
+
+function logInvalidImageField(
+  context: string,
+  value: unknown,
+  field = "image",
+): void {
+  if (value === undefined || value === null) return;
+  if (isUploadFile(value)) return;
+  const detail =
+    value instanceof File
+      ? "empty file"
+      : typeof value === "string"
+        ? `string value "${value}"`
+        : `unexpected type ${typeof value}`;
+  logger.warn(`${context}: skipped ${field} upload (${detail})`);
+}
 import {
   authMiddleware,
   type AuthVariables,
@@ -347,8 +370,9 @@ catalogRoutes.post(
     if (contentType.includes("multipart/form-data")) {
       const form = await c.req.parseBody();
       for (const [key, value] of Object.entries(form)) {
-        if (value instanceof File && value.size > 0) {
-          imagePath = saveUpload("products", id, key, value);
+        if (isUploadFile(value)) {
+          imagePath = await saveUpload("products", id, key, value);
+          logger.debug(`product.create saved image path=${imagePath} id=${id}`);
         } else if (typeof value === "string") {
           body[key] = value === "true" ? true : value === "false" ? false : value;
         }
@@ -416,9 +440,10 @@ catalogRoutes.patch(
     if (contentType.includes("multipart/form-data")) {
       const form = await c.req.parseBody();
       for (const [key, value] of Object.entries(form)) {
-        if (value instanceof File && value.size > 0) {
+        if (isUploadFile(value)) {
           if (existing[0].image) deleteUpload(existing[0].image);
-          updates.image = saveUpload("products", id, key, value);
+          updates.image = await saveUpload("products", id, key, value);
+          logger.debug(`product.update saved image path=${updates.image} id=${id}`);
         } else if (key === "image" && value === "") {
           if (existing[0].image) deleteUpload(existing[0].image);
           updates.image = "";
@@ -529,12 +554,16 @@ catalogRoutes.post(
     if (!existing[0]) throw new HTTPException(404, { message: "Not found" });
 
     let imagePath = "";
-    if (file instanceof File && file.size > 0) {
+    if (isUploadFile(file)) {
       if (existing[0].image) deleteUpload(existing[0].image);
-      imagePath = saveUpload("products", id, "image", file);
-    } else if (form.remove === "true" || file === "") {
-      if (existing[0].image) deleteUpload(existing[0].image);
-      imagePath = "";
+      imagePath = await saveUpload("products", id, "image", file);
+      logger.debug(`product.image saved path=${imagePath} id=${id}`);
+    } else {
+      logInvalidImageField("product.image", file);
+      if (form.remove === "true" || file === "") {
+        if (existing[0].image) deleteUpload(existing[0].image);
+        imagePath = "";
+      }
     }
 
     const now = nowIso();

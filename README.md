@@ -105,6 +105,10 @@ API_URL=http://localhost:4001
 NUXT_PUBLIC_API_URL=http://localhost:4001
 NUXT_PUBLIC_APP_URL=http://localhost:4000
 
+# Production (task prod): ตั้ง NUXT_PUBLIC_API_URL ว่าง แล้ว rebuild
+# NUXT_PUBLIC_API_URL=
+# NUXT_PUBLIC_APP_URL=https://pos.yourdomain.com
+
 # JWT secret (เปลี่ยนใน production)
 JWT_SECRET=change-me-in-production
 
@@ -118,7 +122,9 @@ DB_ADMIN_PASS=changeme
 
 Frontend อ่านค่า `NUXT_PUBLIC_API_URL` — ในโหมด `task local` จะถูก set อัตโนมัติเป็น `http://localhost:4001`
 
-บน Pi production ให้ `NUXT_PUBLIC_API_URL` ว่าง — client จะใช้ `window.location.origin + '/api'` ผ่าน Nginx proxy
+บน production (`task prod`) ให้ `NUXT_PUBLIC_API_URL` **ว่าง** ใน `.env` แล้วรัน `task prod` ใหม่ (rebuild) — client จะใช้ `window.location.origin + '/api'` และรูปจาก `window.location.origin + '/uploads'` ผ่าน Nginx
+
+**สำคัญ:** ถ้า `.env` ยังเป็น `NUXT_PUBLIC_API_URL=http://localhost:4001` ตอน build prod รูปสินค้าจะโหลดไม่ได้เพราะ browser พยายามเข้า port 4001 ที่ไม่ได้ expose
 
 ## Deploy to Raspberry Pi 5
 
