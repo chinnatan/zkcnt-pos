@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { validateProductImage } from "~/lib/files/constants";
 import type { Product, Category } from "~/lib/types";
+import { CategoryHasProductsError } from "~/composables/useProducts";
 
 definePageMeta({ middleware: "auth" });
 
 const { t } = useI18n();
 const { formatCurrency } = useFormat();
+const { alert } = useDialog();
 const { products, categories, fetchProducts, fetchCategories, createProduct, updateProduct, deleteProduct, createCategory, updateCategory, deleteCategory, isLoading } = useProducts();
 const { activeStoreId } = useStore();
 const { isOnline } = useOnlineStatus();
@@ -111,6 +113,14 @@ function getCategoryName(categoryId: string): string {
   return cat ? cat.name : "-";
 }
 
+function getCategoryProductCount(categoryId: string): number {
+  return (products.value ?? []).filter((p) => p.category === categoryId).length;
+}
+
+function categoryDeleteBlockedMessage(category: Category, count: number): string {
+  return t("productsPage.cannotDeleteCategoryDesc", { name: category.name, count });
+}
+
 function openAddProduct() {
   editingProduct.value = null;
   clearImageState();
@@ -213,17 +223,35 @@ async function handleSaveCategory() {
   showCategoryModal.value = false;
 }
 
-function confirmDeleteCategory(category: Category) {
+async function confirmDeleteCategory(category: Category) {
+  const count = getCategoryProductCount(category.id);
+  if (count > 0) {
+    await alert(categoryDeleteBlockedMessage(category, count), {
+      title: t("productsPage.cannotDeleteCategory"),
+    });
+    return;
+  }
   deletingCategory.value = category;
   showDeleteCategoryConfirm.value = true;
 }
 
 async function handleDeleteCategory() {
-  if (deletingCategory.value) {
-    await deleteCategory(deletingCategory.value.id);
+  if (!deletingCategory.value) return;
+  const category = deletingCategory.value;
+  try {
+    await deleteCategory(category.id);
+    showDeleteCategoryConfirm.value = false;
+    deletingCategory.value = null;
+  } catch (err) {
+    showDeleteCategoryConfirm.value = false;
+    const count = err instanceof CategoryHasProductsError
+      ? err.count
+      : getCategoryProductCount(category.id);
+    await alert(categoryDeleteBlockedMessage(category, count), {
+      title: t("productsPage.cannotDeleteCategory"),
+    });
+    deletingCategory.value = null;
   }
-  showDeleteCategoryConfirm.value = false;
-  deletingCategory.value = null;
 }
 
 watch(
@@ -474,6 +502,7 @@ onUnmounted(() => {
                     <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">{{ t('productsPage.categoryName') }}</th>
                     <th class="hidden px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 sm:table-cell">{{ t('common.description') }}</th>
                     <th class="px-6 py-3 text-center text-xs font-semibold uppercase tracking-wider text-gray-500">{{ t('common.sortOrder') }}</th>
+                    <th class="px-6 py-3 text-center text-xs font-semibold uppercase tracking-wider text-gray-500">{{ t('productsPage.categoryProductCount') }}</th>
                     <th class="px-6 py-3 text-center text-xs font-semibold uppercase tracking-wider text-gray-500">{{ t('common.status') }}</th>
                     <th class="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">{{ t('productsPage.manage') }}</th>
                   </tr>
@@ -483,6 +512,7 @@ onUnmounted(() => {
                     <td class="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900">{{ cat.name }}</td>
                     <td class="hidden max-w-xs truncate px-6 py-4 text-sm text-gray-500 sm:table-cell">{{ cat.description || "-" }}</td>
                     <td class="whitespace-nowrap px-6 py-4 text-center text-sm text-gray-500">{{ cat.sort_order ?? 0 }}</td>
+                    <td class="whitespace-nowrap px-6 py-4 text-center text-sm text-gray-500">{{ getCategoryProductCount(cat.id) }}</td>
                     <td class="whitespace-nowrap px-6 py-4 text-center">
                       <span
                         class="inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium"
@@ -501,8 +531,9 @@ onUnmounted(() => {
                           <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
                         </button>
                         <button
-                          class="rounded-lg p-1.5 text-gray-400 transition hover:bg-red-50 hover:text-red-600"
-                          :title="t('common.delete')"
+                          class="rounded-lg p-1.5 text-gray-400 transition hover:bg-red-50 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-gray-400"
+                          :disabled="getCategoryProductCount(cat.id) > 0"
+                          :title="getCategoryProductCount(cat.id) > 0 ? t('productsPage.deleteCategoryDisabled') : t('common.delete')"
                           @click="confirmDeleteCategory(cat)"
                         >
                           <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
@@ -511,7 +542,7 @@ onUnmounted(() => {
                     </td>
                   </tr>
                   <tr v-if="(categories ?? []).length === 0">
-                    <td colspan="5" class="px-6 py-16 text-center">
+                    <td colspan="6" class="px-6 py-16 text-center">
                       <svg class="mx-auto h-12 w-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z" /></svg>
                       <p class="mt-3 text-sm font-medium text-gray-500">{{ t('productsPage.noCategories') }}</p>
                       <button class="mt-2 text-sm font-medium text-primary-600 hover:text-primary-700" @click="openAddCategory">{{ t('productsPage.addFirstCategory') }}</button>
@@ -546,6 +577,10 @@ onUnmounted(() => {
                   <span class="text-gray-400">{{ t('common.sortOrder') }}</span>
                   <p class="text-gray-600">{{ cat.sort_order ?? 0 }}</p>
                 </div>
+                <div>
+                  <span class="text-gray-400">{{ t('productsPage.categoryProductCount') }}</span>
+                  <p class="text-gray-600">{{ getCategoryProductCount(cat.id) }}</p>
+                </div>
               </template>
               <template #actions>
                 <button
@@ -555,7 +590,9 @@ onUnmounted(() => {
                   {{ t('common.edit') }}
                 </button>
                 <button
-                  class="rounded-lg px-3 py-2 text-xs font-medium text-red-600 hover:bg-red-50"
+                  class="rounded-lg px-3 py-2 text-xs font-medium text-red-600 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent"
+                  :disabled="getCategoryProductCount(cat.id) > 0"
+                  :title="getCategoryProductCount(cat.id) > 0 ? t('productsPage.deleteCategoryDisabled') : undefined"
                   @click="confirmDeleteCategory(cat)"
                 >
                   {{ t('common.delete') }}

@@ -155,6 +155,16 @@ catalogRoutes.delete(
       .where(and(eq(categories.id, id), eq(categories.store, storeId)))
       .limit(1);
 
+    const linked = await db
+      .select({ id: products.id })
+      .from(products)
+      .where(and(eq(products.store, storeId), eq(products.category, id)))
+      .limit(1);
+
+    if (linked.length > 0) {
+      throw new HTTPException(409, { message: "category_has_products" });
+    }
+
     await db
       .delete(categories)
       .where(and(eq(categories.id, id), eq(categories.store, storeId)));

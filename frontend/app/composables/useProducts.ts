@@ -19,6 +19,16 @@ export interface BulkCreateResult {
   failed: { index: number; message: string }[];
 }
 
+export class CategoryHasProductsError extends Error {
+  count: number;
+
+  constructor(count: number) {
+    super("category_has_products");
+    this.name = "CategoryHasProductsError";
+    this.count = count;
+  }
+}
+
 interface BulkCreateApiResponse {
   created: Product[];
   skipped: { index: number; sku: string; reason: string }[];
@@ -346,12 +356,34 @@ export function useProducts() {
     await fetchCategories();
   }
 
+  async function countProductsInCategory(categoryId: string): Promise<number> {
+    if (!activeStoreId.value) return 0;
+    return db.products
+      .where("store")
+      .equals(activeStoreId.value)
+      .filter((p) => p.category === categoryId)
+      .count();
+  }
+
   async function deleteCategory(id: string) {
+    const productCount = await countProductsInCategory(id);
+    if (productCount > 0) {
+      throw new CategoryHasProductsError(productCount);
+    }
+
     if (isOnline.value) {
-      await $api.send(`/stores/${activeStoreId.value}/categories/${id}`, {
-        method: "DELETE",
-      });
-      await db.categories.delete(id);
+      try {
+        await $api.send(`/stores/${activeStoreId.value}/categories/${id}`, {
+          method: "DELETE",
+        });
+        await db.categories.delete(id);
+      } catch (err) {
+        if (err instanceof Error && err.message === "category_has_products") {
+          const count = await countProductsInCategory(id);
+          throw new CategoryHasProductsError(count || 1);
+        }
+        throw err;
+      }
     } else {
       await db.categories.delete(id);
       await addToSyncQueue({
