@@ -265,6 +265,8 @@ const {
   addItem,
   subtotal,
   discountAmount,
+  appliedPromotions,
+  appliedCouponCode,
   total,
   changeAmount,
   itemCount,
@@ -274,8 +276,10 @@ const {
   paymentMethod,
   paymentReceived,
   cartNote,
+  setPromotionInputs,
 } = useCart();
 const { createOrder } = useOrders();
+const { fetchPromotions, getPromotionInputs, activePromotions } = usePromotions();
 const { alert } = useDialog();
 const { activeStore } = useStore();
 const { generateQrDataUrl, resolvePromptPayId } = usePromptPayQr();
@@ -418,10 +422,13 @@ async function completeCheckout() {
       product_id: item.product.id,
       product_name: item.product.name,
       product_price: item.product.price,
+      category_id: item.product.category || "",
       quantity: item.quantity,
       unit_price: item.product.price,
       discount: item.discount,
       total: item.product.price * item.quantity - item.discount,
+      promotion_id: item.promotion_id || undefined,
+      free_quantity: item.free_quantity,
     }));
 
     const received =
@@ -440,6 +447,8 @@ async function completeCheckout() {
         paymentMethod.value === "cash" ? changeAmount.value : 0,
       customer: selectedCustomerId.value || undefined,
       note: cartNote.value || undefined,
+      coupon_code: appliedCouponCode.value || undefined,
+      applied_promotions: appliedPromotions.value,
     });
 
     lastOrderNumber.value = order.order_number || order.id || "";
@@ -471,8 +480,20 @@ function handleNewOrder() {
 }
 
 onMounted(async () => {
-  await Promise.all([fetchProducts(), fetchCategories(), fetchInventory()]);
+  await Promise.all([
+    fetchProducts(),
+    fetchCategories(),
+    fetchInventory(),
+    fetchPromotions(),
+  ]);
+  setPromotionInputs(getPromotionInputs());
 });
+
+watch(
+  activePromotions,
+  () => setPromotionInputs(getPromotionInputs()),
+  { deep: true },
+);
 </script>
 
 <style scoped>

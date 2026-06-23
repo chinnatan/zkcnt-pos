@@ -10,6 +10,7 @@ import { authRoutes } from "./routes/auth";
 import { catalogRoutes } from "./routes/catalog";
 import { customerRoutes } from "./routes/customers";
 import { discountRoutes } from "./routes/discounts";
+import { promotionRoutes } from "./routes/promotions";
 import { inventoryRoutes } from "./routes/inventory";
 import {
   inviteRoutes,
@@ -97,6 +98,7 @@ app.route("/api/invites", inviteRoutes);
 app.route("/api/stores", catalogRoutes);
 app.route("/api/stores", customerRoutes);
 app.route("/api/stores", discountRoutes);
+app.route("/api/stores", promotionRoutes);
 app.route("/api/stores", inventoryRoutes);
 app.route("/api/stores", orderRoutes);
 app.route("/api/stores", syncRoutes);

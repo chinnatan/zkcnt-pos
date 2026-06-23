@@ -110,6 +110,9 @@ export function useOrders() {
       unit_price: number;
       discount: number;
       total: number;
+      category_id?: string;
+      promotion_id?: string;
+      free_quantity?: number;
     }>;
     subtotal: number;
     discount_amount: number;
@@ -121,6 +124,13 @@ export function useOrders() {
     change_amount: number;
     customer?: string;
     note?: string;
+    coupon_code?: string;
+    applied_promotions?: Array<{
+      promotion_id: string;
+      name: string;
+      amount: number;
+      coupon_code?: string;
+    }>;
   }): Promise<Order> {
     if (!activeStoreId.value || !authUser.value) {
       throw new Error("Not authenticated or no active store");
@@ -147,16 +157,22 @@ export function useOrders() {
       status: "completed",
       note: orderData.note || "",
       synced_at: isOnline.value ? now : "",
+      coupon_code: orderData.coupon_code || "",
+      applied_promotions: orderData.applied_promotions || [],
     };
 
     const items = orderData.items.map((item) => ({
       product: item.product_id,
+      product_id: item.product_id,
+      category_id: item.category_id || "",
       product_name: item.product_name,
       product_price: item.product_price,
       quantity: item.quantity,
       unit_price: item.unit_price,
       discount: item.discount,
       total: item.total,
+      promotion_id: item.promotion_id || "",
+      free_quantity: item.free_quantity ?? 0,
     }));
 
     if (isOnline.value) {
@@ -197,6 +213,9 @@ export function useOrders() {
       unit_price: number;
       discount: number;
       total: number;
+      category_id?: string;
+      promotion_id?: string;
+      free_quantity?: number;
     }>,
     clientId: string,
   ) {
@@ -236,6 +255,8 @@ export function useOrders() {
         unit_price: item.unit_price,
         discount: item.discount,
         total: item.total,
+        promotion_id: item.promotion_id || "",
+        free_quantity: item.free_quantity ?? 0,
         created: now,
         updated: now,
       };
@@ -253,6 +274,8 @@ export function useOrders() {
           unit_price: item.unit_price,
           discount: item.discount,
           total: item.total,
+          promotion_id: item.promotion_id || "",
+          free_quantity: item.free_quantity ?? 0,
         },
         store: String(order.store),
       });

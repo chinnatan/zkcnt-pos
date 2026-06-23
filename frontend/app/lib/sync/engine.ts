@@ -41,6 +41,8 @@ export class SyncEngine {
       customers: delta.customers?.length ?? 0,
       inventory: delta.inventory?.length ?? 0,
       discounts: delta.discounts?.length ?? 0,
+      promotions: delta.promotions?.length ?? 0,
+      promotion_targets: delta.promotion_targets?.length ?? 0,
       orders: delta.orders?.length ?? 0,
       order_items: delta.order_items?.length ?? 0,
     };
@@ -66,6 +68,12 @@ export class SyncEngine {
     }
     if (delta.discounts?.length) {
       await db.discounts.bulkPut(delta.discounts as never[]);
+    }
+    if (delta.promotions?.length) {
+      await db.promotions.bulkPut(delta.promotions as never[]);
+    }
+    if (delta.promotion_targets?.length) {
+      await db.promotionTargets.bulkPut(delta.promotion_targets as never[]);
     }
     if (delta.orders?.length) {
       await db.orders.bulkPut(delta.orders as never[]);
@@ -293,6 +301,10 @@ export class SyncEngine {
         return db.inventory;
       case "discounts":
         return db.discounts;
+      case "promotions":
+        return db.promotions;
+      case "promotion_targets":
+        return db.promotionTargets;
       default:
         return null;
     }

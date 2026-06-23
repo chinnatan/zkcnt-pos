@@ -56,6 +56,12 @@
             </p>
             <p class="mt-0.5 text-xs text-gray-500">
               {{ formatCurrency(item.product.price) }} {{ t('common.perPiece') }}
+              <span
+                v-if="item.free_quantity > 0"
+                class="ml-1 text-success-600"
+              >
+                ({{ t('pos.freeQty', { qty: item.free_quantity }) }})
+              </span>
             </p>
             <div class="mt-2 flex items-center gap-2">
               <button
@@ -113,8 +119,51 @@
           <span class="font-medium">{{ formatCurrency(subtotal) }}</span>
         </div>
 
+        <div
+          v-if="appliedPromotions.length > 0"
+          class="space-y-1 rounded-lg bg-primary-50 px-3 py-2"
+        >
+          <p class="text-xs font-medium text-primary-700">{{ t('pos.appliedPromotions') }}</p>
+          <div
+            v-for="promo in appliedPromotions"
+            :key="promo.promotion_id"
+            class="flex items-center justify-between text-xs text-primary-800"
+          >
+            <span>{{ promo.name }}</span>
+            <span>-{{ formatCurrency(promo.amount) }}</span>
+          </div>
+        </div>
+
         <div class="space-y-2">
-          <label class="text-xs font-medium text-gray-500">{{ t('pos.discountLabel') }}</label>
+          <label class="text-xs font-medium text-gray-500">{{ t('pos.couponCode') }}</label>
+          <div class="flex gap-2">
+            <input
+              v-model="couponCode"
+              type="text"
+              :placeholder="t('pos.couponPlaceholder')"
+              class="touch-pos w-full rounded-lg border border-gray-300 px-3 py-2 text-sm uppercase outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20"
+            />
+            <button
+              type="button"
+              class="shrink-0 rounded-lg bg-primary-600 px-3 py-2 text-xs font-medium text-white hover:bg-primary-700"
+              @click="applyCoupon"
+            >
+              {{ t('pos.applyCoupon') }}
+            </button>
+          </div>
+          <p v-if="couponError" class="text-xs text-danger-500">{{ couponError }}</p>
+          <button
+            v-if="appliedCouponCode"
+            type="button"
+            class="text-xs text-gray-500 underline"
+            @click="clearCoupon"
+          >
+            {{ t('pos.removeCoupon') }}
+          </button>
+        </div>
+
+        <div class="space-y-2">
+          <label class="text-xs font-medium text-gray-500">{{ t('pos.manualDiscountLabel') }}</label>
           <div class="flex gap-2">
             <input
               :value="cartDiscount"
@@ -139,7 +188,7 @@
           v-if="discountAmount > 0"
           class="flex items-center justify-between text-sm"
         >
-          <span class="text-danger-500">{{ t('pos.discountLabel') }}</span>
+          <span class="text-danger-500">{{ t('pos.totalDiscount') }}</span>
           <span class="font-medium text-danger-500">
             -{{ formatCurrency(discountAmount) }}
           </span>
@@ -262,12 +311,18 @@ const {
   updateQuantity,
   subtotal,
   discountAmount,
+  appliedPromotions,
   total,
   changeAmount,
   itemCount,
   clearCart,
   cartDiscount,
   cartDiscountType,
+  couponCode,
+  appliedCouponCode,
+  couponError,
+  applyCoupon,
+  clearCoupon,
   paymentMethod,
   paymentReceived,
 } = useCart();

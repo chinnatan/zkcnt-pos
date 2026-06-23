@@ -123,6 +123,8 @@ export interface Order extends BaseRecord {
   status: 'completed' | 'voided' | 'refunded';
   note: string;
   synced_at: string;
+  coupon_code: string;
+  applied_promotions?: readonly AppliedPromotionSnapshot[];
 }
 
 export interface OrderItem extends BaseRecord {
@@ -134,6 +136,8 @@ export interface OrderItem extends BaseRecord {
   unit_price: number;
   discount: number;
   total: number;
+  promotion_id: string;
+  free_quantity: number;
 }
 
 // ─── Inventory ───────────────────────────────────────────────────────────────
@@ -157,7 +161,7 @@ export interface InventoryTransaction extends BaseRecord {
   created_by: string;
 }
 
-// ─── Discount ────────────────────────────────────────────────────────────────
+// ─── Discount (legacy) ───────────────────────────────────────────────────────
 
 export interface Discount extends BaseRecord {
   store: string;
@@ -168,6 +172,53 @@ export interface Discount extends BaseRecord {
   start_date: string;
   end_date: string;
   is_active: boolean;
+}
+
+// ─── Promotion ───────────────────────────────────────────────────────────────
+
+export type PromotionType =
+  | 'bxgy'
+  | 'order_percent'
+  | 'order_fixed'
+  | 'coupon';
+
+export type PoolMode = 'same_product' | 'same_category' | 'mixed';
+export type RewardMode = 'cheapest' | 'same_product';
+
+export interface PromotionTarget extends BaseRecord {
+  promotion: string;
+  target_type: 'product' | 'category';
+  target_id: string;
+}
+
+export interface AppliedPromotionSnapshot {
+  promotion_id: string;
+  name: string;
+  amount: number;
+  coupon_code?: string;
+}
+
+export interface Promotion extends BaseRecord {
+  store: string;
+  name: string;
+  type: PromotionType;
+  buy_quantity: number;
+  get_quantity: number;
+  get_discount_percent: number;
+  pool_mode: PoolMode;
+  reward_mode: RewardMode;
+  value: number;
+  min_purchase: number;
+  coupon_code: string;
+  coupon_discount_type: 'percent' | 'fixed';
+  max_uses_total: number | null;
+  max_uses_per_customer: number | null;
+  stackable: boolean;
+  priority: number;
+  start_date: string;
+  end_date: string;
+  is_active: boolean;
+  targets?: PromotionTarget[];
 }
 
 // ─── File Blobs (IndexedDB only) ────────────────────────────────────────────
@@ -243,5 +294,7 @@ export interface CartItem {
   product: Product;
   quantity: number;
   discount: number;
+  free_quantity: number;
+  promotion_id: string;
   note: string;
 }

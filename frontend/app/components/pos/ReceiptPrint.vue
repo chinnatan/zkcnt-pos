@@ -54,6 +54,14 @@
           <span>{{ t('receipt.discount') }}</span>
           <span>-{{ formatAmount(order?.discount_amount ?? 0) }}</span>
         </div>
+        <div
+          v-for="promo in order?.applied_promotions ?? []"
+          :key="promo.promotion_id"
+          class="flex justify-between text-gray-600"
+        >
+          <span>{{ promo.name }}</span>
+          <span>-{{ formatAmount(promo.amount) }}</span>
+        </div>
         <div v-if="(order?.tax_amount ?? 0) > 0" class="flex justify-between">
           <span>{{ t('receipt.vat') }}</span>
           <span>{{ formatAmount(order?.tax_amount ?? 0) }}</span>
