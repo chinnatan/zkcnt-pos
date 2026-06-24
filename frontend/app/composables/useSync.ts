@@ -19,6 +19,7 @@ export function useSync() {
     if (!activeStoreId.value) return;
 
     syncEngine = new SyncEngine($api, activeStoreId.value);
+    void updatePendingCount();
 
     if (isOnline.value) {
       performSync();

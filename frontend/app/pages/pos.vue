@@ -117,6 +117,7 @@
             <button
               v-for="product in filteredProducts"
               :key="product.id"
+              :data-testid="`product-card-${product.id}`"
               class="touch-pos group flex flex-col items-center rounded-xl border border-gray-200 bg-white p-4 text-center shadow-sm transition-colors"
               :class="
                 isOutOfStock(product)
@@ -179,6 +180,7 @@
     <Teleport to="body">
       <div
         v-if="showSuccessModal"
+        data-testid="success-modal"
         class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
         @click.self="showSuccessModal = false"
       >

@@ -75,6 +75,8 @@ task local
 | `task prod` | **Production** — รัน stack แบบ detached (Nginx + built frontend) |
 | `task prod:down` | หยุดและลบ prod containers |
 | `task prod:logs` | ดู logs ของ prod stack |
+| `task test` | รัน backend + frontend tests |
+| `task test:e2e` | Build + Playwright E2E tests |
 | `task backup` | สร้าง backup archive (pos.db + uploads + .env) แบบ online |
 | `task backup:upload` | Backup แล้วอัปโหลดไป Google Drive ผ่าน rclone |
 | `task restore -- <archive>` | กู้คืนจาก backup archive |
@@ -149,7 +151,7 @@ docker compose -f docker-compose.prod.yml up -d --build
 
 | Event | ผลลัพธ์ |
 |-------|---------|
-| Push / PR (ทุก branch) | CI — `bun install` + `bun run build` บน ubuntu-latest |
+| Push / PR (ทุก branch) | CI — `bun test`, Vitest, build, Playwright E2E |
 | Push `main` (หลัง CI ผ่าน) | Deploy อัตโนมัติบน Pi |
 | Manual (Actions → Deploy to Pi 5 → Run workflow) | Deploy ทันทีบน Pi |
 

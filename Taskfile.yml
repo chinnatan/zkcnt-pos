@@ -132,6 +132,33 @@ tasks:
       - "{{.PROD_COMPOSE}} logs -f"
     interactive: true
 
+  # ─── Tests ───
+
+  test:
+    desc: Run all tests (backend + frontend)
+    cmds:
+      - task: test:backend
+      - task: test:frontend
+
+  test:backend:
+    desc: Run backend unit and integration tests
+    dir: backend
+    cmds:
+      - bun test
+
+  test:frontend:
+    desc: Run frontend Vitest suite
+    dir: frontend
+    cmds:
+      - bun run test
+
+  test:e2e:
+    desc: Run Playwright E2E tests (requires frontend build first)
+    dir: frontend
+    cmds:
+      - bun run build
+      - bun run test:e2e
+
   # ─── Backup ───
 
   backup:

@@ -7,6 +7,7 @@
     "start": "bun run src/index.ts",
     "migrate": "bun run src/db/migrate.ts",
     "test": "bun test",
+    "test:integration": "bun test src/test/integration",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

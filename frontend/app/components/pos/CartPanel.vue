@@ -198,7 +198,7 @@
           class="flex items-center justify-between border-t border-gray-300 pt-3 text-lg"
         >
           <span class="font-bold text-gray-800">{{ t('pos.netTotal') }}</span>
-          <span class="font-bold text-primary-600">
+          <span class="font-bold text-primary-600" data-testid="cart-total">
             {{ formatCurrency(total) }}
           </span>
         </div>
@@ -233,6 +233,7 @@
             type="number"
             min="0"
             placeholder="0.00"
+            data-testid="payment-received"
             class="touch-pos w-full rounded-lg border border-gray-300 px-3 py-2.5 text-right text-lg font-bold outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20"
             @input="onPaymentReceivedInput"
           />
@@ -267,6 +268,7 @@
         </p>
 
         <button
+          data-testid="checkout-btn"
           class="touch-pos w-full rounded-xl py-4 text-base font-bold text-white shadow-lg transition-colors active:bg-primary-800 disabled:opacity-50 disabled:shadow-none lg:active:scale-[0.98]"
           :class="
             isCheckingOut

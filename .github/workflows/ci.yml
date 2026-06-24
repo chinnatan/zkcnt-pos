@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+
+      - name: Backend tests
+        run: |
+          cd backend
+          bun install
+          bun test
+
+      - name: Frontend unit and integration tests
+        run: |
+          cd frontend
+          bun install
+          bun run test
+
+      - name: Frontend production build
+        run: |
+          cd frontend
+          bun run build
+
+  e2e:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+
+      - name: Install dependencies
+        run: |
+          cd backend && bun install
+          cd ../frontend && bun install
+
+      - name: Install Playwright Chromium
+        run: cd frontend && bunx playwright install chromium --with-deps
+
+      - name: Build frontend
+        run: cd frontend && bun run build
+
+      - name: E2E tests
+        run: cd frontend && CI=1 bun run test:e2e
+        env:
+          CI: "1"

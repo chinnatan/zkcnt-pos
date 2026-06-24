@@ -1,0 +1,77 @@
+[
+  {
+    "name": "applies same-product BXGY",
+    "input": {
+      "lines": [
+        { "product_id": "prod-a", "category_id": "", "price": 10, "quantity": 4 }
+      ],
+      "promotions": [
+        {
+          "id": "p1",
+          "name": "ซื้อ 3 แถม 1",
+          "type": "bxgy",
+          "buy_quantity": 3,
+          "get_quantity": 1,
+          "get_discount_percent": 100,
+          "pool_mode": "same_product",
+          "reward_mode": "same_product",
+          "value": 0,
+          "min_purchase": 0,
+          "coupon_code": null,
+          "coupon_discount_type": "fixed",
+          "max_uses_total": null,
+          "max_uses_per_customer": null,
+          "stackable": true,
+          "priority": 10,
+          "start_date": "",
+          "end_date": "",
+          "is_active": true,
+          "targets": [{ "target_type": "product", "target_id": "prod-a" }]
+        }
+      ]
+    },
+    "expected": {
+      "line_discount": 10,
+      "free_quantity": 1,
+      "promo_subtotal": 30,
+      "applied_count": 1
+    }
+  },
+  {
+    "name": "coupon below minimum shows error",
+    "input": {
+      "lines": [
+        { "product_id": "prod-a", "category_id": "", "price": 10, "quantity": 1 }
+      ],
+      "promotions": [
+        {
+          "id": "p4",
+          "name": "SAVE50",
+          "type": "coupon",
+          "buy_quantity": 0,
+          "get_quantity": 0,
+          "get_discount_percent": 0,
+          "pool_mode": "same_product",
+          "reward_mode": "same_product",
+          "value": 50,
+          "min_purchase": 100,
+          "coupon_code": "SAVE50",
+          "coupon_discount_type": "fixed",
+          "max_uses_total": null,
+          "max_uses_per_customer": null,
+          "stackable": true,
+          "priority": 10,
+          "start_date": "",
+          "end_date": "",
+          "is_active": true,
+          "targets": []
+        }
+      ],
+      "coupon_code": "SAVE50"
+    },
+    "expected": {
+      "order_discount": 0,
+      "has_coupon_error": true
+    }
+  }
+]

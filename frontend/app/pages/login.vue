@@ -14,6 +14,7 @@
           type="email"
           required
           autocomplete="email"
+          data-testid="email"
           class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
           :placeholder="t('auth.emailPlaceholder')"
         />
@@ -30,6 +31,7 @@
           type="password"
           required
           autocomplete="current-password"
+          data-testid="password"
           class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
           :placeholder="t('auth.passwordPlaceholder')"
         />
@@ -37,6 +39,7 @@
       <button
         type="submit"
         :disabled="isLoading"
+        data-testid="login-btn"
         class="w-full rounded-lg bg-primary-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500/50 disabled:opacity-50"
       >
         {{ isLoading ? t('auth.signingIn') : t('auth.signIn') }}

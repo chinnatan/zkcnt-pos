@@ -61,7 +61,10 @@
           <div class="flex items-center justify-between">
             <div>
               <p class="text-sm text-gray-500">{{ t('dashboard.syncStatus') }}</p>
-              <p class="mt-1 text-2xl font-bold" :class="pendingSyncCount > 0 ? 'text-warning-500' : 'text-success-500'">
+              <p
+                data-testid="sync-pending-count"
+                class="mt-1 text-2xl font-bold" :class="pendingSyncCount > 0 ? 'text-warning-500' : 'text-success-500'"
+              >
                 {{ pendingSyncCount > 0 ? t('common.pending', { count: pendingSyncCount }) : t('common.synced') }}
               </p>
             </div>

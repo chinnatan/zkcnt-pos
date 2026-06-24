@@ -1,4 +1,6 @@
 data/
+.test-run/
+data-e2e/
 node_modules/
 *.db
 *.db-journal
