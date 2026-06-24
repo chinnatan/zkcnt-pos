@@ -156,7 +156,7 @@
 
       <!-- RIGHT: Cart (desktop sidebar) -->
       <div
-        class="hidden flex-col border-l border-gray-200 bg-white md:flex"
+        class="hidden min-h-0 flex-col overflow-hidden border-l border-gray-200 bg-white md:flex"
         style="flex: 1"
       >
         <PosCartPanel
