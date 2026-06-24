@@ -67,6 +67,7 @@ const pageTitle = computed(() => {
     "/customers": t("nav.customers"),
     "/reports": t("nav.reports"),
     "/settings": t("nav.settings"),
+    "/settings/roles": t("rolesPage.title"),
     "/stores": t("nav.stores"),
     "/discounts": t("nav.promotions"),
     "/promotions": t("nav.promotions"),

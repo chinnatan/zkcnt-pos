@@ -7,12 +7,22 @@
     </div>
 
     <div v-else class="space-y-6">
-      <div v-if="isManager" class="rounded-xl bg-paper p-4 shadow-sm">
+      <div v-if="isManager" class="rounded-xl bg-paper p-4 shadow-sm space-y-1">
         <NuxtLink
           to="/settings/audit"
           class="flex items-center justify-between rounded-lg px-3 py-2 text-sm font-medium text-primary-700 hover:bg-primary-50"
         >
           <span>{{ t('settingsPage.auditLog') }}</span>
+          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+          </svg>
+        </NuxtLink>
+        <NuxtLink
+          v-if="isOwner"
+          to="/settings/roles"
+          class="flex items-center justify-between rounded-lg px-3 py-2 text-sm font-medium text-primary-700 hover:bg-primary-50"
+        >
+          <span>{{ t('settingsPage.rolesAndPermissions') }}</span>
           <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
           </svg>

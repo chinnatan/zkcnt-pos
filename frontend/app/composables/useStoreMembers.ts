@@ -154,6 +154,17 @@ export function useStoreMembers() {
     await fetchStoreMembers();
   }
 
+  async function updateMemberRole(memberId: string, role: "manager" | "cashier") {
+    if (!activeStoreId.value) throw new Error("No active store");
+
+    await $api.send(`/stores/${activeStoreId.value}/members/${memberId}`, {
+      method: "PATCH",
+      body: { role },
+    });
+
+    await refreshTeamData();
+  }
+
   async function lookupInvite(token: string): Promise<{
     storeName: string;
     email: string;
@@ -199,6 +210,7 @@ export function useStoreMembers() {
     addOrInvite,
     cancelInvite,
     removeMember,
+    updateMemberRole,
     lookupInvite,
     acceptInvite,
     updateInviteMode,

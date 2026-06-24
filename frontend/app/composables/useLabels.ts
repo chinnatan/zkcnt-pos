@@ -27,11 +27,19 @@ export function useLabels() {
     return map[role] || role;
   }
 
+  function permissionLabel(permissionId: string): string {
+    return t(`permissions.items.${permissionId}`);
+  }
+
+  function permissionGroupLabel(group: string): string {
+    return t(`permissions.groups.${group}`);
+  }
+
   function stockStatusLabel(quantity: number, threshold: number): string {
     if (quantity <= 0) return t("stock.outOfStock");
     if (quantity <= threshold) return t("stock.lowStock");
     return t("stock.inStock");
   }
 
-  return { statusLabel, paymentLabel, roleLabel, stockStatusLabel };
+  return { statusLabel, paymentLabel, roleLabel, permissionLabel, permissionGroupLabel, stockStatusLabel };
 }

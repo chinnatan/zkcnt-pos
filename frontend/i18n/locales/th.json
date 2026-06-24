@@ -377,6 +377,7 @@
     "inviteLinkCopyFailed": "ไม่สามารถคัดลอกลิงก์ได้",
     "confirmRemoveMember": "ลบสมาชิกคนนี้ออกจากทีม?",
     "auditLog": "ประวัติการทำรายการ",
+    "rolesAndPermissions": "บทบาทและสิทธิ์",
     "paymentSettings": "การชำระเงิน",
     "promptpayId": "PromptPay ID",
     "promptpayIdPlaceholder": "0812345678 หรือ เลขบัตรประชาชน 13 หลัก",
@@ -492,6 +493,72 @@
     "action": "การกระทำ",
     "summary": "รายละเอียด",
     "showing": "แสดง {shown} จาก {total} รายการ"
+  },
+  "rolesPage": {
+    "title": "บทบาทและสิทธิ์",
+    "offlineHint": "ต้องเชื่อมต่ออินเทอร์เน็ตเพื่อเปลี่ยนบทบาทสมาชิก",
+    "matrixTitle": "สิทธิ์ตามบทบาท",
+    "matrixHint": "ตารางนี้แสดงสิทธิ์ที่ระบบอนุญาตในแต่ละบทบาท",
+    "permissionColumn": "สิทธิ์",
+    "membersTitle": "เปลี่ยนบทบาทสมาชิก",
+    "changeRole": "บันทึก",
+    "roleUpdated": "อัปเดตบทบาทสำเร็จ",
+    "confirmChangeRole": "เปลี่ยนบทบาทของ {name} เป็น {role}?",
+    "noMembers": "ยังไม่มีสมาชิกในทีม",
+    "allowed": "อนุญาต",
+    "denied": "ไม่อนุญาต"
+  },
+  "permissions": {
+    "groups": {
+      "sales": "การขาย",
+      "catalog": "สินค้า",
+      "inventory": "สต็อก",
+      "customers": "ลูกค้า",
+      "promotions": "โปรโมชัน",
+      "reports": "รายงาน",
+      "store": "ร้าน",
+      "team": "ทีม",
+      "system": "ระบบ"
+    },
+    "items": {
+      "pos": {
+        "use": "ใช้งาน POS"
+      },
+      "orders": {
+        "create": "สร้างออเดอร์",
+        "view": "ดูออเดอร์",
+        "voidRefund": "ยกเลิก/คืนเงินออเดอร์"
+      },
+      "products": {
+        "manage": "จัดการสินค้าและหมวดหมู่"
+      },
+      "inventory": {
+        "manage": "จัดการสต็อก"
+      },
+      "customers": {
+        "manage": "จัดการลูกค้า"
+      },
+      "promotions": {
+        "manage": "จัดการส่วนลดและโปรโมชัน"
+      },
+      "reports": {
+        "view": "ดูรายงาน"
+      },
+      "store": {
+        "edit": "แก้ไขข้อมูลร้าน",
+        "paymentSettings": "ตั้งค่า PromptPay"
+      },
+      "team": {
+        "view": "ดูรายชื่อสมาชิก",
+        "addInvite": "เพิ่ม/เชิญสมาชิก",
+        "remove": "ลบสมาชิก",
+        "changeRole": "เปลี่ยนบทบาทสมาชิก",
+        "inviteMode": "ตั้งโหมดเชิญสมาชิก"
+      },
+      "audit": {
+        "view": "ดูประวัติการทำรายการ"
+      }
+    }
   },
   "errors": {
     "invalidCredentials": "อีเมลหรือรหัสผ่านไม่ถูกต้อง",

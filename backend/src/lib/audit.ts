@@ -35,6 +35,7 @@ export type AuditAction =
   | "store.update"
   | "member.add"
   | "member.remove"
+  | "member.role_change"
   | "invite.create"
   | "invite.cancel"
   | "invite.accept"

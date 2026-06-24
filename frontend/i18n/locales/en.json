@@ -377,6 +377,7 @@
     "inviteLinkCopyFailed": "Could not copy link",
     "confirmRemoveMember": "Remove this team member?",
     "auditLog": "Audit log",
+    "rolesAndPermissions": "Roles & permissions",
     "paymentSettings": "Payment",
     "promptpayId": "PromptPay ID",
     "promptpayIdPlaceholder": "0812345678 or 13-digit national ID",
@@ -492,6 +493,72 @@
     "action": "Action",
     "summary": "Summary",
     "showing": "Showing {shown} of {total} events"
+  },
+  "rolesPage": {
+    "title": "Roles & permissions",
+    "offlineHint": "Internet connection required to change member roles",
+    "matrixTitle": "Permissions by role",
+    "matrixHint": "This table shows what each role is allowed to do in the system",
+    "permissionColumn": "Permission",
+    "membersTitle": "Change member roles",
+    "changeRole": "Save",
+    "roleUpdated": "Role updated successfully",
+    "confirmChangeRole": "Change {name}'s role to {role}?",
+    "noMembers": "No team members yet",
+    "allowed": "Allowed",
+    "denied": "Denied"
+  },
+  "permissions": {
+    "groups": {
+      "sales": "Sales",
+      "catalog": "Products",
+      "inventory": "Inventory",
+      "customers": "Customers",
+      "promotions": "Promotions",
+      "reports": "Reports",
+      "store": "Store",
+      "team": "Team",
+      "system": "System"
+    },
+    "items": {
+      "pos": {
+        "use": "Use POS"
+      },
+      "orders": {
+        "create": "Create orders",
+        "view": "View orders",
+        "voidRefund": "Void/refund orders"
+      },
+      "products": {
+        "manage": "Manage products and categories"
+      },
+      "inventory": {
+        "manage": "Manage inventory"
+      },
+      "customers": {
+        "manage": "Manage customers"
+      },
+      "promotions": {
+        "manage": "Manage discounts and promotions"
+      },
+      "reports": {
+        "view": "View reports"
+      },
+      "store": {
+        "edit": "Edit store information",
+        "paymentSettings": "Configure PromptPay"
+      },
+      "team": {
+        "view": "View team members",
+        "addInvite": "Add/invite members",
+        "remove": "Remove members",
+        "changeRole": "Change member roles",
+        "inviteMode": "Configure invite mode"
+      },
+      "audit": {
+        "view": "View audit log"
+      }
+    }
   },
   "errors": {
     "invalidCredentials": "Invalid email or password",

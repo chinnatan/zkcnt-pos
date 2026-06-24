@@ -364,6 +364,83 @@ storeRoutes.patch(
   },
 );
 
+storeRoutes.patch(
+  "/:storeId/members/:memberId",
+  authMiddleware,
+  requireStoreOwner,
+  async (c) => {
+    const storeId = c.req.param("storeId");
+    const memberId = c.req.param("memberId");
+    const userId = c.get("userId");
+
+    const body = await c.req.json<{ role?: string }>();
+    const role = body.role;
+
+    if (role !== "manager" && role !== "cashier") {
+      throw new HTTPException(400, { message: "valid role required" });
+    }
+
+    const existing = await db
+      .select()
+      .from(storeMembers)
+      .where(and(eq(storeMembers.id, memberId), eq(storeMembers.store, storeId)))
+      .limit(1);
+
+    const member = existing[0];
+    if (!member) {
+      throw new HTTPException(404, { message: "Member not found" });
+    }
+
+    if (member.role === "owner") {
+      throw new HTTPException(400, { message: "Cannot change owner role" });
+    }
+
+    if (member.role === role) {
+      throw new HTTPException(400, { message: "Role unchanged" });
+    }
+
+    const previousRole = member.role;
+    const updatedAt = nowIso();
+
+    await db
+      .update(storeMembers)
+      .set({ role: role as "manager" | "cashier", updated: updatedAt })
+      .where(and(eq(storeMembers.id, memberId), eq(storeMembers.store, storeId)));
+
+    const userRows = await db
+      .select({ email: users.email, name: users.name })
+      .from(users)
+      .where(eq(users.id, member.user))
+      .limit(1);
+    const memberUser = userRows[0];
+    const displayName = memberUser?.name || memberUser?.email || member.user;
+
+    logAuditEvent(c, {
+      store: storeId,
+      actor: userId,
+      action: "member.role_change",
+      entityType: "store_member",
+      entityId: memberId,
+      summary: `เปลี่ยนบทบาท ${displayName} จาก ${previousRole} เป็น ${role}`,
+      changes: buildChanges({ role: previousRole }, { role }, ["role"]),
+      metadata: { user_id: member.user, from: previousRole, to: role },
+    });
+
+    const rows = await db
+      .select()
+      .from(storeMembers)
+      .where(eq(storeMembers.id, memberId))
+      .limit(1);
+
+    const mapped = mapStoreMember(rows[0]!);
+    const expandUser = memberUser
+      ? { id: member.user, name: memberUser.name ?? undefined, email: memberUser.email }
+      : undefined;
+
+    return c.json({ ...mapped, expand: expandUser ? { user: expandUser } : undefined });
+  },
+);
+
 storeRoutes.delete(
   "/:storeId/members/:memberId",
   authMiddleware,
