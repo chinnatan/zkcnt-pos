@@ -11,6 +11,8 @@ import {
   orderItems,
   orders,
   products,
+  promotionTargets,
+  promotions,
 } from "../db/schema";
 import {
   mapCategory,
@@ -21,6 +23,8 @@ import {
   mapOrder,
   mapOrderItem,
   mapProduct,
+  mapPromotion,
+  mapPromotionTarget,
 } from "../lib/mappers";
 import { createLogger } from "../lib/logger";
 import {
@@ -46,7 +50,7 @@ syncRoutes.get(
     const storeId = c.req.param("storeId");
     const since = c.req.query("since") ?? "1970-01-01T00:00:00.000Z";
 
-    const [catRows, prodRows, custRows, invRows, discRows, orderRows, itemRows, txRows] =
+    const [catRows, prodRows, custRows, invRows, discRows, promoRows, targetRows, orderRows, itemRows, txRows] =
       await Promise.all([
         db
           .select()
@@ -78,6 +82,16 @@ syncRoutes.get(
           ),
         db
           .select()
+          .from(promotions)
+          .where(
+            and(eq(promotions.store, storeId), gt(promotions.updated, since)),
+          ),
+        db
+          .select()
+          .from(promotionTargets)
+          .where(gt(promotionTargets.updated, since)),
+        db
+          .select()
           .from(orders)
           .where(and(eq(orders.store, storeId), gt(orders.updated, since))),
         db
@@ -98,12 +112,17 @@ syncRoutes.get(
     // Filter order items to this store's orders
     const storeOrderIds = new Set(orderRows.map((o) => o.id));
     const filteredItems = itemRows.filter((i) => storeOrderIds.has(i.order));
+    const storePromoIds = new Set(promoRows.map((p) => p.id));
+    const filteredTargets = targetRows.filter((t) =>
+      storePromoIds.has(t.promotion),
+    );
 
     logger.debug(
       `sync delta storeId=${storeId} since=${since} ` +
         `categories=${catRows.length} products=${prodRows.length} ` +
         `customers=${custRows.length} inventory=${invRows.length} ` +
-        `discounts=${discRows.length} orders=${orderRows.length} ` +
+        `discounts=${discRows.length} promotions=${promoRows.length} ` +
+        `promotion_targets=${filteredTargets.length} orders=${orderRows.length} ` +
         `order_items=${filteredItems.length} inventory_transactions=${txRows.length}`,
     );
 
@@ -113,6 +132,8 @@ syncRoutes.get(
       customers: custRows.map(mapCustomer),
       inventory: invRows.map(mapInventory),
       discounts: discRows.map(mapDiscount),
+      promotions: promoRows.map((row) => mapPromotion({ ...row, targets: [] })),
+      promotion_targets: filteredTargets.map(mapPromotionTarget),
       orders: orderRows.map(mapOrder),
       order_items: filteredItems.map(mapOrderItem),
       inventory_transactions: txRows.map(mapInventoryTransaction),
@@ -129,6 +150,8 @@ const COLLECTION_HANDLERS: Record<
   products: { table: "products", storeField: "store" },
   customers: { table: "customers", storeField: "store" },
   discounts: { table: "discounts", storeField: "store" },
+  promotions: { table: "promotions", storeField: "store" },
+  promotion_targets: { table: "promotionTargets" },
   inventory: { table: "inventory", storeField: "store" },
   orders: { table: "orders", storeField: "store" },
   order_items: { table: "orderItems" },

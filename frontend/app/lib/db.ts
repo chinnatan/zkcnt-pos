@@ -9,6 +9,8 @@ import type {
   OrderItem,
   Inventory,
   Discount,
+  Promotion,
+  PromotionTarget,
   SyncQueueItem,
   FileBlob,
   FileUploadQueueItem,
@@ -24,6 +26,8 @@ export class PosDatabase extends Dexie {
   orderItems!: Table<OrderItem>;
   inventory!: Table<Inventory>;
   discounts!: Table<Discount>;
+  promotions!: Table<Promotion>;
+  promotionTargets!: Table<PromotionTarget>;
   syncQueue!: Table<SyncQueueItem, number>;
   fileBlobs!: Table<FileBlob>;
   fileUploadQueue!: Table<FileUploadQueueItem, number>;
@@ -50,6 +54,11 @@ export class PosDatabase extends Dexie {
 
     this.version(3).stores({
       discounts: 'id, store, [store+is_active], name',
+    });
+
+    this.version(4).stores({
+      promotions: 'id, store, [store+is_active], name, type, priority',
+      promotionTargets: 'id, promotion, [promotion+target_type], target_id',
     });
   }
 }

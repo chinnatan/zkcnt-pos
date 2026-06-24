@@ -204,12 +204,148 @@ CREATE TABLE IF NOT EXISTS audit_events (
 CREATE INDEX IF NOT EXISTS idx_audit_store_created ON audit_events(store, created);
 CREATE INDEX IF NOT EXISTS idx_audit_entity ON audit_events(store, entity_type, entity_id);
 CREATE INDEX IF NOT EXISTS idx_audit_actor ON audit_events(store, actor);
+
+CREATE TABLE IF NOT EXISTS promotions (
+  id TEXT PRIMARY KEY,
+  store TEXT NOT NULL REFERENCES stores(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  type TEXT NOT NULL,
+  buy_quantity INTEGER NOT NULL DEFAULT 0,
+  get_quantity INTEGER NOT NULL DEFAULT 0,
+  get_discount_percent REAL NOT NULL DEFAULT 100,
+  pool_mode TEXT NOT NULL DEFAULT 'same_product',
+  reward_mode TEXT NOT NULL DEFAULT 'cheapest',
+  value REAL NOT NULL DEFAULT 0,
+  min_purchase REAL NOT NULL DEFAULT 0,
+  coupon_code TEXT,
+  coupon_discount_type TEXT NOT NULL DEFAULT 'fixed',
+  max_uses_total INTEGER,
+  max_uses_per_customer INTEGER,
+  stackable INTEGER NOT NULL DEFAULT 1,
+  priority INTEGER NOT NULL DEFAULT 0,
+  start_date TEXT NOT NULL DEFAULT '',
+  end_date TEXT NOT NULL DEFAULT '',
+  is_active INTEGER NOT NULL DEFAULT 1,
+  created TEXT NOT NULL,
+  updated TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS promotion_targets (
+  id TEXT PRIMARY KEY,
+  promotion TEXT NOT NULL REFERENCES promotions(id) ON DELETE CASCADE,
+  target_type TEXT NOT NULL,
+  target_id TEXT NOT NULL,
+  created TEXT NOT NULL,
+  updated TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_promotion_targets_promotion ON promotion_targets(promotion);
+CREATE INDEX IF NOT EXISTS idx_promotion_targets_target ON promotion_targets(target_type, target_id);
+
+CREATE TABLE IF NOT EXISTS promotion_usages (
+  id TEXT PRIMARY KEY,
+  store TEXT NOT NULL REFERENCES stores(id) ON DELETE CASCADE,
+  promotion TEXT NOT NULL REFERENCES promotions(id) ON DELETE CASCADE,
+  "order" TEXT NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
+  customer TEXT REFERENCES customers(id),
+  discount_amount REAL NOT NULL DEFAULT 0,
+  created TEXT NOT NULL,
+  updated TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_promotion_usages_store_promotion ON promotion_usages(store, promotion);
+CREATE INDEX IF NOT EXISTS idx_promotion_usages_customer ON promotion_usages(store, customer);
 `;
 
 export function runMigrate() {
   mkdirSync(env.dataDir, { recursive: true });
   sqlite.exec(DDL);
+  migrateOrderPromotionColumns();
+  migrateDiscountsToPromotions();
   backfillOrderAuditEvents();
+}
+
+function migrateOrderPromotionColumns() {
+  const orderCols = sqlite
+    .query<{ name: string }, []>("PRAGMA table_info(orders)")
+    .all()
+    .map((c) => c.name);
+
+  if (!orderCols.includes("coupon_code")) {
+    sqlite.exec(
+      `ALTER TABLE orders ADD COLUMN coupon_code TEXT NOT NULL DEFAULT ''`,
+    );
+  }
+  if (!orderCols.includes("applied_promotions")) {
+    sqlite.exec(
+      `ALTER TABLE orders ADD COLUMN applied_promotions TEXT NOT NULL DEFAULT '[]'`,
+    );
+  }
+
+  const itemCols = sqlite
+    .query<{ name: string }, []>("PRAGMA table_info(order_items)")
+    .all()
+    .map((c) => c.name);
+
+  if (!itemCols.includes("promotion_id")) {
+    sqlite.exec(`ALTER TABLE order_items ADD COLUMN promotion_id TEXT`);
+  }
+  if (!itemCols.includes("free_quantity")) {
+    sqlite.exec(
+      `ALTER TABLE order_items ADD COLUMN free_quantity INTEGER NOT NULL DEFAULT 0`,
+    );
+  }
+}
+
+function migrateDiscountsToPromotions() {
+  const legacyDiscounts = sqlite
+    .query<
+      {
+        id: string;
+        store: string;
+        name: string;
+        type: string;
+        value: number;
+        min_purchase: number;
+        start_date: string;
+        end_date: string;
+        is_active: number;
+        created: string;
+        updated: string;
+      },
+      []
+    >(
+      `SELECT id, store, name, type, value, min_purchase, start_date, end_date, is_active, created, updated
+       FROM discounts`,
+    )
+    .all();
+
+  const insert = sqlite.prepare(
+    `INSERT OR IGNORE INTO promotions (
+      id, store, name, type, buy_quantity, get_quantity, get_discount_percent,
+      pool_mode, reward_mode, value, min_purchase, coupon_code, coupon_discount_type,
+      max_uses_total, max_uses_per_customer, stackable, priority,
+      start_date, end_date, is_active, created, updated
+    ) VALUES (?, ?, ?, ?, 0, 0, 100, 'same_product', 'cheapest', ?, ?, NULL, 'fixed',
+      NULL, NULL, 1, 0, ?, ?, ?, ?, ?)`,
+  );
+
+  for (const d of legacyDiscounts) {
+    const promoType = d.type === "percent" ? "order_percent" : "order_fixed";
+    insert.run(
+      d.id,
+      d.store,
+      d.name,
+      promoType,
+      d.value,
+      d.min_purchase,
+      d.start_date,
+      d.end_date,
+      d.is_active,
+      d.created,
+      d.updated,
+    );
+  }
 }
 
 function backfillOrderAuditEvents() {

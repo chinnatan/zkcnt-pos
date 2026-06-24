@@ -195,6 +195,13 @@ export function mapOrder(row: {
   status: string;
   note: string;
   syncedAt: string;
+  couponCode?: string;
+  appliedPromotions?: Array<{
+    promotion_id: string;
+    name: string;
+    amount: number;
+    coupon_code?: string;
+  }>;
   created: string;
   updated: string;
 }) {
@@ -216,6 +223,8 @@ export function mapOrder(row: {
     status: row.status,
     note: row.note,
     synced_at: row.syncedAt,
+    coupon_code: row.couponCode ?? "",
+    applied_promotions: row.appliedPromotions ?? [],
     created: row.created,
     updated: row.updated,
   });
@@ -231,6 +240,8 @@ export function mapOrderItem(row: {
   unitPrice: number;
   discount: number;
   total: number;
+  promotionId?: string | null;
+  freeQuantity?: number;
   created: string;
   updated: string;
 }) {
@@ -244,6 +255,8 @@ export function mapOrderItem(row: {
     unit_price: row.unitPrice,
     discount: row.discount,
     total: row.total,
+    promotion_id: row.promotionId ?? "",
+    free_quantity: row.freeQuantity ?? 0,
     created: row.created,
     updated: row.updated,
   });
@@ -350,6 +363,83 @@ export function mapDiscount(row: {
     start_date: row.startDate,
     end_date: row.endDate,
     is_active: row.isActive,
+    created: row.created,
+    updated: row.updated,
+  });
+}
+
+export function mapPromotion(row: {
+  id: string;
+  store: string;
+  name: string;
+  type: string;
+  buyQuantity: number;
+  getQuantity: number;
+  getDiscountPercent: number;
+  poolMode: string;
+  rewardMode: string;
+  value: number;
+  minPurchase: number;
+  couponCode: string | null;
+  couponDiscountType: string;
+  maxUsesTotal: number | null;
+  maxUsesPerCustomer: number | null;
+  stackable: boolean;
+  priority: number;
+  startDate: string;
+  endDate: string;
+  isActive: boolean;
+  created: string;
+  updated: string;
+  targets?: Array<{
+    id: string;
+    promotion: string;
+    targetType: string;
+    targetId: string;
+    created: string;
+    updated: string;
+  }>;
+}) {
+  return withMeta("promotions", {
+    id: row.id,
+    store: row.store,
+    name: row.name,
+    type: row.type,
+    buy_quantity: row.buyQuantity,
+    get_quantity: row.getQuantity,
+    get_discount_percent: row.getDiscountPercent,
+    pool_mode: row.poolMode,
+    reward_mode: row.rewardMode,
+    value: row.value,
+    min_purchase: row.minPurchase,
+    coupon_code: row.couponCode ?? "",
+    coupon_discount_type: row.couponDiscountType,
+    max_uses_total: row.maxUsesTotal,
+    max_uses_per_customer: row.maxUsesPerCustomer,
+    stackable: row.stackable,
+    priority: row.priority,
+    start_date: row.startDate,
+    end_date: row.endDate,
+    is_active: row.isActive,
+    targets: (row.targets ?? []).map(mapPromotionTarget),
+    created: row.created,
+    updated: row.updated,
+  });
+}
+
+export function mapPromotionTarget(row: {
+  id: string;
+  promotion: string;
+  targetType: string;
+  targetId: string;
+  created: string;
+  updated: string;
+}) {
+  return withMeta("promotion_targets", {
+    id: row.id,
+    promotion: row.promotion,
+    target_type: row.targetType,
+    target_id: row.targetId,
     created: row.created,
     updated: row.updated,
   });

@@ -23,6 +23,8 @@ export interface SyncDelta {
   customers: Record<string, unknown>[];
   inventory: Record<string, unknown>[];
   discounts: Record<string, unknown>[];
+  promotions: Record<string, unknown>[];
+  promotion_targets: Record<string, unknown>[];
   orders: Record<string, unknown>[];
   order_items: Record<string, unknown>[];
   inventory_transactions: Record<string, unknown>[];
@@ -272,6 +274,8 @@ export class ApiClient {
       products: `/stores/${storeId}/products`,
       customers: `/stores/${storeId}/customers`,
       discounts: `/stores/${storeId}/discounts`,
+      promotions: `/stores/${storeId}/promotions`,
+      promotion_targets: `/stores/${storeId}/promotion-targets`,
       inventory: `/stores/${storeId}/inventory`,
       orders: `/stores/${storeId}/orders`,
       order_items: `/stores/${storeId}/order-items`,

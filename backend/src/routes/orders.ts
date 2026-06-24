@@ -8,10 +8,19 @@ import {
   orderItems,
   orders,
   products,
+  promotionUsages,
 } from "../db/schema";
 import { logAuditEvent } from "../lib/audit";
 import { generateId } from "../lib/id";
 import { mapOrder, mapOrderItem } from "../lib/mappers";
+import {
+  calculatePromotions,
+  totalsMatch,
+} from "../lib/promotions/engine";
+import {
+  loadPromotionUsageCounts,
+  loadStorePromotions,
+} from "../routes/promotions";
 import { nowIso } from "../lib/timestamps";
 import {
   authMiddleware,
@@ -220,6 +229,57 @@ orderRoutes.post(
       body.order ?? (body as Record<string, unknown>);
     const items = body.items ?? [];
 
+    const promoLines = items.map((item) => ({
+      product_id: String(item.product ?? item.product_id ?? ""),
+      category_id: String(item.category_id ?? ""),
+      price: Number(item.unit_price ?? item.product_price ?? 0),
+      quantity: Number(item.quantity ?? 1),
+    }));
+
+    const storePromotions = await loadStorePromotions(storeId);
+    const { usageByPromotion, usageByPromotionCustomer } =
+      await loadPromotionUsageCounts(storeId);
+
+    const promoResult = calculatePromotions({
+      lines: promoLines,
+      promotions: storePromotions,
+      coupon_code: orderData.coupon_code
+        ? String(orderData.coupon_code)
+        : undefined,
+      customer_id: orderData.customer
+        ? String(orderData.customer)
+        : undefined,
+      usage_by_promotion: usageByPromotion,
+      usage_by_promotion_customer: usageByPromotionCustomer,
+    });
+
+    if (promoResult.coupon_error) {
+      throw new HTTPException(400, { message: promoResult.coupon_error });
+    }
+
+    const clientLineDiscount = items.reduce(
+      (s, item) => s + Number(item.discount ?? 0),
+      0,
+    );
+    const expectedLineDiscount = promoResult.line_adjustments.reduce(
+      (s, a) => s + a.discount,
+      0,
+    );
+    if (!totalsMatch(clientLineDiscount, expectedLineDiscount)) {
+      throw new HTTPException(400, { message: "promotion_mismatch" });
+    }
+
+    const clientApplied = (orderData.applied_promotions ?? []) as Array<{
+      promotion_id: string;
+      amount: number;
+    }>;
+    const expectedPromoTotal =
+      promoResult.order_discount + expectedLineDiscount;
+    const clientPromoTotal = clientApplied.reduce((s, p) => s + p.amount, 0);
+    if (!totalsMatch(clientPromoTotal, expectedPromoTotal, 2)) {
+      throw new HTTPException(400, { message: "promotion_mismatch" });
+    }
+
     const now = nowIso();
     const orderId = generateId();
     const orderNumber = String(orderData.order_number ?? `ORD-${Date.now()}`);
@@ -304,6 +364,8 @@ orderRoutes.post(
           "completed",
         note: String(orderData.note ?? ""),
         syncedAt: String(orderData.synced_at ?? now),
+        couponCode: String(orderData.coupon_code ?? ""),
+        appliedPromotions: promoResult.applied_promotions,
         created: now,
         updated: now,
       });
@@ -311,6 +373,9 @@ orderRoutes.post(
       for (const item of items) {
         const itemId = generateId();
         const productId = String(item.product ?? item.product_id ?? "");
+        const lineAdj = promoResult.line_adjustments.find(
+          (a) => a.product_id === productId,
+        );
 
         await tx.insert(orderItems).values({
           id: itemId,
@@ -322,6 +387,8 @@ orderRoutes.post(
           unitPrice: Number(item.unit_price ?? 0),
           discount: Number(item.discount ?? 0),
           total: Number(item.total ?? 0),
+          promotionId: lineAdj?.promotion_id ?? null,
+          freeQuantity: lineAdj?.free_quantity ?? 0,
           created: now,
           updated: now,
         });
@@ -376,6 +443,20 @@ orderRoutes.post(
         .from(orders)
         .where(eq(orders.id, orderId))
         .limit(1);
+
+      for (const applied of promoResult.applied_promotions) {
+        await tx.insert(promotionUsages).values({
+          id: generateId(),
+          store: storeId,
+          promotion: applied.promotion_id,
+          order: orderId,
+          customer: orderData.customer ? String(orderData.customer) : null,
+          discountAmount: applied.amount,
+          created: now,
+          updated: now,
+        });
+      }
+
       return rows[0]!;
     });
 

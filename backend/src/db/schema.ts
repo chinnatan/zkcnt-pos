@@ -179,6 +179,18 @@ export const orders = sqliteTable(
     }).notNull(),
     note: text("note").notNull().default(""),
     syncedAt: text("synced_at").notNull().default(""),
+    couponCode: text("coupon_code").notNull().default(""),
+    appliedPromotions: text("applied_promotions", { mode: "json" })
+      .$type<
+        Array<{
+          promotion_id: string;
+          name: string;
+          amount: number;
+          coupon_code?: string;
+        }>
+      >()
+      .notNull()
+      .default([]),
     ...timestamps,
   },
   (t) => [
@@ -201,6 +213,8 @@ export const orderItems = sqliteTable("order_items", {
   unitPrice: real("unit_price").notNull(),
   discount: real("discount").notNull().default(0),
   total: real("total").notNull(),
+  promotionId: text("promotion_id"),
+  freeQuantity: integer("free_quantity").notNull().default(0),
   ...timestamps,
 });
 
@@ -258,6 +272,93 @@ export const discounts = sqliteTable("discounts", {
   ...timestamps,
 });
 
+export const promotions = sqliteTable(
+  "promotions",
+  {
+    id: text("id").primaryKey(),
+    store: text("store")
+      .notNull()
+      .references(() => stores.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    type: text("type", {
+      enum: ["bxgy", "order_percent", "order_fixed", "coupon"],
+    }).notNull(),
+    buyQuantity: integer("buy_quantity").notNull().default(0),
+    getQuantity: integer("get_quantity").notNull().default(0),
+    getDiscountPercent: real("get_discount_percent").notNull().default(100),
+    poolMode: text("pool_mode", {
+      enum: ["same_product", "same_category", "mixed"],
+    })
+      .notNull()
+      .default("same_product"),
+    rewardMode: text("reward_mode", {
+      enum: ["cheapest", "same_product"],
+    })
+      .notNull()
+      .default("cheapest"),
+    value: real("value").notNull().default(0),
+    minPurchase: real("min_purchase").notNull().default(0),
+    couponCode: text("coupon_code"),
+    couponDiscountType: text("coupon_discount_type", {
+      enum: ["percent", "fixed"],
+    })
+      .notNull()
+      .default("fixed"),
+    maxUsesTotal: integer("max_uses_total"),
+    maxUsesPerCustomer: integer("max_uses_per_customer"),
+    stackable: integer("stackable", { mode: "boolean" })
+      .notNull()
+      .default(true),
+    priority: integer("priority").notNull().default(0),
+    startDate: text("start_date").notNull().default(""),
+    endDate: text("end_date").notNull().default(""),
+    isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
+    ...timestamps,
+  },
+);
+
+export const promotionTargets = sqliteTable(
+  "promotion_targets",
+  {
+    id: text("id").primaryKey(),
+    promotion: text("promotion")
+      .notNull()
+      .references(() => promotions.id, { onDelete: "cascade" }),
+    targetType: text("target_type", {
+      enum: ["product", "category"],
+    }).notNull(),
+    targetId: text("target_id").notNull(),
+    ...timestamps,
+  },
+  (t) => [
+    index("idx_promotion_targets_promotion").on(t.promotion),
+    index("idx_promotion_targets_target").on(t.targetType, t.targetId),
+  ],
+);
+
+export const promotionUsages = sqliteTable(
+  "promotion_usages",
+  {
+    id: text("id").primaryKey(),
+    store: text("store")
+      .notNull()
+      .references(() => stores.id, { onDelete: "cascade" }),
+    promotion: text("promotion")
+      .notNull()
+      .references(() => promotions.id, { onDelete: "cascade" }),
+    order: text("order")
+      .notNull()
+      .references(() => orders.id, { onDelete: "cascade" }),
+    customer: text("customer").references(() => customers.id),
+    discountAmount: real("discount_amount").notNull().default(0),
+    ...timestamps,
+  },
+  (t) => [
+    index("idx_promotion_usages_store_promotion").on(t.store, t.promotion),
+    index("idx_promotion_usages_customer").on(t.store, t.customer),
+  ],
+);
+
 export const auditEvents = sqliteTable(
   "audit_events",
   {
@@ -299,5 +400,8 @@ export const schema = {
   inventory,
   inventoryTransactions,
   discounts,
+  promotions,
+  promotionTargets,
+  promotionUsages,
   auditEvents,
 };

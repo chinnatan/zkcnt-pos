@@ -68,7 +68,8 @@ const pageTitle = computed(() => {
     "/reports": t("nav.reports"),
     "/settings": t("nav.settings"),
     "/stores": t("nav.stores"),
-    "/discounts": t("nav.discounts"),
+    "/discounts": t("nav.promotions"),
+    "/promotions": t("nav.promotions"),
   };
   return titles[route.path] || t("nav.appName");
 });
