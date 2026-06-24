@@ -1,7 +1,7 @@
 <template>
   <div class="space-y-4">
     <div class="flex items-center justify-between">
-      <h2 class="text-lg font-semibold text-gray-800">{{ t('stock.adjustStock') }}</h2>
+      <h2 class="text-lg font-semibold text-ink">{{ t('stock.adjustStock') }}</h2>
       <button
         class="rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700"
         @click="showAdjustModal = true"
@@ -10,8 +10,8 @@
       </button>
     </div>
 
-    <div v-if="lowStockItems.length > 0" class="rounded-lg border border-yellow-200 bg-yellow-50 p-4">
-      <h3 class="flex items-center gap-2 text-sm font-semibold text-yellow-800">
+    <div v-if="lowStockItems.length > 0" class="rounded-lg border border-warning-100 bg-warning-50 p-4">
+      <h3 class="flex items-center gap-2 text-sm font-semibold text-warning-700">
         <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
         </svg>
@@ -19,12 +19,12 @@
       </h3>
     </div>
 
-    <div class="rounded-xl bg-white shadow-sm">
+    <div class="rounded-xl bg-paper shadow-sm">
       <div v-if="isLoading" class="flex justify-center py-12">
         <div class="h-8 w-8 animate-spin rounded-full border-4 border-primary-200 border-t-primary-600" />
       </div>
 
-      <div v-else-if="inventoryWithProducts.length === 0" class="py-12 text-center text-gray-400">
+      <div v-else-if="inventoryWithProducts.length === 0" class="py-12 text-center text-ink-muted">
         {{ t('stock.noData') }}
       </div>
 
@@ -33,7 +33,7 @@
           <template #table>
             <div class="overflow-x-auto">
               <table class="w-full text-left text-sm">
-                <thead class="border-b border-gray-200 bg-gray-50 text-xs uppercase text-gray-500">
+                <thead class="border-b border-border-warm bg-surface text-xs uppercase text-ink-muted">
                   <tr>
                     <th class="px-4 py-3">{{ t('common.product') }}</th>
                     <th class="px-4 py-3">{{ t('common.sku') }}</th>
@@ -43,18 +43,18 @@
                     <th class="px-4 py-3">{{ t('common.actions') }}</th>
                   </tr>
                 </thead>
-                <tbody class="divide-y divide-gray-100">
-                  <tr v-for="item in inventoryWithProducts" :key="item.id" class="hover:bg-gray-50">
-                    <td class="px-4 py-3 font-medium text-gray-900">{{ item.productName }}</td>
-                    <td class="px-4 py-3 text-gray-500">{{ item.productSku || '-' }}</td>
+                <tbody class="divide-y divide-border-warm">
+                  <tr v-for="item in inventoryWithProducts" :key="item.id" class="hover:bg-surface">
+                    <td class="px-4 py-3 font-medium text-ink">{{ item.productName }}</td>
+                    <td class="px-4 py-3 text-ink-muted">{{ item.productSku || '-' }}</td>
                     <td class="px-4 py-3 text-right font-semibold" :class="item.quantity <= item.low_stock_threshold ? 'text-danger-500' : ''">
                       {{ item.quantity }}
                     </td>
-                    <td class="px-4 py-3 text-right text-gray-500">{{ item.low_stock_threshold }}</td>
+                    <td class="px-4 py-3 text-right text-ink-muted">{{ item.low_stock_threshold }}</td>
                     <td class="px-4 py-3">
                       <span
                         class="rounded-full px-2 py-0.5 text-xs font-medium"
-                        :class="item.quantity <= 0 ? 'bg-red-100 text-red-700' : item.quantity <= item.low_stock_threshold ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700'"
+                        :class="stockQuantityBadge(item.quantity, item.low_stock_threshold)"
                       >
                         {{ stockStatusLabel(item.quantity, item.low_stock_threshold) }}
                       </span>
@@ -82,21 +82,21 @@
               <template #badge>
                 <span
                   class="rounded-full px-2 py-0.5 text-xs font-medium"
-                  :class="item.quantity <= 0 ? 'bg-red-100 text-red-700' : item.quantity <= item.low_stock_threshold ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700'"
+                  :class="stockQuantityBadge(item.quantity, item.low_stock_threshold)"
                 >
                   {{ stockStatusLabel(item.quantity, item.low_stock_threshold) }}
                 </span>
               </template>
               <template #fields>
                 <div>
-                  <span class="text-gray-400">{{ t('common.quantity') }}</span>
-                  <p class="font-semibold" :class="item.quantity <= item.low_stock_threshold ? 'text-danger-500' : 'text-gray-900'">
+                  <span class="text-ink-muted">{{ t('common.quantity') }}</span>
+                  <p class="font-semibold" :class="item.quantity <= item.low_stock_threshold ? 'text-danger-500' : 'text-ink'">
                     {{ item.quantity }}
                   </p>
                 </div>
                 <div>
-                  <span class="text-gray-400">{{ t('common.threshold') }}</span>
-                  <p class="text-gray-600">{{ item.low_stock_threshold }}</p>
+                  <span class="text-ink-muted">{{ t('common.threshold') }}</span>
+                  <p class="text-ink-muted">{{ item.low_stock_threshold }}</p>
                 </div>
               </template>
               <template #actions>
@@ -114,17 +114,17 @@
     </div>
 
     <Teleport to="body">
-      <div v-if="showAdjustModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" @click.self="showAdjustModal = false">
-        <div class="w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
+      <div v-if="showAdjustModal" class="craft-modal-backdrop craft-modal-backdrop--center z-50" @click.self="showAdjustModal = false">
+        <div class="craft-modal-panel craft-modal--stitched max-w-md">
           <h3 class="mb-4 text-lg font-semibold">{{ t('stock.adjustStock') }}</h3>
 
           <form @submit.prevent="handleAdjust" class="space-y-4">
             <div>
-              <label class="mb-1 block text-sm font-medium text-gray-700">{{ t('common.product') }}</label>
+              <label class="mb-1 block text-sm font-medium text-ink">{{ t('common.product') }}</label>
               <select
                 v-model="adjustForm.productId"
                 required
-                class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-primary-500 focus:outline-none"
+                class="w-full rounded-lg border border-border-warm px-3 py-2.5 text-sm focus:border-primary-500 focus:outline-none"
               >
                 <option value="">{{ t('common.selectProduct') }}</option>
                 <option v-for="p in products" :key="p.id" :value="p.id">{{ p.name }}</option>
@@ -132,11 +132,11 @@
             </div>
 
             <div>
-              <label class="mb-1 block text-sm font-medium text-gray-700">{{ t('common.type') }}</label>
+              <label class="mb-1 block text-sm font-medium text-ink">{{ t('common.type') }}</label>
               <select
                 v-model="adjustForm.type"
                 required
-                class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-primary-500 focus:outline-none"
+                class="w-full rounded-lg border border-border-warm px-3 py-2.5 text-sm focus:border-primary-500 focus:outline-none"
               >
                 <option value="stock_in">{{ t('stock.stockIn') }}</option>
                 <option value="stock_out">{{ t('stock.stockOut') }}</option>
@@ -145,22 +145,22 @@
             </div>
 
             <div>
-              <label class="mb-1 block text-sm font-medium text-gray-700">{{ t('common.quantity') }}</label>
+              <label class="mb-1 block text-sm font-medium text-ink">{{ t('common.quantity') }}</label>
               <input
                 v-model.number="adjustForm.quantity"
                 type="number"
                 min="1"
                 required
-                class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-primary-500 focus:outline-none"
+                class="w-full rounded-lg border border-border-warm px-3 py-2.5 text-sm focus:border-primary-500 focus:outline-none"
               />
             </div>
 
             <div>
-              <label class="mb-1 block text-sm font-medium text-gray-700">{{ t('common.note') }}</label>
+              <label class="mb-1 block text-sm font-medium text-ink">{{ t('common.note') }}</label>
               <input
                 v-model="adjustForm.note"
                 type="text"
-                class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-primary-500 focus:outline-none"
+                class="w-full rounded-lg border border-border-warm px-3 py-2.5 text-sm focus:border-primary-500 focus:outline-none"
                 :placeholder="t('common.optionalNote')"
               />
             </div>
@@ -168,7 +168,7 @@
             <div class="flex gap-3 pt-2">
               <button
                 type="button"
-                class="flex-1 rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                class="flex-1 rounded-lg border border-border-warm px-4 py-2.5 text-sm font-medium text-ink hover:bg-surface"
                 @click="showAdjustModal = false"
               >
                 {{ t('common.cancel') }}
@@ -188,6 +188,7 @@
 </template>
 
 <script setup lang="ts">
+import { stockQuantityBadge } from "~/lib/ui/statusColors";
 definePageMeta({ middleware: "auth" });
 
 const { t } = useI18n();

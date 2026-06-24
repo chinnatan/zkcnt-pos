@@ -75,6 +75,10 @@
     "synced": "ซิงค์แล้ว",
     "sold": "ขาย {qty} ชิ้น",
     "perPiece": "/ ชิ้น",
+    "multiSelectHint": "เลือกได้หลายรายการ — แตะเพื่อเลือกหรือยกเลิก",
+    "selectedCount": "เลือกแล้ว {count} รายการ",
+    "noSearchResults": "ไม่พบรายการที่ค้นหา",
+    "removeItem": "ลบ {name}",
     "appTagline": "ระบบ POS ทำงานออฟไลน์ได้"
   },
   "pwa": {
@@ -435,6 +439,10 @@
     "rewardSameProduct": "สินค้าเดียวกัน",
     "targetProducts": "สินค้าที่ร่วมโปร",
     "targetCategories": "หมวดที่ร่วมโปร",
+    "searchProducts": "ค้นหาสินค้า...",
+    "searchCategories": "ค้นหาหมวดหมู่...",
+    "noProducts": "ยังไม่มีสินค้า",
+    "noCategories": "ยังไม่มีหมวดหมู่",
     "couponCode": "รหัสคูปอง",
     "couponDiscountType": "ประเภทส่วนลดคูปอง",
     "maxUsesTotal": "จำกัดการใช้รวม",

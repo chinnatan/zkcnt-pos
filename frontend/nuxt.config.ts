@@ -55,12 +55,25 @@ export default defineNuxtConfig({
             "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover",
         },
         { name: "description", content: "Offline-First POS System" },
-        { name: "theme-color", content: "#4f46e5" },
+        { name: "theme-color", content: "#5a8da8" },
         { name: "apple-mobile-web-app-capable", content: "yes" },
         { name: "apple-mobile-web-app-title", content: "zKCNT POS" },
         { name: "apple-mobile-web-app-status-bar-style", content: "default" },
       ],
       link: [
+        {
+          rel: "preconnect",
+          href: "https://fonts.googleapis.com",
+        },
+        {
+          rel: "preconnect",
+          href: "https://fonts.gstatic.com",
+          crossorigin: "",
+        },
+        {
+          rel: "stylesheet",
+          href: "https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Noto+Sans+Thai:wght@400;500;600;700&display=swap",
+        },
         {
           rel: "icon",
           type: "image/svg+xml",
@@ -92,8 +105,8 @@ export default defineNuxtConfig({
       description: "Offline-First POS System",
       start_url: "/",
       scope: "/",
-      theme_color: "#4f46e5",
-      background_color: "#f9fafb",
+      theme_color: "#5a8da8",
+      background_color: "#f6f9fc",
       display: "standalone",
       orientation: "any",
       icons: [

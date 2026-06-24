@@ -7,7 +7,7 @@ globs: "frontend/app/**/*.vue"
 
 ## Template Structure
 - Use `<template>` then `<script setup lang="ts">` order
-- No `<style>` blocks — use Tailwind utility classes exclusively
+- No `<style>` blocks — use Tailwind utility classes exclusively (exceptions: POS animation keyframes)
 - Use semantic HTML elements where appropriate
 
 ## Script Setup
@@ -15,20 +15,29 @@ globs: "frontend/app/**/*.vue"
 - Import types with `import type { X } from "~/lib/types"`
 - Use `definePageMeta({ middleware: "auth" })` on all authenticated pages
 - Composables are auto-imported — no need to import `useAuth`, `useStore`, etc.
+- Status badge colors: import from `~/lib/ui/statusColors` instead of duplicating maps
 
-## Tailwind CSS
-- Use Tailwind v4 classes (no config file needed)
-- Custom colors defined in `@theme`: `primary-50` through `primary-950`, `success-500`, `warning-500`, `danger-500`
-- Responsive: mobile-first with `sm:`, `md:`, `lg:` breakpoints
-- Common patterns:
-  - Cards: `rounded-xl bg-white p-5 shadow-sm`
-  - Inputs: `rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20`
-  - Primary buttons: `rounded-lg bg-primary-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-primary-700`
-  - Status badges: `rounded-full px-2 py-0.5 text-xs font-medium`
+## Tailwind CSS — Art & Craft Theme (white-first)
+- Design tokens in `frontend/app/assets/css/main.css` `@theme`
+- Surfaces: `surface` (#f6f9fc), `paper` (#ffffff) — Soft Sky white-first palette
+- Primary: soft sky blue (`primary-400` #6b9eb8), Accent: soft teal
+- Craft cards: use `<UiCraftCard variant="tag|polaroid|stitched|kraft|canvas|ticket|label|paper">` or CSS classes `craft-card craft-card--{variant}`
+- Variants:
+  - **paper** — lined notebook paper
+  - **tag** — price tag with hole
+  - **polaroid** — photo frame (use on POS product tiles via `craft-tile-polaroid`)
+  - **stitched** — dashed border with corner dots
+  - **kraft** — light kraft paper texture
+  - **canvas** — grid weave texture
+  - **ticket** — perforated ticket notches
+  - **label** — sticker with folded corner
+- Component classes: `.card` (legacy paper), `.btn-primary`, `.btn-secondary`, `.input`, `.badge`, `.pill-active`, `.pill-inactive`
+- Status badges: import from `~/lib/ui/statusColors`
 
 ## Modals
 - Use `<Teleport to="body">` for modals
-- Backdrop: `fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4`
+- Backdrop: `craft-modal-backdrop craft-modal-backdrop--center` (or `--top`)
+- Panel: `craft-modal-panel craft-modal--{stitched|paper|tag|ticket|label|canvas}` or `<UiCraftModal>`
 - Close on backdrop click: `@click.self="showModal = false"`
 
 ## Data Loading

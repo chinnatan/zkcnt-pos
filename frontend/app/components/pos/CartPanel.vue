@@ -1,21 +1,20 @@
 <template>
   <div class="flex h-full min-h-0 flex-col">
     <!-- Cart Header -->
-    <div
-      class="flex shrink-0 items-center justify-between border-b border-gray-200 px-4 py-3"
-    >
-      <h2 class="text-base font-bold text-gray-800">
+    <div class="pos-cart-header">
+      <h2 class="font-display text-base font-bold text-ink">
         {{ t('pos.orderItems') }}
         <span
           v-if="itemCount > 0"
-          class="ml-1 inline-flex h-6 min-w-6 items-center justify-center rounded-full bg-primary-600 px-1.5 text-xs font-bold text-white"
+          class="ml-1 inline-flex h-6 min-w-6 items-center justify-center rounded-md bg-primary-500 px-1.5 text-xs font-bold text-white"
+          style="transform: rotate(-2deg)"
         >
           {{ itemCount }}
         </span>
       </h2>
       <button
         v-if="cartItems.length > 0"
-        class="touch-pos rounded-lg px-3 py-2 text-xs font-medium text-danger-500 transition-colors hover:bg-red-50"
+        class="touch-pos rounded-lg px-3 py-2 text-xs font-medium text-danger-500 transition-colors hover:bg-danger-50"
         @click="clearCart"
       >
         {{ t('pos.clearAll') }}
@@ -25,7 +24,7 @@
     <!-- Scroll body: items + checkout fields -->
     <div class="min-h-0 flex-1 overflow-y-auto">
       <div v-if="cartItems.length === 0" class="flex h-full items-center justify-center p-8">
-        <div class="text-center text-gray-400">
+        <div class="text-center text-ink-muted">
           <svg
             class="mx-auto h-12 w-12"
             fill="none"
@@ -45,28 +44,28 @@
       </div>
 
       <template v-else>
-        <div class="divide-y divide-gray-100">
+        <div>
           <div
             v-for="item in cartItems"
             :key="item.product.id"
-            class="flex items-start gap-3 px-4 py-3"
+            class="pos-cart-item"
           >
             <div class="min-w-0 flex-1">
-              <p class="truncate text-sm font-medium text-gray-800">
+              <p class="truncate text-sm font-medium text-ink">
                 {{ item.product.name }}
               </p>
-              <p class="mt-0.5 text-xs text-gray-500">
+              <p class="mt-0.5 text-xs text-ink-muted">
                 {{ formatCurrency(item.product.price) }} {{ t('common.perPiece') }}
                 <span
                   v-if="item.free_quantity > 0"
-                  class="ml-1 text-success-600"
+                  class="ml-1 text-success-500"
                 >
                   ({{ t('pos.freeQty', { qty: item.free_quantity }) }})
                 </span>
               </p>
               <div class="mt-2 flex items-center gap-2">
                 <button
-                  class="touch-pos flex h-11 w-11 items-center justify-center rounded-lg border border-gray-300 text-gray-600 transition-colors hover:bg-gray-100 active:bg-gray-200"
+                  class="pos-qty-btn"
                   @click="updateQuantity(item.product.id, item.quantity - 1)"
                 >
                   <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -77,7 +76,7 @@
                   {{ item.quantity }}
                 </span>
                 <button
-                  class="touch-pos flex h-11 w-11 items-center justify-center rounded-lg border border-gray-300 text-gray-600 transition-colors hover:bg-gray-100 active:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-40"
+                  class="pos-qty-btn disabled:cursor-not-allowed disabled:opacity-40"
                   :disabled="!canIncreaseQty(item.product, item.quantity)"
                   @click="handleUpdateQuantity(item.product.id, item.quantity + 1)"
                 >
@@ -88,11 +87,11 @@
               </div>
             </div>
             <div class="flex flex-col items-end gap-1">
-              <span class="text-sm font-bold text-gray-800">
+              <span class="text-sm font-bold text-ink">
                 {{ formatCurrency(item.product.price * item.quantity - item.discount) }}
               </span>
               <button
-                class="touch-pos flex h-11 w-11 items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-red-50 hover:text-danger-500"
+                class="touch-pos flex h-11 w-11 items-center justify-center rounded-lg text-ink-muted transition-colors hover:bg-danger-50 hover:text-danger-500"
                 @click="removeItem(item.product.id)"
               >
                 <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -108,9 +107,9 @@
           </div>
         </div>
 
-        <div class="space-y-3 border-t border-gray-200 bg-gray-50 p-4">
+        <div class="pos-cart-receipt">
           <div class="flex items-center justify-between text-sm">
-            <span class="text-gray-600">{{ t('pos.subtotal') }}</span>
+            <span class="text-ink-muted">{{ t('pos.subtotal') }}</span>
             <span class="font-medium">{{ formatCurrency(subtotal) }}</span>
           </div>
 
@@ -130,13 +129,13 @@
           </div>
 
           <div class="space-y-2">
-            <label class="text-xs font-medium text-gray-500">{{ t('pos.couponCode') }}</label>
+            <label class="text-xs font-medium text-ink-muted">{{ t('pos.couponCode') }}</label>
             <div class="flex gap-2">
               <input
                 v-model="couponCode"
                 type="text"
                 :placeholder="t('pos.couponPlaceholder')"
-                class="touch-pos w-full rounded-lg border border-gray-300 px-3 py-2 text-sm uppercase outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20"
+                class="touch-pos input uppercase"
               />
               <button
                 type="button"
@@ -150,7 +149,7 @@
             <button
               v-if="appliedCouponCode"
               type="button"
-              class="text-xs text-gray-500 underline"
+              class="text-xs text-ink-muted underline"
               @click="clearCoupon"
             >
               {{ t('pos.removeCoupon') }}
@@ -158,19 +157,19 @@
           </div>
 
           <div class="space-y-2">
-            <label class="text-xs font-medium text-gray-500">{{ t('pos.manualDiscountLabel') }}</label>
+            <label class="text-xs font-medium text-ink-muted">{{ t('pos.manualDiscountLabel') }}</label>
             <div class="flex gap-2">
               <input
                 :value="cartDiscount"
                 type="number"
                 min="0"
                 placeholder="0"
-                class="touch-pos w-full rounded-lg border border-gray-300 px-3 py-2 text-base outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 lg:text-sm"
+                class="touch-pos input text-base lg:text-sm"
                 @input="onDiscountInput"
               />
               <select
                 :value="cartDiscountType"
-                class="shrink-0 rounded-lg border border-gray-300 px-2 py-2 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20"
+                class="shrink-0 rounded-lg border border-border-warm bg-paper px-2 py-2 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20"
                 @change="onDiscountTypeChange"
               >
                 <option value="fixed">฿</option>
@@ -190,19 +189,15 @@
           </div>
 
           <div class="space-y-2">
-            <label class="text-xs font-medium text-gray-500">
+            <label class="text-xs font-medium text-ink-muted">
               {{ t('pos.paymentMethod') }}
             </label>
             <div class="grid grid-cols-2 gap-2">
               <button
                 v-for="method in paymentMethods"
                 :key="method.value"
-                class="touch-pos rounded-lg border py-2.5 text-center text-xs font-semibold transition-colors"
-                :class="
-                  paymentMethod === method.value
-                    ? 'border-primary-600 bg-primary-50 text-primary-700'
-                    : 'border-gray-300 text-gray-600 hover:bg-gray-100'
-                "
+                class="pos-pay-pill"
+                :class="paymentMethod === method.value ? 'pos-pay-pill--active' : ''"
                 @click="paymentMethod = method.value"
               >
                 {{ method.label }}
@@ -211,7 +206,7 @@
           </div>
 
           <div v-if="paymentMethod === 'cash'" class="space-y-2">
-            <label class="text-xs font-medium text-gray-500">
+            <label class="text-xs font-medium text-ink-muted">
               {{ t('pos.paymentReceived') }}
             </label>
             <input
@@ -220,7 +215,7 @@
               min="0"
               placeholder="0.00"
               data-testid="payment-received"
-              class="touch-pos w-full rounded-lg border border-gray-300 px-3 py-2.5 text-right text-lg font-bold outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20"
+              class="touch-pos input text-right text-lg font-bold"
               @input="onPaymentReceivedInput"
             />
 
@@ -228,7 +223,7 @@
               <button
                 v-for="amount in quickCashAmounts"
                 :key="amount"
-                class="touch-pos rounded-lg border border-gray-200 bg-white py-2.5 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-100 active:bg-gray-200"
+                class="touch-pos rounded-md border border-dashed border-border-warm bg-paper py-2.5 text-xs font-medium text-ink transition hover:border-primary-200 hover:bg-primary-50 active:bg-primary-50"
                 @click="paymentReceived = amount"
               >
                 {{ amount.toLocaleString() }}
@@ -237,10 +232,10 @@
 
             <div
               v-if="paymentReceived > 0"
-              class="flex items-center justify-between rounded-lg bg-green-50 px-3 py-2"
+              class="flex items-center justify-between rounded-lg bg-accent-50 px-3 py-2"
             >
-              <span class="text-sm font-medium text-green-700">{{ t('pos.change') }}</span>
-              <span class="text-lg font-bold text-green-700">
+              <span class="text-sm font-medium text-accent-700">{{ t('pos.change') }}</span>
+              <span class="text-lg font-bold text-accent-700">
                 {{ formatCurrency(changeAmount) }}
               </span>
             </div>
@@ -248,7 +243,7 @@
 
           <p
             v-if="paymentMethod === 'qr' && !hasPromptPayId"
-            class="rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-700"
+            class="rounded-lg bg-warning-50 px-3 py-2 text-xs text-warning-700"
           >
             {{ t('pos.promptpayNotConfigured') }}
           </p>
@@ -259,11 +254,11 @@
     <!-- Sticky checkout bar -->
     <div
       v-if="cartItems.length > 0"
-      class="shrink-0 border-t border-gray-200 bg-white p-4 shadow-[0_-4px_12px_rgba(0,0,0,0.06)]"
+      class="pos-checkout-strip"
       style="padding-bottom: max(1rem, env(safe-area-inset-bottom))"
     >
       <div class="mb-3 flex items-center justify-between text-lg">
-        <span class="font-bold text-gray-800">{{ t('pos.netTotal') }}</span>
+        <span class="font-display font-bold text-ink">{{ t('pos.netTotal') }}</span>
         <span class="font-bold text-primary-600" data-testid="cart-total">
           {{ formatCurrency(total) }}
         </span>
@@ -271,12 +266,7 @@
 
       <button
         data-testid="checkout-btn"
-        class="touch-pos w-full rounded-xl py-4 text-base font-bold text-white shadow-lg transition-colors active:bg-primary-800 disabled:opacity-50 disabled:shadow-none lg:active:scale-[0.98]"
-        :class="
-          isCheckingOut
-            ? 'bg-gray-400'
-            : 'bg-primary-600 hover:bg-primary-700'
-        "
+        class="touch-pos w-full rounded-lg border-2 border-primary-400 bg-primary-500 py-4 text-base font-bold text-white shadow-md transition hover:bg-primary-600 active:bg-primary-700 disabled:border-transparent disabled:bg-ink-muted/60 disabled:opacity-50 disabled:shadow-none lg:active:scale-[0.98]"
         :disabled="isCheckingOut || !canCheckout"
         @click="emit('checkout')"
       >

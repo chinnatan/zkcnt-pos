@@ -1,13 +1,13 @@
 <template>
   <div class="space-y-6">
-    <h2 class="text-lg font-semibold text-gray-800">{{ t('settingsPage.title') }}</h2>
+    <h2 class="text-lg font-semibold text-ink">{{ t('settingsPage.title') }}</h2>
 
-    <div v-if="!activeStore" class="rounded-xl bg-white p-8 text-center shadow-sm">
-      <p class="text-gray-500">{{ t('settingsPage.noStore') }}</p>
+    <div v-if="!activeStore" class="rounded-xl bg-paper p-8 text-center shadow-sm">
+      <p class="text-ink-muted">{{ t('settingsPage.noStore') }}</p>
     </div>
 
     <div v-else class="space-y-6">
-      <div v-if="isManager" class="rounded-xl bg-white p-4 shadow-sm">
+      <div v-if="isManager" class="rounded-xl bg-paper p-4 shadow-sm">
         <NuxtLink
           to="/settings/audit"
           class="flex items-center justify-between rounded-lg px-3 py-2 text-sm font-medium text-primary-700 hover:bg-primary-50"
@@ -19,56 +19,56 @@
         </NuxtLink>
       </div>
 
-      <div class="rounded-xl bg-white p-6 shadow-sm">
-        <h3 class="mb-4 text-base font-semibold text-gray-800">{{ t('settingsPage.storeInfo') }}</h3>
+      <UiCraftCard variant="paper" padding="md">
+        <h3 class="mb-4 text-base font-semibold text-ink">{{ t('settingsPage.storeInfo') }}</h3>
         <form @submit.prevent="saveStoreInfo" class="space-y-4">
           <div class="grid gap-4 sm:grid-cols-2">
             <div>
-              <label class="mb-1 block text-sm font-medium text-gray-700">{{ t('settingsPage.storeName') }}</label>
-              <input v-model="storeForm.name" type="text" required class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-primary-500 focus:outline-none" />
+              <label class="mb-1 block text-sm font-medium text-ink">{{ t('settingsPage.storeName') }}</label>
+              <input v-model="storeForm.name" type="text" required class="w-full rounded-lg border border-border-warm px-3 py-2.5 text-sm focus:border-primary-500 focus:outline-none" />
             </div>
             <div>
-              <label class="mb-1 block text-sm font-medium text-gray-700">{{ t('common.phone') }}</label>
-              <input v-model="storeForm.phone" type="tel" class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-primary-500 focus:outline-none" />
+              <label class="mb-1 block text-sm font-medium text-ink">{{ t('common.phone') }}</label>
+              <input v-model="storeForm.phone" type="tel" class="w-full rounded-lg border border-border-warm px-3 py-2.5 text-sm focus:border-primary-500 focus:outline-none" />
             </div>
           </div>
           <div>
-            <label class="mb-1 block text-sm font-medium text-gray-700">{{ t('common.address') }}</label>
-            <textarea v-model="storeForm.address" rows="2" class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-primary-500 focus:outline-none" />
+            <label class="mb-1 block text-sm font-medium text-ink">{{ t('common.address') }}</label>
+            <textarea v-model="storeForm.address" rows="2" class="w-full rounded-lg border border-border-warm px-3 py-2.5 text-sm focus:border-primary-500 focus:outline-none" />
           </div>
           <div>
-            <label class="mb-1 block text-sm font-medium text-gray-700">{{ t('settingsPage.taxId') }}</label>
-            <input v-model="storeForm.tax_id" type="text" class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-primary-500 focus:outline-none" :placeholder="t('settingsPage.taxIdPlaceholder')" />
+            <label class="mb-1 block text-sm font-medium text-ink">{{ t('settingsPage.taxId') }}</label>
+            <input v-model="storeForm.tax_id" type="text" class="w-full rounded-lg border border-border-warm px-3 py-2.5 text-sm focus:border-primary-500 focus:outline-none" :placeholder="t('settingsPage.taxIdPlaceholder')" />
           </div>
           <button type="submit" :disabled="isSaving" class="rounded-lg bg-primary-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-primary-700 disabled:opacity-50">
             {{ isSaving ? t('common.saving') : t('settingsPage.saveChanges') }}
           </button>
         </form>
-      </div>
+      </UiCraftCard>
 
-      <div v-if="isManager" class="rounded-xl bg-white p-6 shadow-sm">
-        <h3 class="mb-4 text-base font-semibold text-gray-800">{{ t('settingsPage.paymentSettings') }}</h3>
+      <UiCraftCard v-if="isManager" variant="ticket" padding="md">
+        <h3 class="mb-4 text-base font-semibold text-ink">{{ t('settingsPage.paymentSettings') }}</h3>
         <form @submit.prevent="savePaymentSettings" class="space-y-4">
           <div>
-            <label class="mb-1 block text-sm font-medium text-gray-700">{{ t('settingsPage.promptpayId') }}</label>
+            <label class="mb-1 block text-sm font-medium text-ink">{{ t('settingsPage.promptpayId') }}</label>
             <input
               v-model="paymentForm.promptpay_id"
               type="text"
               inputmode="numeric"
-              class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-primary-500 focus:outline-none"
+              class="w-full rounded-lg border border-border-warm px-3 py-2.5 text-sm focus:border-primary-500 focus:outline-none"
               :placeholder="t('settingsPage.promptpayIdPlaceholder')"
             />
-            <p class="mt-1 text-xs text-gray-500">{{ t('settingsPage.promptpayIdHint') }}</p>
+            <p class="mt-1 text-xs text-ink-muted">{{ t('settingsPage.promptpayIdHint') }}</p>
           </div>
           <button type="submit" :disabled="isSavingPayment" class="rounded-lg bg-primary-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-primary-700 disabled:opacity-50">
             {{ isSavingPayment ? t('common.saving') : t('settingsPage.saveChanges') }}
           </button>
         </form>
-      </div>
+      </UiCraftCard>
 
-      <div class="rounded-xl bg-white p-6 shadow-sm">
+      <UiCraftCard variant="stitched" padding="md">
         <div class="mb-4 flex items-center justify-between">
-          <h3 class="text-base font-semibold text-gray-800">{{ t('settingsPage.teamMembers') }}</h3>
+          <h3 class="text-base font-semibold text-ink">{{ t('settingsPage.teamMembers') }}</h3>
           <button
             v-if="isManager"
             class="rounded-lg bg-primary-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-primary-700"
@@ -78,32 +78,32 @@
           </button>
         </div>
 
-        <div v-if="isOwner" class="mb-4 rounded-lg border border-gray-100 bg-gray-50 p-4">
-          <p class="mb-3 text-sm font-medium text-gray-700">{{ t('settingsPage.inviteModeTitle') }}</p>
+        <div v-if="isOwner" class="mb-4 rounded-lg border border-border-warm bg-surface p-4">
+          <p class="mb-3 text-sm font-medium text-ink">{{ t('settingsPage.inviteModeTitle') }}</p>
           <div class="space-y-2">
-            <label class="flex cursor-pointer items-start gap-3 rounded-lg border border-gray-200 bg-white p-3" :class="inviteModeForm === 'direct' ? 'border-primary-500 ring-1 ring-primary-500/20' : ''">
+            <label class="flex cursor-pointer items-start gap-3 rounded-lg border border-border-warm bg-paper p-3" :class="inviteModeForm === 'direct' ? 'border-primary-500 ring-1 ring-primary-500/20' : ''">
               <input v-model="inviteModeForm" type="radio" value="direct" class="mt-1" :disabled="isUpdatingMode" @change="handleModeChange" />
               <div>
-                <span class="text-sm font-medium text-gray-800">{{ t('settingsPage.inviteModeDirect') }}</span>
-                <p class="text-xs text-gray-500">{{ t('settingsPage.inviteModeDirectHint') }}</p>
+                <span class="text-sm font-medium text-ink">{{ t('settingsPage.inviteModeDirect') }}</span>
+                <p class="text-xs text-ink-muted">{{ t('settingsPage.inviteModeDirectHint') }}</p>
               </div>
             </label>
-            <label class="flex cursor-pointer items-start gap-3 rounded-lg border border-gray-200 bg-white p-3" :class="inviteModeForm === 'email' ? 'border-primary-500 ring-1 ring-primary-500/20' : ''">
+            <label class="flex cursor-pointer items-start gap-3 rounded-lg border border-border-warm bg-paper p-3" :class="inviteModeForm === 'email' ? 'border-primary-500 ring-1 ring-primary-500/20' : ''">
               <input v-model="inviteModeForm" type="radio" value="email" class="mt-1" :disabled="isUpdatingMode" @change="handleModeChange" />
               <div>
-                <span class="text-sm font-medium text-gray-800">{{ t('settingsPage.inviteModeEmail') }}</span>
-                <p class="text-xs text-gray-500">{{ t('settingsPage.inviteModeEmailHint') }}</p>
+                <span class="text-sm font-medium text-ink">{{ t('settingsPage.inviteModeEmail') }}</span>
+                <p class="text-xs text-ink-muted">{{ t('settingsPage.inviteModeEmailHint') }}</p>
               </div>
             </label>
           </div>
-          <p v-if="modeError" class="mt-2 text-sm text-red-600">{{ modeError }}</p>
+          <p v-if="modeError" class="mt-2 text-sm text-danger-500">{{ modeError }}</p>
         </div>
 
-        <div v-if="isLoadingMembers" class="py-6 text-center text-sm text-gray-500">
+        <div v-if="isLoadingMembers" class="py-6 text-center text-sm text-ink-muted">
           {{ t('common.loading') }}
         </div>
 
-        <div v-else-if="membersError" class="rounded-lg bg-red-50 p-3 text-sm text-red-700">
+        <div v-else-if="membersError" class="rounded-lg bg-danger-50 p-3 text-sm text-danger-700">
           {{ membersError }}
         </div>
 
@@ -111,25 +111,25 @@
           <div
             v-for="member in storeMembers"
             :key="member.id"
-            class="flex items-center justify-between rounded-lg border border-gray-100 p-3"
+            class="flex items-center justify-between rounded-lg border border-border-warm p-3"
           >
             <div>
-              <p class="text-sm font-medium text-gray-800">
+              <p class="text-sm font-medium text-ink">
                 {{ member.expand?.user?.name || member.expand?.user?.email || t('common.unknown') }}
               </p>
-              <p v-if="member.expand?.user?.email" class="text-xs text-gray-500">{{ member.expand.user.email }}</p>
+              <p v-if="member.expand?.user?.email" class="text-xs text-ink-muted">{{ member.expand.user.email }}</p>
             </div>
             <div class="flex items-center gap-2">
               <span
                 class="rounded-full px-2 py-0.5 text-xs font-medium"
-                :class="member.role === 'owner' ? 'bg-purple-100 text-purple-700' : member.role === 'manager' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700'"
+                :class="memberRoleBadge(member.role)"
               >
                 {{ roleLabel(member.role) }}
               </span>
               <button
                 v-if="isOwner && member.role !== 'owner'"
                 type="button"
-                class="rounded-lg px-2 py-1 text-xs text-red-600 hover:bg-red-50"
+                class="rounded-lg px-2 py-1 text-xs text-danger-500 hover:bg-danger-50"
                 @click="handleRemoveMember(member.id)"
               >
                 {{ t('common.delete') }}
@@ -138,22 +138,22 @@
           </div>
         </div>
 
-        <div v-if="memberInviteMode === 'email' && pendingInvites.length > 0" class="mt-6 border-t border-gray-100 pt-4">
-          <h4 class="mb-3 text-sm font-semibold text-gray-700">{{ t('settingsPage.pendingInvites') }}</h4>
+        <div v-if="memberInviteMode === 'email' && pendingInvites.length > 0" class="mt-6 border-t border-border-warm pt-4">
+          <h4 class="mb-3 text-sm font-semibold text-ink">{{ t('settingsPage.pendingInvites') }}</h4>
           <div class="space-y-2">
             <div
               v-for="invite in pendingInvites"
               :key="invite.id"
-              class="flex items-center justify-between rounded-lg border border-amber-100 bg-amber-50/50 p-3"
+              class="flex items-center justify-between rounded-lg border border-warning-100 bg-warning-50/50 p-3"
             >
               <div>
-                <p class="text-sm font-medium text-gray-800">{{ invite.email }}</p>
-                <p class="text-xs text-gray-500">{{ roleLabel(invite.role) }}</p>
+                <p class="text-sm font-medium text-ink">{{ invite.email }}</p>
+                <p class="text-xs text-ink-muted">{{ roleLabel(invite.role) }}</p>
               </div>
               <button
                 v-if="isManager"
                 type="button"
-                class="rounded-lg px-2 py-1 text-xs text-gray-600 hover:bg-white"
+                class="rounded-lg px-2 py-1 text-xs text-ink-muted hover:bg-paper"
                 @click="handleCancelInvite(invite.id)"
               >
                 {{ t('common.cancel') }}
@@ -161,42 +161,42 @@
             </div>
           </div>
         </div>
-      </div>
+      </UiCraftCard>
     </div>
 
     <Teleport to="body">
-      <div v-if="showMemberModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" @click.self="showMemberModal = false">
-        <div class="w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
+      <div v-if="showMemberModal" class="craft-modal-backdrop craft-modal-backdrop--center z-50" @click.self="showMemberModal = false">
+        <div class="craft-modal-panel craft-modal--stitched max-w-md">
           <h3 class="mb-4 text-lg font-semibold">
             {{ memberInviteMode === 'email' ? t('settingsPage.inviteTitle') : t('settingsPage.addMemberTitle') }}
           </h3>
 
-          <div v-if="memberSuccess" class="mb-4 rounded-lg bg-green-50 p-3 text-sm text-green-700">
+          <div v-if="memberSuccess" class="mb-4 rounded-lg bg-success-50 p-3 text-sm text-accent-700">
             {{ memberSuccess }}
           </div>
-          <div v-if="inviteLink" class="mb-4 rounded-lg bg-blue-50 p-3 text-sm text-blue-800">
+          <div v-if="inviteLink" class="mb-4 rounded-lg bg-primary-50 p-3 text-sm text-primary-800">
             <p class="mb-1 font-medium">{{ t('settingsPage.inviteLinkLabel') }}</p>
             <p class="break-all">{{ inviteLink }}</p>
             <button type="button" class="mt-2 text-xs font-medium text-primary-600 hover:text-primary-700" @click="copyInviteLink">
               {{ t('settingsPage.copyInviteLink') }}
             </button>
           </div>
-          <div v-if="memberError" class="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">{{ memberError }}</div>
+          <div v-if="memberError" class="mb-4 rounded-lg bg-danger-50 p-3 text-sm text-danger-700">{{ memberError }}</div>
 
           <form @submit.prevent="handleAddOrInvite" class="space-y-4">
             <div>
-              <label class="mb-1 block text-sm font-medium text-gray-700">{{ t('common.email') }}</label>
-              <input v-model="memberEmail" type="email" required class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-primary-500 focus:outline-none" :placeholder="t('settingsPage.memberEmailPlaceholder')" />
+              <label class="mb-1 block text-sm font-medium text-ink">{{ t('common.email') }}</label>
+              <input v-model="memberEmail" type="email" required class="w-full rounded-lg border border-border-warm px-3 py-2.5 text-sm focus:border-primary-500 focus:outline-none" :placeholder="t('settingsPage.memberEmailPlaceholder')" />
             </div>
             <div>
-              <label class="mb-1 block text-sm font-medium text-gray-700">{{ t('common.role') }}</label>
-              <select v-model="memberRole" class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-primary-500 focus:outline-none">
+              <label class="mb-1 block text-sm font-medium text-ink">{{ t('common.role') }}</label>
+              <select v-model="memberRole" class="w-full rounded-lg border border-border-warm px-3 py-2.5 text-sm focus:border-primary-500 focus:outline-none">
                 <option value="manager">{{ t('roles.manager') }}</option>
                 <option value="cashier">{{ t('roles.cashier') }}</option>
               </select>
             </div>
             <div class="flex gap-3 pt-2">
-              <button type="button" class="flex-1 rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50" @click="closeMemberModal">{{ t('common.cancel') }}</button>
+              <button type="button" class="flex-1 rounded-lg border border-border-warm px-4 py-2.5 text-sm font-medium text-ink hover:bg-surface" @click="closeMemberModal">{{ t('common.cancel') }}</button>
               <button type="submit" :disabled="isSubmittingMember" class="flex-1 rounded-lg bg-primary-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-primary-700 disabled:opacity-50">
                 {{ isSubmittingMember ? t('common.loading') : (memberInviteMode === 'email' ? t('common.invite') : t('settingsPage.addMember')) }}
               </button>
@@ -210,6 +210,7 @@
 
 <script setup lang="ts">
 import type { MemberInviteMode } from "~/lib/types";
+import { memberRoleBadge } from "~/lib/ui/statusColors";
 
 definePageMeta({ middleware: "auth" });
 

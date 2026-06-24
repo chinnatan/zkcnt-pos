@@ -30,7 +30,7 @@ const chartData = computed(() => ({
     {
       label: props.label,
       data: props.points.map((p) => p.total),
-      backgroundColor: "rgba(37, 99, 235, 0.7)",
+      backgroundColor: "rgba(107, 158, 184, 0.55)",
       borderRadius: 4,
     },
   ],

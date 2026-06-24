@@ -1,5 +1,5 @@
 <template>
-  <div class="flex rounded-lg border border-gray-200 bg-gray-50 p-0.5">
+  <div class="flex rounded-lg border border-border-warm bg-surface p-0.5">
     <button
       v-for="loc in locales"
       :key="loc.code"
@@ -7,8 +7,8 @@
       class="rounded-md px-2.5 py-1 text-xs font-medium transition-colors"
       :class="
         locale === loc.code
-          ? 'bg-white text-primary-700 shadow-sm'
-          : 'text-gray-500 hover:text-gray-700'
+          ? 'bg-paper text-primary-700 shadow-sm'
+          : 'text-ink-muted hover:text-ink'
       "
       @click="setLocale(loc.code)"
     >

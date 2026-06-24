@@ -1,4 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <rect width="32" height="32" rx="6" fill="#4f46e5"/>
-  <text x="16" y="22" font-size="18" font-weight="bold" fill="white" text-anchor="middle" font-family="system-ui">P</text>
+  <rect width="32" height="32" rx="6" fill="#5a8da8"/>
+  <path d="M8 22 L12 8 L14 8 L10 22 Z" fill="#ffffff" opacity="0.9"/>
+  <path d="M14 22 L18 10 L20 10 L16 22 Z" fill="#ffffff"/>
+  <circle cx="22" cy="12" r="3" fill="#6ba8a0"/>
+  <path d="M20 22 Q22 16 24 22" stroke="#ffffff" stroke-width="1.5" fill="none" stroke-linecap="round"/>
 </svg>

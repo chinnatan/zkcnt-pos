@@ -6,7 +6,7 @@
     >
       {{ statusLabel }}
     </span>
-    <span v-for="msg in messages" :key="msg" class="max-w-[120px] text-[10px] text-gray-500">
+    <span v-for="msg in messages" :key="msg" class="max-w-[120px] text-[10px] text-ink-muted">
       {{ t(`productsPage.errors.${msg}`) }}
     </span>
   </div>
@@ -35,15 +35,15 @@ const statusLabel = computed(() => {
 const badgeClass = computed(() => {
   switch (props.status) {
     case "valid":
-      return "bg-green-50 text-green-700";
+      return "bg-success-50 text-accent-700";
     case "skipped":
-      return "bg-yellow-50 text-yellow-700";
+      return "bg-warning-50 text-warning-700";
     case "error":
-      return "bg-red-50 text-red-700";
+      return "bg-danger-50 text-danger-700";
     case "warning":
-      return "bg-amber-50 text-amber-700";
+      return "bg-warning-50 text-warning-700";
     default:
-      return "bg-gray-50 text-gray-700";
+      return "bg-surface text-ink";
   }
 });
 </script>

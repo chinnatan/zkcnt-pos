@@ -1,7 +1,7 @@
 <template>
   <div class="space-y-4">
     <div class="flex items-center justify-between">
-      <h2 class="text-lg font-semibold text-gray-800">{{ t('customersPage.title') }}</h2>
+      <h2 class="text-lg font-semibold text-ink">{{ t('customersPage.title') }}</h2>
       <button
         class="rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700"
         @click="openModal()"
@@ -15,19 +15,19 @@
         v-model="search"
         type="text"
         :placeholder="t('customersPage.searchPlaceholder')"
-        class="w-full rounded-lg border border-gray-300 px-4 py-2.5 pl-10 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+        class="w-full rounded-lg border border-border-warm px-4 py-2.5 pl-10 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
       />
-      <svg class="absolute left-3 top-3 h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <svg class="absolute left-3 top-3 h-4 w-4 text-ink-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
       </svg>
     </div>
 
-    <div class="rounded-xl bg-white shadow-sm">
+    <div class="rounded-xl bg-paper shadow-sm">
       <div v-if="isLoading" class="flex justify-center py-12">
         <div class="h-8 w-8 animate-spin rounded-full border-4 border-primary-200 border-t-primary-600" />
       </div>
 
-      <div v-else-if="filteredCustomers.length === 0" class="py-12 text-center text-gray-400">
+      <div v-else-if="filteredCustomers.length === 0" class="py-12 text-center text-ink-muted">
         {{ t('customersPage.noCustomers') }}
       </div>
 
@@ -36,7 +36,7 @@
           <template #table>
             <div class="overflow-x-auto">
               <table class="w-full text-left text-sm">
-                <thead class="border-b border-gray-200 bg-gray-50 text-xs uppercase text-gray-500">
+                <thead class="border-b border-border-warm bg-surface text-xs uppercase text-ink-muted">
                   <tr>
                     <th class="px-4 py-3">{{ t('common.name') }}</th>
                     <th class="px-4 py-3">{{ t('common.phone') }}</th>
@@ -46,11 +46,11 @@
                     <th class="px-4 py-3">{{ t('common.actions') }}</th>
                   </tr>
                 </thead>
-                <tbody class="divide-y divide-gray-100">
-                  <tr v-for="customer in filteredCustomers" :key="customer.id" class="hover:bg-gray-50">
-                    <td class="px-4 py-3 font-medium text-gray-900">{{ customer.name }}</td>
-                    <td class="px-4 py-3 text-gray-500">{{ customer.phone || '-' }}</td>
-                    <td class="px-4 py-3 text-gray-500">{{ customer.email || '-' }}</td>
+                <tbody class="divide-y divide-border-warm">
+                  <tr v-for="customer in filteredCustomers" :key="customer.id" class="hover:bg-surface">
+                    <td class="px-4 py-3 font-medium text-ink">{{ customer.name }}</td>
+                    <td class="px-4 py-3 text-ink-muted">{{ customer.phone || '-' }}</td>
+                    <td class="px-4 py-3 text-ink-muted">{{ customer.email || '-' }}</td>
                     <td class="px-4 py-3 text-right">{{ formatCurrency(customer.total_spent) }}</td>
                     <td class="px-4 py-3 text-right">{{ customer.visit_count }}</td>
                     <td class="px-4 py-3">
@@ -58,7 +58,7 @@
                         <button class="rounded px-2 py-1 text-xs text-primary-600 hover:bg-primary-50" @click="openModal(customer)">
                           {{ t('common.edit') }}
                         </button>
-                        <button class="rounded px-2 py-1 text-xs text-red-600 hover:bg-red-50" @click="handleDelete(customer.id)">
+                        <button class="rounded px-2 py-1 text-xs text-danger-500 hover:bg-danger-50" @click="handleDelete(customer.id)">
                           {{ t('common.delete') }}
                         </button>
                       </div>
@@ -77,12 +77,12 @@
             >
               <template #fields>
                 <div>
-                  <span class="text-gray-400">{{ t('customersPage.totalSpent') }}</span>
-                  <p class="font-medium text-gray-900">{{ formatCurrency(customer.total_spent) }}</p>
+                  <span class="text-ink-muted">{{ t('customersPage.totalSpent') }}</span>
+                  <p class="font-medium text-ink">{{ formatCurrency(customer.total_spent) }}</p>
                 </div>
                 <div>
-                  <span class="text-gray-400">{{ t('common.visits') }}</span>
-                  <p class="text-gray-600">{{ customer.visit_count }}</p>
+                  <span class="text-ink-muted">{{ t('common.visits') }}</span>
+                  <p class="text-ink-muted">{{ customer.visit_count }}</p>
                 </div>
               </template>
               <template #actions>
@@ -93,7 +93,7 @@
                   {{ t('common.edit') }}
                 </button>
                 <button
-                  class="rounded-lg px-3 py-2 text-xs font-medium text-red-600 hover:bg-red-50"
+                  class="rounded-lg px-3 py-2 text-xs font-medium text-danger-500 hover:bg-danger-50"
                   @click="handleDelete(customer.id)"
                 >
                   {{ t('common.delete') }}
@@ -106,33 +106,33 @@
     </div>
 
     <Teleport to="body">
-      <div v-if="showModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" @click.self="showModal = false">
-        <div class="w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
+      <div v-if="showModal" class="craft-modal-backdrop craft-modal-backdrop--center z-50" @click.self="showModal = false">
+        <div class="craft-modal-panel craft-modal--stitched max-w-md">
           <h3 class="mb-4 text-lg font-semibold">{{ editingId ? t('customersPage.editCustomer') : t('customersPage.addCustomerModal') }}</h3>
 
           <form @submit.prevent="handleSave" class="space-y-4">
             <div>
-              <label class="mb-1 block text-sm font-medium text-gray-700">{{ t('common.nameRequired') }}</label>
-              <input v-model="form.name" type="text" required class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-primary-500 focus:outline-none" />
+              <label class="mb-1 block text-sm font-medium text-ink">{{ t('common.nameRequired') }}</label>
+              <input v-model="form.name" type="text" required class="w-full rounded-lg border border-border-warm px-3 py-2.5 text-sm focus:border-primary-500 focus:outline-none" />
             </div>
             <div>
-              <label class="mb-1 block text-sm font-medium text-gray-700">{{ t('common.phone') }}</label>
-              <input v-model="form.phone" type="tel" class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-primary-500 focus:outline-none" />
+              <label class="mb-1 block text-sm font-medium text-ink">{{ t('common.phone') }}</label>
+              <input v-model="form.phone" type="tel" class="w-full rounded-lg border border-border-warm px-3 py-2.5 text-sm focus:border-primary-500 focus:outline-none" />
             </div>
             <div>
-              <label class="mb-1 block text-sm font-medium text-gray-700">{{ t('common.email') }}</label>
-              <input v-model="form.email" type="email" class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-primary-500 focus:outline-none" />
+              <label class="mb-1 block text-sm font-medium text-ink">{{ t('common.email') }}</label>
+              <input v-model="form.email" type="email" class="w-full rounded-lg border border-border-warm px-3 py-2.5 text-sm focus:border-primary-500 focus:outline-none" />
             </div>
             <div>
-              <label class="mb-1 block text-sm font-medium text-gray-700">{{ t('common.address') }}</label>
-              <textarea v-model="form.address" rows="2" class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-primary-500 focus:outline-none" />
+              <label class="mb-1 block text-sm font-medium text-ink">{{ t('common.address') }}</label>
+              <textarea v-model="form.address" rows="2" class="w-full rounded-lg border border-border-warm px-3 py-2.5 text-sm focus:border-primary-500 focus:outline-none" />
             </div>
             <div>
-              <label class="mb-1 block text-sm font-medium text-gray-700">{{ t('common.note') }}</label>
-              <input v-model="form.note" type="text" class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-primary-500 focus:outline-none" />
+              <label class="mb-1 block text-sm font-medium text-ink">{{ t('common.note') }}</label>
+              <input v-model="form.note" type="text" class="w-full rounded-lg border border-border-warm px-3 py-2.5 text-sm focus:border-primary-500 focus:outline-none" />
             </div>
             <div class="flex gap-3 pt-2">
-              <button type="button" class="flex-1 rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50" @click="showModal = false">
+              <button type="button" class="flex-1 rounded-lg border border-border-warm px-4 py-2.5 text-sm font-medium text-ink hover:bg-surface" @click="showModal = false">
                 {{ t('common.cancel') }}
               </button>
               <button type="submit" class="flex-1 rounded-lg bg-primary-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-primary-700">

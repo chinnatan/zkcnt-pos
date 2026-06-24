@@ -1,19 +1,19 @@
 <template>
   <aside
-    class="fixed inset-y-0 left-0 z-30 w-64 transform border-r border-gray-200 bg-white transition-transform duration-200 lg:static lg:translate-x-0"
+    class="fixed inset-y-0 left-0 z-30 w-64 transform border-r border-border-warm bg-paper transition-transform duration-200 lg:static lg:translate-x-0"
     :class="isOpen ? 'translate-x-0' : '-translate-x-full'"
   >
     <div class="flex h-full flex-col">
-      <div class="flex h-14 items-center justify-between border-b border-gray-200 px-4">
-        <NuxtLink to="/" class="text-lg font-bold text-primary-600">{{ t('nav.appName') }}</NuxtLink>
-        <button class="rounded p-1 text-gray-400 hover:text-gray-600 lg:hidden" @click="close">
+      <div class="flex h-14 items-center justify-between border-b border-border-warm px-4">
+        <NuxtLink to="/" class="font-display text-lg font-bold text-primary-700">{{ t('nav.appName') }}</NuxtLink>
+        <button class="rounded p-1 text-ink-muted hover:text-ink lg:hidden" @click="close">
           <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
       </div>
 
-      <div v-if="activeStore" class="border-b border-gray-200 p-3">
+      <div v-if="activeStore" class="border-b border-border-warm p-3">
         <button
           class="flex w-full items-center gap-2 rounded-lg bg-primary-50 px-3 py-2 text-left text-sm font-medium text-primary-700 hover:bg-primary-100"
           @click="navigateTo('/stores')"
@@ -36,8 +36,8 @@
           class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors"
           :class="
             $route.path === item.to || $route.path.startsWith(item.to + '/')
-              ? 'bg-primary-50 text-primary-700'
-              : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+              ? 'bg-primary-100/80 text-primary-700'
+              : 'text-ink-muted hover:bg-primary-50/60 hover:text-ink'
           "
           @click="close"
         >
@@ -46,7 +46,7 @@
         </NuxtLink>
       </nav>
 
-      <div class="border-t border-gray-200 p-3">
+      <div class="border-t border-border-warm p-3">
         <div class="flex items-center gap-1.5 px-3 py-1 text-xs" :class="isOnline ? 'text-success-500' : 'text-danger-500'">
           <span class="h-1.5 w-1.5 rounded-full" :class="isOnline ? 'bg-success-500' : 'bg-danger-500'" />
           {{ isOnline ? t('common.online') : t('common.offline') }}

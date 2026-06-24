@@ -1,41 +1,41 @@
 <template>
-  <div class="rounded-xl bg-white p-6 shadow-sm">
-    <h2 class="mb-6 text-center text-xl font-semibold text-gray-800">{{ t('auth.createAccount') }}</h2>
+  <UiCraftCard variant="kraft" padding="md">
+    <h2 class="mb-6 text-center text-xl font-semibold text-ink">{{ t('auth.createAccount') }}</h2>
 
-    <div v-if="error" class="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">
+    <div v-if="error" class="mb-4 rounded-lg bg-danger-50 p-3 text-sm text-danger-700">
       {{ error }}
     </div>
 
     <form @submit.prevent="handleRegister" class="space-y-4">
       <div>
-        <label class="mb-1 block text-sm font-medium text-gray-700">{{ t('auth.name') }}</label>
+        <label class="mb-1 block text-sm font-medium text-ink">{{ t('auth.name') }}</label>
         <input
           v-model="name"
           type="text"
           required
-          class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+          class="w-full rounded-lg border border-border-warm px-3 py-2.5 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
           :placeholder="t('auth.namePlaceholder')"
         />
       </div>
       <div>
-        <label class="mb-1 block text-sm font-medium text-gray-700">{{ t('common.email') }}</label>
+        <label class="mb-1 block text-sm font-medium text-ink">{{ t('common.email') }}</label>
         <input
           v-model="email"
           type="email"
           required
           :readonly="!!inviteToken"
-          class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 disabled:bg-gray-50"
+          class="w-full rounded-lg border border-border-warm px-3 py-2.5 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 disabled:bg-surface"
           :placeholder="t('auth.emailPlaceholder')"
         />
       </div>
       <div>
-        <label class="mb-1 block text-sm font-medium text-gray-700">{{ t('common.password') }}</label>
+        <label class="mb-1 block text-sm font-medium text-ink">{{ t('common.password') }}</label>
         <input
           v-model="password"
           type="password"
           required
           minlength="8"
-          class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+          class="w-full rounded-lg border border-border-warm px-3 py-2.5 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
           :placeholder="t('auth.passwordMinPlaceholder')"
         />
       </div>
@@ -48,13 +48,13 @@
       </button>
     </form>
 
-    <p class="mt-4 text-center text-sm text-gray-500">
+    <p class="mt-4 text-center text-sm text-ink-muted">
       {{ t('auth.hasAccount') }}
       <NuxtLink to="/login" class="font-medium text-primary-600 hover:text-primary-700">
         {{ t('auth.signInLink') }}
       </NuxtLink>
     </p>
-  </div>
+  </UiCraftCard>
 </template>
 
 <script setup lang="ts">

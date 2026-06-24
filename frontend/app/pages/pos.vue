@@ -3,14 +3,14 @@
     <div class="flex flex-1 overflow-hidden">
       <!-- LEFT: Product Grid -->
       <div
-        class="flex flex-col overflow-hidden bg-white"
+        class="pos-product-zone flex flex-col overflow-hidden"
         style="flex: 2"
       >
         <!-- Search + Category Filters -->
-        <div class="shrink-0 space-y-3 border-b border-gray-200 p-4">
+        <div class="pos-toolbar">
           <div class="relative">
             <svg
-              class="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400"
+              class="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-primary-400"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -26,18 +26,14 @@
               v-model="searchQuery"
               type="text"
               :placeholder="t('pos.searchPlaceholder')"
-              class="touch-pos w-full rounded-xl border border-gray-300 bg-gray-50 py-3 pl-10 pr-4 text-base outline-none transition-colors focus:border-primary-500 focus:bg-white focus:ring-2 focus:ring-primary-500/20"
+              class="pos-search"
             />
           </div>
 
           <div class="flex gap-2 overflow-x-auto pb-1">
             <button
-              class="touch-pos shrink-0 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors"
-              :class="
-                selectedCategory === null
-                  ? 'bg-primary-600 text-white shadow-sm'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              "
+              class="pos-cat-pill"
+              :class="selectedCategory === null ? 'pos-cat-pill--active' : ''"
               @click="selectedCategory = null"
             >
               {{ t('pos.allCategories') }}
@@ -45,12 +41,8 @@
             <button
               v-for="cat in categories"
               :key="cat.id"
-              class="touch-pos shrink-0 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors"
-              :class="
-                selectedCategory === cat.id
-                  ? 'bg-primary-600 text-white shadow-sm'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              "
+              class="pos-cat-pill"
+              :class="selectedCategory === cat.id ? 'pos-cat-pill--active' : ''"
               @click="selectedCategory = cat.id"
             >
               {{ cat.name }}
@@ -64,7 +56,7 @@
           :class="itemCount > 0 ? 'pb-24 md:pb-4' : ''"
         >
           <div v-if="isLoading" class="flex h-full items-center justify-center">
-            <div class="text-center text-gray-400">
+            <div class="text-center text-ink-muted">
               <svg
                 class="mx-auto h-8 w-8 animate-spin"
                 fill="none"
@@ -92,7 +84,7 @@
             v-else-if="filteredProducts.length === 0"
             class="flex h-full items-center justify-center"
           >
-            <div class="text-center text-gray-400">
+            <div class="text-center text-ink-muted">
               <svg
                 class="mx-auto h-12 w-12"
                 fill="none"
@@ -118,30 +110,30 @@
               v-for="product in filteredProducts"
               :key="product.id"
               :data-testid="`product-card-${product.id}`"
-              class="touch-pos group flex flex-col items-center rounded-xl border border-gray-200 bg-white p-4 text-center shadow-sm transition-colors"
+              class="touch-pos craft-tile-polaroid group flex flex-col items-center"
               :class="
                 isOutOfStock(product)
                   ? 'cursor-not-allowed opacity-50'
-                  : 'hover:border-primary-300 hover:shadow-md active:bg-primary-50 lg:active:scale-[0.97]'
+                  : 'lg:active:scale-[0.98]'
               "
               :disabled="isOutOfStock(product)"
               @click="handleAddItem(product)"
             >
-              <div class="mb-3">
-                <ProductImage :product="product" size="lg" />
+              <div class="pos-photo-frame mb-3">
+                <ProductImage :product="product" size="lg" square />
               </div>
               <span
-                class="mb-1 line-clamp-2 w-full text-sm font-medium text-gray-800"
+                class="mb-1 line-clamp-2 w-full text-sm font-medium text-ink"
               >
                 {{ product.name }}
               </span>
-              <span class="text-sm font-bold text-primary-600">
+              <span class="font-display text-sm font-semibold text-primary-700">
                 {{ formatCurrency(product.price) }}
               </span>
               <span
                 v-if="product.track_inventory"
                 class="mt-1 text-xs"
-                :class="isOutOfStock(product) ? 'text-danger-500' : 'text-gray-500'"
+                :class="isOutOfStock(product) ? 'text-danger-500' : 'text-ink-muted'"
               >
                 {{
                   isOutOfStock(product)
@@ -156,7 +148,7 @@
 
       <!-- RIGHT: Cart (desktop sidebar) -->
       <div
-        class="hidden min-h-0 flex-col overflow-hidden border-l border-gray-200 bg-white md:flex"
+        class="pos-cart-sidebar hidden md:flex"
         style="flex: 1"
       >
         <PosCartPanel
@@ -181,17 +173,17 @@
       <div
         v-if="showSuccessModal"
         data-testid="success-modal"
-        class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+        class="craft-modal-backdrop craft-modal-backdrop--center z-50"
         @click.self="showSuccessModal = false"
       >
         <div
-          class="w-full max-w-sm animate-[scaleIn_0.2s_ease-out] rounded-2xl bg-white p-8 text-center shadow-2xl"
+          class="craft-modal-panel craft-modal--tag max-w-sm animate-[scaleIn_0.2s_ease-out] text-center"
         >
           <div
-            class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-100"
+            class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-accent-100"
           >
             <svg
-              class="h-8 w-8 text-green-600"
+              class="h-8 w-8 text-accent-600"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -204,17 +196,17 @@
               />
             </svg>
           </div>
-          <h3 class="mb-1 text-xl font-bold text-gray-800">{{ t('pos.successTitle') }}</h3>
-          <p class="mb-2 text-sm text-gray-500">
+          <h3 class="font-display mb-1 text-xl font-bold text-ink">{{ t('pos.successTitle') }}</h3>
+          <p class="mb-2 text-sm text-ink-muted">
             {{ t('pos.orderNumber', { number: lastOrderNumber }) }}
           </p>
-          <p class="mb-6 text-2xl font-bold text-primary-600">
+          <p class="font-display mb-6 text-2xl font-bold text-primary-600">
             {{ formatCurrency(lastOrderTotal) }}
           </p>
 
           <div class="flex gap-3">
             <button
-              class="touch-pos flex-1 rounded-xl border border-gray-300 py-3.5 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-50"
+              class="touch-pos btn-secondary flex-1 rounded-xl py-3.5 text-sm font-semibold"
               @click="handlePrintReceipt"
             >
               {{ t('pos.printReceipt') }}

@@ -1,12 +1,12 @@
 <template>
-  <div class="rounded-xl bg-white p-6 shadow-sm">
-    <div v-if="isLoading" class="py-8 text-center text-sm text-gray-500">
+  <UiCraftCard variant="stitched" padding="md">
+    <div v-if="isLoading" class="py-8 text-center text-sm text-ink-muted">
       {{ t('common.loading') }}
     </div>
 
     <div v-else-if="!tokenValid" class="space-y-4">
-      <h2 class="text-center text-xl font-semibold text-gray-800">{{ t('auth.resetPassword') }}</h2>
-      <div class="rounded-lg bg-red-50 p-4 text-sm text-red-700">
+      <h2 class="text-center text-xl font-semibold text-ink">{{ t('auth.resetPassword') }}</h2>
+      <div class="rounded-lg bg-danger-50 p-4 text-sm text-danger-700">
         {{ t('auth.tokenExpired') }}
       </div>
       <NuxtLink
@@ -18,8 +18,8 @@
     </div>
 
     <div v-else-if="resetSuccess" class="space-y-4">
-      <h2 class="text-center text-xl font-semibold text-gray-800">{{ t('auth.resetPassword') }}</h2>
-      <div class="rounded-lg bg-green-50 p-4 text-sm text-green-700">
+      <h2 class="text-center text-xl font-semibold text-ink">{{ t('auth.resetPassword') }}</h2>
+      <div class="rounded-lg bg-success-50 p-4 text-sm text-accent-700">
         {{ t('auth.passwordResetSuccess') }}
       </div>
       <NuxtLink
@@ -31,37 +31,37 @@
     </div>
 
     <template v-else>
-      <h2 class="mb-2 text-center text-xl font-semibold text-gray-800">{{ t('auth.resetPassword') }}</h2>
-      <p v-if="tokenEmail" class="mb-6 text-center text-sm text-gray-500">
+      <h2 class="mb-2 text-center text-xl font-semibold text-ink">{{ t('auth.resetPassword') }}</h2>
+      <p v-if="tokenEmail" class="mb-6 text-center text-sm text-ink-muted">
         {{ t('auth.resetPasswordFor', { email: tokenEmail }) }}
       </p>
 
-      <div v-if="error" class="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">
+      <div v-if="error" class="mb-4 rounded-lg bg-danger-50 p-3 text-sm text-danger-700">
         {{ error }}
       </div>
 
       <form @submit.prevent="handleSubmit" class="space-y-4">
         <div>
-          <label class="mb-1 block text-sm font-medium text-gray-700">{{ t('auth.newPassword') }}</label>
+          <label class="mb-1 block text-sm font-medium text-ink">{{ t('auth.newPassword') }}</label>
           <input
             v-model="password"
             type="password"
             required
             minlength="8"
             autocomplete="new-password"
-            class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+            class="w-full rounded-lg border border-border-warm px-3 py-2.5 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
             :placeholder="t('auth.passwordMinPlaceholder')"
           />
         </div>
         <div>
-          <label class="mb-1 block text-sm font-medium text-gray-700">{{ t('auth.confirmPassword') }}</label>
+          <label class="mb-1 block text-sm font-medium text-ink">{{ t('auth.confirmPassword') }}</label>
           <input
             v-model="confirmPassword"
             type="password"
             required
             minlength="8"
             autocomplete="new-password"
-            class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+            class="w-full rounded-lg border border-border-warm px-3 py-2.5 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
             :placeholder="t('auth.passwordMinPlaceholder')"
           />
         </div>
@@ -74,7 +74,7 @@
         </button>
       </form>
     </template>
-  </div>
+  </UiCraftCard>
 </template>
 
 <script setup lang="ts">

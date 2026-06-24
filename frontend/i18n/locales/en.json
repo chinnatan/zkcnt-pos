@@ -75,6 +75,10 @@
     "synced": "Synced",
     "sold": "{qty} sold",
     "perPiece": "/ pc",
+    "multiSelectHint": "Select multiple — tap to toggle each item",
+    "selectedCount": "{count} selected",
+    "noSearchResults": "No matching items",
+    "removeItem": "Remove {name}",
     "appTagline": "Offline-First Point of Sale"
   },
   "pwa": {
@@ -435,6 +439,10 @@
     "rewardSameProduct": "Same product",
     "targetProducts": "Products in promotion",
     "targetCategories": "Categories in promotion",
+    "searchProducts": "Search products...",
+    "searchCategories": "Search categories...",
+    "noProducts": "No products yet",
+    "noCategories": "No categories yet",
     "couponCode": "Coupon code",
     "couponDiscountType": "Coupon discount type",
     "maxUsesTotal": "Max total uses",

@@ -1,27 +1,27 @@
 <template>
-  <div class="rounded-xl bg-white p-6 shadow-sm">
-    <h2 class="mb-6 text-center text-xl font-semibold text-gray-800">{{ t('auth.signIn') }}</h2>
+  <UiCraftCard variant="stitched" padding="md">
+    <h2 class="font-display mb-6 text-center text-xl font-semibold text-ink">{{ t('auth.signIn') }}</h2>
 
-    <div v-if="error" class="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">
+    <div v-if="error" class="mb-4 rounded-lg bg-danger-50 p-3 text-sm text-danger-700">
       {{ error }}
     </div>
 
     <form @submit.prevent="handleLogin" class="space-y-4">
       <div>
-        <label class="mb-1 block text-sm font-medium text-gray-700">{{ t('common.email') }}</label>
+        <label class="mb-1 block text-sm font-medium text-ink">{{ t('common.email') }}</label>
         <input
           v-model="email"
           type="email"
           required
           autocomplete="email"
           data-testid="email"
-          class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+          class="input"
           :placeholder="t('auth.emailPlaceholder')"
         />
       </div>
       <div>
         <div class="mb-1 flex items-center justify-between">
-          <label class="text-sm font-medium text-gray-700">{{ t('common.password') }}</label>
+          <label class="text-sm font-medium text-ink">{{ t('common.password') }}</label>
           <NuxtLink to="/forgot-password" class="text-xs font-medium text-primary-600 hover:text-primary-700">
             {{ t('auth.forgotPassword') }}
           </NuxtLink>
@@ -32,7 +32,7 @@
           required
           autocomplete="current-password"
           data-testid="password"
-          class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+          class="input"
           :placeholder="t('auth.passwordPlaceholder')"
         />
       </div>
@@ -40,19 +40,19 @@
         type="submit"
         :disabled="isLoading"
         data-testid="login-btn"
-        class="w-full rounded-lg bg-primary-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500/50 disabled:opacity-50"
+        class="btn-primary w-full"
       >
         {{ isLoading ? t('auth.signingIn') : t('auth.signIn') }}
       </button>
     </form>
 
-    <p class="mt-4 text-center text-sm text-gray-500">
+    <p class="mt-4 text-center text-sm text-ink-muted">
       {{ t('auth.noAccount') }}
       <NuxtLink to="/register" class="font-medium text-primary-600 hover:text-primary-700">
         {{ t('auth.createOne') }}
       </NuxtLink>
     </p>
-  </div>
+  </UiCraftCard>
 </template>
 
 <script setup lang="ts">

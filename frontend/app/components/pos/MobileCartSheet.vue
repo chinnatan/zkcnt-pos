@@ -9,23 +9,23 @@
         :aria-labelledby="titleId"
       >
         <div
-          class="absolute inset-0 bg-black/50"
+          class="pos-mobile-sheet-backdrop"
           @click="close"
         />
 
         <div
           ref="panelRef"
-          class="absolute inset-x-0 bottom-0 flex max-h-[90vh] flex-col rounded-t-2xl bg-white shadow-2xl"
+          class="pos-mobile-sheet-panel"
           style="padding-bottom: env(safe-area-inset-bottom)"
           @touchstart.passive="onTouchStart"
           @touchmove.passive="onTouchMove"
           @touchend="onTouchEnd"
         >
-          <div class="relative flex shrink-0 flex-col items-center border-b border-gray-200 px-4 py-3">
-            <div class="mb-1 h-1 w-10 cursor-grab rounded-full bg-gray-300 active:cursor-grabbing" />
+          <div class="relative flex shrink-0 flex-col items-center border-b border-primary-200/60 px-4 py-3" style="border-bottom-style: dashed">
+            <div class="mb-1 h-1 w-10 cursor-grab rounded-full bg-primary-200 active:cursor-grabbing" />
             <button
               type="button"
-              class="touch-pos absolute right-3 top-2 flex h-11 w-11 items-center justify-center rounded-lg text-gray-500 transition-colors hover:bg-gray-100"
+              class="touch-pos absolute right-3 top-2 flex h-11 w-11 items-center justify-center rounded-lg text-ink-muted transition-colors hover:bg-surface"
               :aria-label="t('pos.closeCart')"
               @click="close"
             >

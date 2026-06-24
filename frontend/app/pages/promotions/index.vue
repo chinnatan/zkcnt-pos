@@ -1,7 +1,7 @@
 <template>
   <div class="space-y-4">
     <div class="flex items-center justify-between">
-      <h2 class="text-lg font-semibold text-gray-800">{{ t('promotionsPage.title') }}</h2>
+      <h2 class="text-lg font-semibold text-ink">{{ t('promotionsPage.title') }}</h2>
       <button
         class="rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700"
         @click="openModal()"
@@ -10,18 +10,18 @@
       </button>
     </div>
 
-    <div class="rounded-xl bg-white shadow-sm">
+    <div class="rounded-xl bg-paper shadow-sm">
       <div v-if="isLoading" class="flex justify-center py-12">
         <div class="h-8 w-8 animate-spin rounded-full border-4 border-primary-200 border-t-primary-600" />
       </div>
 
-      <div v-else-if="promotions.length === 0" class="py-12 text-center text-gray-400">
+      <div v-else-if="promotions.length === 0" class="py-12 text-center text-ink-muted">
         {{ t('promotionsPage.noPromotions') }}
       </div>
 
       <div v-else class="overflow-x-auto">
         <table class="w-full text-left text-sm">
-          <thead class="border-b border-gray-200 bg-gray-50 text-xs uppercase text-gray-500">
+          <thead class="border-b border-border-warm bg-surface text-xs uppercase text-ink-muted">
             <tr>
               <th class="px-4 py-3">{{ t('common.name') }}</th>
               <th class="px-4 py-3">{{ t('common.type') }}</th>
@@ -31,16 +31,16 @@
               <th class="px-4 py-3">{{ t('common.actions') }}</th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-gray-100">
-            <tr v-for="promo in promotions" :key="promo.id" class="hover:bg-gray-50">
-              <td class="px-4 py-3 font-medium text-gray-900">{{ promo.name }}</td>
+          <tbody class="divide-y divide-border-warm">
+            <tr v-for="promo in promotions" :key="promo.id" class="hover:bg-surface">
+              <td class="px-4 py-3 font-medium text-ink">{{ promo.name }}</td>
               <td class="px-4 py-3">
                 <span class="rounded-full bg-primary-100 px-2 py-0.5 text-xs font-medium text-primary-700">
                   {{ typeLabel(promo.type) }}
                 </span>
               </td>
-              <td class="px-4 py-3 text-xs text-gray-600">{{ promoSummary(promo) }}</td>
-              <td class="px-4 py-3 text-xs text-gray-500">
+              <td class="px-4 py-3 text-xs text-ink-muted">{{ promoSummary(promo) }}</td>
+              <td class="px-4 py-3 text-xs text-ink-muted">
                 <template v-if="promo.start_date || promo.end_date">
                   {{ promo.start_date ? formatDateShort(promo.start_date) : t('common.na') }} -
                   {{ promo.end_date ? formatDateShort(promo.end_date) : t('common.na') }}
@@ -50,7 +50,7 @@
               <td class="px-4 py-3">
                 <span
                   class="rounded-full px-2 py-0.5 text-xs font-medium"
-                  :class="promo.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'"
+                  :class="activeBadge(promo.is_active)"
                 >
                   {{ promo.is_active ? t('common.active') : t('common.inactive') }}
                 </span>
@@ -70,22 +70,22 @@
     <Teleport to="body">
       <div
         v-if="showModal"
-        class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+        class="craft-modal-backdrop craft-modal-backdrop--center z-50"
         @click.self="showModal = false"
       >
-        <div class="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-xl bg-white p-6 shadow-xl">
+        <div class="craft-modal-panel craft-modal--paper max-w-lg">
           <h3 class="mb-4 text-lg font-semibold">
             {{ editingId ? t('promotionsPage.editPromotion') : t('promotionsPage.addPromotionModal') }}
           </h3>
           <form class="space-y-4" @submit.prevent="handleSave">
             <div>
-              <label class="mb-1 block text-sm font-medium text-gray-700">{{ t('common.nameRequired') }}</label>
-              <input v-model="form.name" type="text" required class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-primary-500 focus:outline-none" />
+              <label class="mb-1 block text-sm font-medium text-ink">{{ t('common.nameRequired') }}</label>
+              <input v-model="form.name" type="text" required class="w-full rounded-lg border border-border-warm px-3 py-2.5 text-sm focus:border-primary-500 focus:outline-none" />
             </div>
 
             <div>
-              <label class="mb-1 block text-sm font-medium text-gray-700">{{ t('common.type') }}</label>
-              <select v-model="form.type" class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-primary-500 focus:outline-none">
+              <label class="mb-1 block text-sm font-medium text-ink">{{ t('common.type') }}</label>
+              <select v-model="form.type" class="w-full rounded-lg border border-border-warm px-3 py-2.5 text-sm focus:border-primary-500 focus:outline-none">
                 <option value="bxgy">{{ t('promotionsPage.typeBxgy') }}</option>
                 <option value="order_percent">{{ t('promotionsPage.typeOrderPercent') }}</option>
                 <option value="order_fixed">{{ t('promotionsPage.typeOrderFixed') }}</option>
@@ -96,103 +96,111 @@
             <template v-if="form.type === 'bxgy'">
               <div class="grid grid-cols-2 gap-3">
                 <div>
-                  <label class="mb-1 block text-sm font-medium text-gray-700">{{ t('promotionsPage.buyQty') }}</label>
-                  <input v-model.number="form.buy_quantity" type="number" min="1" required class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm" />
+                  <label class="mb-1 block text-sm font-medium text-ink">{{ t('promotionsPage.buyQty') }}</label>
+                  <input v-model.number="form.buy_quantity" type="number" min="1" required class="w-full rounded-lg border border-border-warm px-3 py-2.5 text-sm" />
                 </div>
                 <div>
-                  <label class="mb-1 block text-sm font-medium text-gray-700">{{ t('promotionsPage.getQty') }}</label>
-                  <input v-model.number="form.get_quantity" type="number" min="1" required class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm" />
+                  <label class="mb-1 block text-sm font-medium text-ink">{{ t('promotionsPage.getQty') }}</label>
+                  <input v-model.number="form.get_quantity" type="number" min="1" required class="w-full rounded-lg border border-border-warm px-3 py-2.5 text-sm" />
                 </div>
               </div>
               <div>
-                <label class="mb-1 block text-sm font-medium text-gray-700">{{ t('promotionsPage.getDiscountPercent') }}</label>
-                <input v-model.number="form.get_discount_percent" type="number" min="1" max="100" class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm" />
+                <label class="mb-1 block text-sm font-medium text-ink">{{ t('promotionsPage.getDiscountPercent') }}</label>
+                <input v-model.number="form.get_discount_percent" type="number" min="1" max="100" class="w-full rounded-lg border border-border-warm px-3 py-2.5 text-sm" />
               </div>
               <div class="grid grid-cols-2 gap-3">
                 <div>
-                  <label class="mb-1 block text-sm font-medium text-gray-700">{{ t('promotionsPage.poolMode') }}</label>
-                  <select v-model="form.pool_mode" class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm">
+                  <label class="mb-1 block text-sm font-medium text-ink">{{ t('promotionsPage.poolMode') }}</label>
+                  <select v-model="form.pool_mode" class="w-full rounded-lg border border-border-warm px-3 py-2.5 text-sm">
                     <option value="same_product">{{ t('promotionsPage.poolSameProduct') }}</option>
                     <option value="same_category">{{ t('promotionsPage.poolSameCategory') }}</option>
                     <option value="mixed">{{ t('promotionsPage.poolMixed') }}</option>
                   </select>
                 </div>
                 <div>
-                  <label class="mb-1 block text-sm font-medium text-gray-700">{{ t('promotionsPage.rewardMode') }}</label>
-                  <select v-model="form.reward_mode" class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm">
+                  <label class="mb-1 block text-sm font-medium text-ink">{{ t('promotionsPage.rewardMode') }}</label>
+                  <select v-model="form.reward_mode" class="w-full rounded-lg border border-border-warm px-3 py-2.5 text-sm">
                     <option value="cheapest">{{ t('promotionsPage.rewardCheapest') }}</option>
                     <option value="same_product">{{ t('promotionsPage.rewardSameProduct') }}</option>
                   </select>
                 </div>
               </div>
               <div>
-                <label class="mb-1 block text-sm font-medium text-gray-700">{{ t('promotionsPage.targetProducts') }}</label>
-                <select v-model="selectedProductIds" multiple class="h-32 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">
-                  <option v-for="p in products" :key="p.id" :value="p.id">{{ p.name }}</option>
-                </select>
+                <label class="mb-1 block text-sm font-medium text-ink">{{ t('promotionsPage.targetProducts') }}</label>
+                <UiCraftMultiSelect
+                  v-model="selectedProductIds"
+                  :options="productOptions"
+                  :search-placeholder="t('promotionsPage.searchProducts')"
+                  :empty-text="t('promotionsPage.noProducts')"
+                  list-max-height="9rem"
+                />
               </div>
               <div>
-                <label class="mb-1 block text-sm font-medium text-gray-700">{{ t('promotionsPage.targetCategories') }}</label>
-                <select v-model="selectedCategoryIds" multiple class="h-24 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">
-                  <option v-for="c in categories" :key="c.id" :value="c.id">{{ c.name }}</option>
-                </select>
+                <label class="mb-1 block text-sm font-medium text-ink">{{ t('promotionsPage.targetCategories') }}</label>
+                <UiCraftMultiSelect
+                  v-model="selectedCategoryIds"
+                  :options="categoryOptions"
+                  :search-placeholder="t('promotionsPage.searchCategories')"
+                  :empty-text="t('promotionsPage.noCategories')"
+                  list-max-height="7rem"
+                />
               </div>
             </template>
 
             <template v-if="form.type === 'order_percent' || form.type === 'order_fixed'">
               <div>
-                <label class="mb-1 block text-sm font-medium text-gray-700">{{ t('common.value') }}</label>
-                <input v-model.number="form.value" type="number" min="0" required class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm" />
+                <label class="mb-1 block text-sm font-medium text-ink">{{ t('common.value') }}</label>
+                <input v-model.number="form.value" type="number" min="0" required class="w-full rounded-lg border border-border-warm px-3 py-2.5 text-sm" />
               </div>
             </template>
 
             <template v-if="form.type === 'coupon'">
               <div>
-                <label class="mb-1 block text-sm font-medium text-gray-700">{{ t('promotionsPage.couponCode') }}</label>
-                <input v-model="form.coupon_code" type="text" required class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm uppercase" />
+                <label class="mb-1 block text-sm font-medium text-ink">{{ t('promotionsPage.couponCode') }}</label>
+                <input v-model="form.coupon_code" type="text" required class="w-full rounded-lg border border-border-warm px-3 py-2.5 text-sm uppercase" />
               </div>
               <div class="grid grid-cols-2 gap-3">
                 <div>
-                  <label class="mb-1 block text-sm font-medium text-gray-700">{{ t('promotionsPage.couponDiscountType') }}</label>
-                  <select v-model="form.coupon_discount_type" class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm">
+                  <label class="mb-1 block text-sm font-medium text-ink">{{ t('promotionsPage.couponDiscountType') }}</label>
+                  <select v-model="form.coupon_discount_type" class="w-full rounded-lg border border-border-warm px-3 py-2.5 text-sm">
                     <option value="percent">{{ t('discountsPage.percentType') }}</option>
                     <option value="fixed">{{ t('discountsPage.fixedType') }}</option>
                   </select>
                 </div>
                 <div>
-                  <label class="mb-1 block text-sm font-medium text-gray-700">{{ t('common.value') }}</label>
-                  <input v-model.number="form.value" type="number" min="0" required class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm" />
+                  <label class="mb-1 block text-sm font-medium text-ink">{{ t('common.value') }}</label>
+                  <input v-model.number="form.value" type="number" min="0" required class="w-full rounded-lg border border-border-warm px-3 py-2.5 text-sm" />
                 </div>
               </div>
               <div class="grid grid-cols-2 gap-3">
                 <div>
-                  <label class="mb-1 block text-sm font-medium text-gray-700">{{ t('promotionsPage.maxUsesTotal') }}</label>
-                  <input v-model.number="form.max_uses_total" type="number" min="0" class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm" />
+                  <label class="mb-1 block text-sm font-medium text-ink">{{ t('promotionsPage.maxUsesTotal') }}</label>
+                  <input v-model.number="form.max_uses_total" type="number" min="0" class="w-full rounded-lg border border-border-warm px-3 py-2.5 text-sm" />
                 </div>
                 <div>
-                  <label class="mb-1 block text-sm font-medium text-gray-700">{{ t('promotionsPage.maxUsesPerCustomer') }}</label>
-                  <input v-model.number="form.max_uses_per_customer" type="number" min="0" class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm" />
+                  <label class="mb-1 block text-sm font-medium text-ink">{{ t('promotionsPage.maxUsesPerCustomer') }}</label>
+                  <input v-model.number="form.max_uses_per_customer" type="number" min="0" class="w-full rounded-lg border border-border-warm px-3 py-2.5 text-sm" />
                 </div>
               </div>
             </template>
 
             <div>
-              <label class="mb-1 block text-sm font-medium text-gray-700">{{ t('common.minPurchase') }} (฿)</label>
-              <input v-model.number="form.min_purchase" type="number" min="0" class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm" />
+              <label class="mb-1 block text-sm font-medium text-ink">{{ t('common.minPurchase') }} (฿)</label>
+              <input v-model.number="form.min_purchase" type="number" min="0" class="w-full rounded-lg border border-border-warm px-3 py-2.5 text-sm" />
             </div>
 
             <div class="grid grid-cols-2 gap-3">
               <div>
-                <label class="mb-1 block text-sm font-medium text-gray-700">{{ t('promotionsPage.priority') }}</label>
-                <input v-model.number="form.priority" type="number" class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm" />
+                <label class="mb-1 block text-sm font-medium text-ink">{{ t('promotionsPage.priority') }}</label>
+                <input v-model.number="form.priority" type="number" class="w-full rounded-lg border border-border-warm px-3 py-2.5 text-sm" />
               </div>
               <div class="flex items-end gap-4 pb-2">
                 <label class="flex items-center gap-2 text-sm">
-                  <input v-model="form.stackable" type="checkbox" class="h-4 w-4 rounded border-gray-300 text-primary-600" />
+                  <input v-model="form.stackable" type="checkbox" class="h-4 w-4 rounded border-border-warm text-primary-600" />
                   {{ t('promotionsPage.stackable') }}
                 </label>
                 <label class="flex items-center gap-2 text-sm">
-                  <input v-model="form.is_active" type="checkbox" class="h-4 w-4 rounded border-gray-300 text-primary-600" />
+                  <input v-model="form.is_active" type="checkbox" class="h-4 w-4 rounded border-border-warm text-primary-600" />
                   {{ t('common.active') }}
                 </label>
               </div>
@@ -200,17 +208,17 @@
 
             <div class="grid grid-cols-2 gap-3">
               <div>
-                <label class="mb-1 block text-sm font-medium text-gray-700">{{ t('common.startDate') }}</label>
-                <input v-model="form.start_date" type="date" class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm" />
+                <label class="mb-1 block text-sm font-medium text-ink">{{ t('common.startDate') }}</label>
+                <input v-model="form.start_date" type="date" class="w-full rounded-lg border border-border-warm px-3 py-2.5 text-sm" />
               </div>
               <div>
-                <label class="mb-1 block text-sm font-medium text-gray-700">{{ t('common.endDate') }}</label>
-                <input v-model="form.end_date" type="date" class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm" />
+                <label class="mb-1 block text-sm font-medium text-ink">{{ t('common.endDate') }}</label>
+                <input v-model="form.end_date" type="date" class="w-full rounded-lg border border-border-warm px-3 py-2.5 text-sm" />
               </div>
             </div>
 
             <div class="flex gap-3 pt-2">
-              <button type="button" class="flex-1 rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50" @click="showModal = false">{{ t('common.cancel') }}</button>
+              <button type="button" class="flex-1 rounded-lg border border-border-warm px-4 py-2.5 text-sm font-medium text-ink hover:bg-surface" @click="showModal = false">{{ t('common.cancel') }}</button>
               <button type="submit" class="flex-1 rounded-lg bg-primary-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-primary-700">{{ t('common.save') }}</button>
             </div>
           </form>
@@ -222,6 +230,7 @@
 
 <script setup lang="ts">
 import type { Promotion, PromotionType } from "~/lib/types";
+import { activeBadge } from "~/lib/ui/statusColors";
 
 definePageMeta({ middleware: "auth" });
 
@@ -242,6 +251,14 @@ const showModal = ref(false);
 const editingId = ref<string | null>(null);
 const selectedProductIds = ref<string[]>([]);
 const selectedCategoryIds = ref<string[]>([]);
+
+const productOptions = computed(() =>
+  products.value.map((p) => ({ id: p.id, label: p.name })),
+);
+
+const categoryOptions = computed(() =>
+  categories.value.map((c) => ({ id: c.id, label: c.name })),
+);
 
 const form = reactive({
   name: "",

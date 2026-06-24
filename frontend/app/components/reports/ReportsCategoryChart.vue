@@ -16,14 +16,14 @@ const props = defineProps<{
 }>();
 
 const COLORS = [
-  "#2563eb",
-  "#16a34a",
-  "#d97706",
-  "#dc2626",
-  "#7c3aed",
-  "#0891b2",
-  "#db2777",
-  "#65a30d",
+  "#6b9eb8",
+  "#6ba8a0",
+  "#8fc5e3",
+  "#5a8da8",
+  "#b8dcef",
+  "#5a9690",
+  "#d4898a",
+  "#c4b07a",
 ];
 
 const chartData = computed(() => ({

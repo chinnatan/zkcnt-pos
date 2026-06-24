@@ -2,22 +2,22 @@
   <Teleport to="body">
     <div
       v-if="show"
-      class="fixed inset-0 z-[110] flex items-center justify-center overflow-y-auto bg-black/50 p-4"
+      class="craft-modal-backdrop craft-modal-backdrop--center z-[110]"
       @click.self="$emit('cancel')"
     >
       <div
-        class="my-auto w-full max-w-sm animate-[scaleIn_0.2s_ease-out] rounded-2xl bg-white p-6 text-center shadow-2xl"
+        class="craft-modal-panel craft-modal--paper max-w-sm animate-[scaleIn_0.2s_ease-out] text-center"
       >
-        <h3 class="mb-1 text-lg font-bold text-gray-800">
+        <h3 class="font-display mb-1 text-lg font-bold text-ink">
           {{ t("pos.qrPaymentTitle") }}
         </h3>
-        <p class="mb-4 text-2xl font-bold text-primary-600">
+        <p class="font-display mb-4 text-2xl font-bold text-primary-600">
           {{ formatCurrency(amount) }}
         </p>
 
         <div
           v-if="loading"
-          class="mx-auto mb-4 flex aspect-square w-full max-w-[280px] items-center justify-center rounded-xl bg-gray-50"
+          class="mx-auto mb-4 flex aspect-square w-full max-w-[280px] items-center justify-center rounded-xl bg-surface"
         >
           <svg
             class="h-8 w-8 animate-spin text-primary-600"
@@ -44,17 +44,17 @@
           v-else-if="dataUrl"
           :src="dataUrl"
           :alt="t('pos.qrPaymentTitle')"
-          class="mx-auto mb-4 w-full max-w-[280px] rounded-xl border border-gray-100"
+          class="mx-auto mb-4 w-full max-w-[280px] rounded-xl border border-border-warm"
         />
 
-        <p class="mb-6 text-sm text-gray-500">
+        <p class="mb-6 text-sm text-ink-muted">
           {{ t("pos.qrPaymentHint") }}
         </p>
 
         <div class="flex gap-3">
           <button
             type="button"
-            class="touch-pos flex-1 rounded-xl border border-gray-300 py-3.5 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-50"
+            class="touch-pos btn-secondary flex-1 rounded-xl py-3.5 text-sm font-semibold"
             @click="$emit('cancel')"
           >
             {{ t("pos.qrPaymentCancel") }}

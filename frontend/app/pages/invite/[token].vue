@@ -1,41 +1,41 @@
 <template>
-  <div class="rounded-xl bg-white p-6 shadow-sm">
-    <div v-if="isLoading" class="py-8 text-center text-sm text-gray-500">
+  <UiCraftCard variant="ticket" padding="md">
+    <div v-if="isLoading" class="py-8 text-center text-sm text-ink-muted">
       {{ t('common.loading') }}
     </div>
 
-    <div v-else-if="loadError" class="rounded-lg bg-red-50 p-4 text-sm text-red-700">
+    <div v-else-if="loadError" class="rounded-lg bg-danger-50 p-4 text-sm text-danger-700">
       {{ loadError }}
     </div>
 
     <div v-else-if="inviteInfo">
-      <h2 class="mb-2 text-center text-xl font-semibold text-gray-800">{{ t('invitePage.title') }}</h2>
-      <p class="mb-6 text-center text-sm text-gray-500">{{ t('invitePage.subtitle', { store: inviteInfo.storeName }) }}</p>
+      <h2 class="mb-2 text-center text-xl font-semibold text-ink">{{ t('invitePage.title') }}</h2>
+      <p class="mb-6 text-center text-sm text-ink-muted">{{ t('invitePage.subtitle', { store: inviteInfo.storeName }) }}</p>
 
-      <div class="mb-6 space-y-2 rounded-lg bg-gray-50 p-4 text-sm">
+      <div class="mb-6 space-y-2 rounded-lg bg-surface p-4 text-sm">
         <div class="flex justify-between">
-          <span class="text-gray-500">{{ t('common.email') }}</span>
-          <span class="font-medium text-gray-800">{{ inviteInfo.email }}</span>
+          <span class="text-ink-muted">{{ t('common.email') }}</span>
+          <span class="font-medium text-ink">{{ inviteInfo.email }}</span>
         </div>
         <div class="flex justify-between">
-          <span class="text-gray-500">{{ t('common.role') }}</span>
-          <span class="font-medium text-gray-800">{{ roleLabel(inviteInfo.role) }}</span>
+          <span class="text-ink-muted">{{ t('common.role') }}</span>
+          <span class="font-medium text-ink">{{ roleLabel(inviteInfo.role) }}</span>
         </div>
         <div class="flex justify-between">
-          <span class="text-gray-500">{{ t('common.status') }}</span>
-          <span class="font-medium text-gray-800">{{ inviteInfo.status }}</span>
+          <span class="text-ink-muted">{{ t('common.status') }}</span>
+          <span class="font-medium text-ink">{{ inviteInfo.status }}</span>
         </div>
       </div>
 
-      <div v-if="inviteInfo.status !== 'pending'" class="rounded-lg bg-amber-50 p-4 text-sm text-amber-800">
+      <div v-if="inviteInfo.status !== 'pending'" class="rounded-lg bg-warning-50 p-4 text-sm text-warning-700">
         {{ inviteInfo.status === 'expired' ? t('invitePage.expired') : t('invitePage.noLongerValid') }}
       </div>
 
       <template v-else>
-        <div v-if="actionError" class="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">{{ actionError }}</div>
+        <div v-if="actionError" class="mb-4 rounded-lg bg-danger-50 p-3 text-sm text-danger-700">{{ actionError }}</div>
 
         <div v-if="!isAuthenticated" class="space-y-3">
-          <p class="text-center text-sm text-gray-600">{{ t('invitePage.signInPrompt') }}</p>
+          <p class="text-center text-sm text-ink-muted">{{ t('invitePage.signInPrompt') }}</p>
           <NuxtLink
             :to="registerLink"
             class="block w-full rounded-lg bg-primary-600 px-4 py-2.5 text-center text-sm font-medium text-white hover:bg-primary-700"
@@ -44,13 +44,13 @@
           </NuxtLink>
           <NuxtLink
             :to="loginLink"
-            class="block w-full rounded-lg border border-gray-300 px-4 py-2.5 text-center text-sm font-medium text-gray-700 hover:bg-gray-50"
+            class="block w-full rounded-lg border border-border-warm px-4 py-2.5 text-center text-sm font-medium text-ink hover:bg-surface"
           >
             {{ t('auth.signInLink') }}
           </NuxtLink>
         </div>
 
-        <div v-else-if="emailMismatch" class="rounded-lg bg-red-50 p-4 text-sm text-red-700">
+        <div v-else-if="emailMismatch" class="rounded-lg bg-danger-50 p-4 text-sm text-danger-700">
           {{ t('invitePage.emailMismatch', { email: inviteInfo.email }) }}
         </div>
 
@@ -65,7 +65,7 @@
         </button>
       </template>
     </div>
-  </div>
+  </UiCraftCard>
 </template>
 
 <script setup lang="ts">

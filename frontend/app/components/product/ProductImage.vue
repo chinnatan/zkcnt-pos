@@ -7,8 +7,9 @@ const props = withDefaults(
     product: Product;
     size?: "sm" | "md" | "lg";
     thumb?: string;
+    square?: boolean;
   }>(),
-  { size: "md", thumb: "100x100" },
+  { size: "md", thumb: "100x100", square: false },
 );
 
 const { getFileUrl } = useFileUrl();
@@ -63,8 +64,8 @@ onUnmounted(() => {
 
 <template>
   <div
-    class="flex flex-shrink-0 items-center justify-center overflow-hidden rounded-xl bg-primary-50 font-bold text-primary-600"
-    :class="sizeClass"
+    class="flex flex-shrink-0 items-center justify-center overflow-hidden bg-primary-100 font-display font-bold text-primary-700"
+    :class="[sizeClass, square ? 'rounded-sm' : 'rounded-xl']"
   >
     <img
       v-if="displayUrl && !showFallback"

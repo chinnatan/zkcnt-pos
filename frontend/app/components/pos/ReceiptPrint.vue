@@ -8,7 +8,7 @@
         <p v-if="taxId">{{ t('receipt.taxId') }} {{ taxId }}</p>
       </div>
 
-      <div class="mb-2 border-t border-dashed border-gray-400" />
+      <div class="mb-2 border-t border-dashed border-border-warm" />
 
       <div class="mb-2 space-y-0.5">
         <div class="flex justify-between">
@@ -25,7 +25,7 @@
         </div>
       </div>
 
-      <div class="mb-2 border-t border-dashed border-gray-400" />
+      <div class="mb-2 border-t border-dashed border-border-warm" />
 
       <div class="mb-2 space-y-1">
         <div v-for="item in items" :key="item.id" class="space-y-0.5">
@@ -36,14 +36,14 @@
             <span>{{ item.quantity }} x {{ formatAmount(item.unit_price) }}</span>
             <span>{{ formatAmount(item.total) }}</span>
           </div>
-          <div v-if="item.discount > 0" class="flex justify-between pl-2 text-gray-600">
+          <div v-if="item.discount > 0" class="flex justify-between pl-2 text-ink-muted">
             <span>{{ t('receipt.discount') }}</span>
             <span>-{{ formatAmount(item.discount) }}</span>
           </div>
         </div>
       </div>
 
-      <div class="mb-2 border-t border-dashed border-gray-400" />
+      <div class="mb-2 border-t border-dashed border-border-warm" />
 
       <div class="mb-2 space-y-0.5">
         <div class="flex justify-between">
@@ -57,7 +57,7 @@
         <div
           v-for="promo in order?.applied_promotions ?? []"
           :key="promo.promotion_id"
-          class="flex justify-between text-gray-600"
+          class="flex justify-between text-ink-muted"
         >
           <span>{{ promo.name }}</span>
           <span>-{{ formatAmount(promo.amount) }}</span>
@@ -72,7 +72,7 @@
         </div>
       </div>
 
-      <div class="mb-2 border-t border-dashed border-gray-400" />
+      <div class="mb-2 border-t border-dashed border-border-warm" />
 
       <div class="mb-3 space-y-0.5">
         <div class="flex justify-between">
@@ -85,7 +85,7 @@
         </div>
       </div>
 
-      <div class="mb-3 border-t border-dashed border-gray-400" />
+      <div class="mb-3 border-t border-dashed border-border-warm" />
 
       <div class="text-center">
         <p>{{ t('receipt.thankYou') }}</p>
@@ -141,7 +141,7 @@ function print() {
           .space-y-0\\.5 > * + * { margin-top: 2px; }
           .space-y-1 > * + * { margin-top: 4px; }
           .border-t { border-top: 1px dashed #666; }
-          .text-gray-600 { color: #666; }
+          .text-ink-muted { color: #666; }
         </style>
       </head>
       <body>

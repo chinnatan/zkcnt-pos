@@ -1,11 +1,11 @@
 <template>
   <div class="space-y-4">
     <div class="flex items-center justify-between">
-      <h2 class="text-lg font-semibold text-gray-800">{{ t('ordersPage.title') }}</h2>
+      <h2 class="text-lg font-semibold text-ink">{{ t('ordersPage.title') }}</h2>
       <div class="flex items-center gap-2">
         <select
           v-model="statusFilter"
-          class="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none"
+          class="rounded-lg border border-border-warm px-3 py-2 text-sm focus:border-primary-500 focus:outline-none"
         >
           <option value="">{{ t('status.all') }}</option>
           <option value="completed">{{ t('status.completed') }}</option>
@@ -15,12 +15,12 @@
       </div>
     </div>
 
-    <div class="rounded-xl bg-white shadow-sm">
+    <div class="rounded-xl bg-paper shadow-sm">
       <div v-if="isLoading" class="flex justify-center py-12">
         <div class="h-8 w-8 animate-spin rounded-full border-4 border-primary-200 border-t-primary-600" />
       </div>
 
-      <div v-else-if="filteredOrders.length === 0" class="py-12 text-center text-gray-400">
+      <div v-else-if="filteredOrders.length === 0" class="py-12 text-center text-ink-muted">
         {{ t('ordersPage.noOrders') }}
       </div>
 
@@ -29,7 +29,7 @@
           <template #table>
             <div class="overflow-x-auto">
               <table class="w-full text-left text-sm">
-                <thead class="border-b border-gray-200 bg-gray-50 text-xs uppercase text-gray-500">
+                <thead class="border-b border-border-warm bg-surface text-xs uppercase text-ink-muted">
                   <tr>
                     <th class="px-4 py-3">{{ t('dashboard.orderNumber') }}</th>
                     <th class="px-4 py-3">{{ t('common.date') }}</th>
@@ -41,10 +41,10 @@
                     <th class="px-4 py-3">{{ t('common.actions') }}</th>
                   </tr>
                 </thead>
-                <tbody class="divide-y divide-gray-100">
-                  <tr v-for="order in filteredOrders" :key="order.id" class="hover:bg-gray-50">
-                    <td class="px-4 py-3 font-medium text-gray-900">{{ order.order_number }}</td>
-                    <td class="px-4 py-3 text-gray-500">{{ formatDate(order.created) }}</td>
+                <tbody class="divide-y divide-border-warm">
+                  <tr v-for="order in filteredOrders" :key="order.id" class="hover:bg-surface">
+                    <td class="px-4 py-3 font-medium text-ink">{{ order.order_number }}</td>
+                    <td class="px-4 py-3 text-ink-muted">{{ formatDate(order.created) }}</td>
                     <td class="px-4 py-3">{{ formatCurrency(order.subtotal) }}</td>
                     <td class="px-4 py-3 text-danger-500">
                       {{ order.discount_amount > 0 ? `-${formatCurrency(order.discount_amount)}` : '-' }}
@@ -92,12 +92,12 @@
               </template>
               <template #fields>
                 <div>
-                  <span class="text-gray-400">{{ t('common.total') }}</span>
-                  <p class="font-semibold text-gray-900">{{ formatCurrency(order.total) }}</p>
+                  <span class="text-ink-muted">{{ t('common.total') }}</span>
+                  <p class="font-semibold text-ink">{{ formatCurrency(order.total) }}</p>
                 </div>
                 <div>
-                  <span class="text-gray-400">{{ t('common.discount') }}</span>
-                  <p class="text-gray-600">
+                  <span class="text-ink-muted">{{ t('common.discount') }}</span>
+                  <p class="text-ink-muted">
                     {{ order.discount_amount > 0 ? `-${formatCurrency(order.discount_amount)}` : '-' }}
                   </p>
                 </div>
@@ -117,11 +117,11 @@
     </div>
 
     <Teleport to="body">
-      <div v-if="selectedOrder" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" @click.self="selectedOrder = null">
-        <div class="max-h-[80vh] w-full max-w-lg overflow-y-auto rounded-xl bg-white p-6 shadow-xl">
+      <div v-if="selectedOrder" class="craft-modal-backdrop craft-modal-backdrop--center z-50" @click.self="selectedOrder = null">
+        <div class="craft-modal-panel craft-modal--ticket max-w-lg">
           <div class="mb-4 flex items-center justify-between">
             <h3 class="text-lg font-semibold">{{ t('ordersPage.orderDetail', { number: selectedOrder.order_number }) }}</h3>
-            <button class="text-gray-400 hover:text-gray-600" @click="selectedOrder = null">
+            <button class="text-ink-muted hover:text-ink-muted" @click="selectedOrder = null">
               <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
               </svg>
@@ -130,28 +130,28 @@
 
           <div class="space-y-3 text-sm">
             <div class="flex justify-between">
-              <span class="text-gray-500">{{ t('common.date') }}</span>
+              <span class="text-ink-muted">{{ t('common.date') }}</span>
               <span>{{ formatDate(selectedOrder.created) }}</span>
             </div>
             <div class="flex justify-between">
-              <span class="text-gray-500">{{ t('common.status') }}</span>
+              <span class="text-ink-muted">{{ t('common.status') }}</span>
               <span class="rounded-full px-2 py-0.5 text-xs font-medium" :class="statusBadge(selectedOrder.status)">
                 {{ statusLabel(selectedOrder.status) }}
               </span>
             </div>
             <div class="flex justify-between">
-              <span class="text-gray-500">{{ t('common.payment') }}</span>
+              <span class="text-ink-muted">{{ t('common.payment') }}</span>
               <span>{{ paymentLabel(selectedOrder.payment_method) }}</span>
             </div>
 
             <hr class="my-3" />
 
-            <div v-if="orderItemsLoading" class="py-4 text-center text-gray-400">{{ t('ordersPage.loadingItems') }}</div>
+            <div v-if="orderItemsLoading" class="py-4 text-center text-ink-muted">{{ t('ordersPage.loadingItems') }}</div>
             <div v-else>
               <div v-for="item in orderItems" :key="item.id" class="flex items-center justify-between py-2">
                 <div>
                   <span class="font-medium">{{ item.product_name }}</span>
-                  <span class="ml-2 text-gray-500">x{{ item.quantity }}</span>
+                  <span class="ml-2 text-ink-muted">x{{ item.quantity }}</span>
                 </div>
                 <span>{{ formatCurrency(item.total) }}</span>
               </div>
@@ -160,7 +160,7 @@
             <hr class="my-3" />
 
             <div class="flex justify-between">
-              <span class="text-gray-500">{{ t('common.subtotal') }}</span>
+              <span class="text-ink-muted">{{ t('common.subtotal') }}</span>
               <span>{{ formatCurrency(selectedOrder.subtotal) }}</span>
             </div>
             <div v-if="selectedOrder.discount_amount > 0" class="flex justify-between text-danger-500">
@@ -174,17 +174,17 @@
 
             <div
               v-if="isManager && selectedOrder.status === 'completed'"
-              class="mt-4 flex gap-2 border-t border-gray-100 pt-4"
+              class="mt-4 flex gap-2 border-t border-border-warm pt-4"
             >
               <button
-                class="flex-1 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700 hover:bg-red-100 disabled:opacity-50"
+                class="flex-1 rounded-lg border border-danger-100 bg-danger-50 px-3 py-2 text-sm font-medium text-danger-700 hover:bg-danger-100 disabled:opacity-50"
                 :disabled="isUpdatingStatus"
                 @click="confirmStatusChange('voided')"
               >
                 {{ t('ordersPage.voidOrder') }}
               </button>
               <button
-                class="flex-1 rounded-lg border border-yellow-200 bg-yellow-50 px-3 py-2 text-sm font-medium text-yellow-700 hover:bg-yellow-100 disabled:opacity-50"
+                class="flex-1 rounded-lg border border-warning-100 bg-warning-50 px-3 py-2 text-sm font-medium text-warning-700 hover:bg-warning-100 disabled:opacity-50"
                 :disabled="isUpdatingStatus"
                 @click="confirmStatusChange('refunded')"
               >
@@ -200,6 +200,7 @@
 
 <script setup lang="ts">
 import type { Order, OrderItem } from "~/lib/types";
+import { orderStatusBadge, paymentMethodBadge } from "~/lib/ui/statusColors";
 
 definePageMeta({ middleware: "auth" });
 
@@ -222,20 +223,11 @@ const filteredOrders = computed(() => {
 });
 
 function statusBadge(status: string) {
-  const map: Record<string, string> = {
-    completed: "bg-green-100 text-green-700",
-    voided: "bg-red-100 text-red-700",
-    refunded: "bg-yellow-100 text-yellow-700",
-  };
-  return map[status] || "bg-gray-100 text-gray-700";
+  return orderStatusBadge(status);
 }
 
 function paymentBadge(method: string) {
-  const map: Record<string, string> = {
-    cash: "bg-green-100 text-green-700",
-    qr: "bg-blue-100 text-blue-700",
-  };
-  return map[method] || "bg-gray-100 text-gray-700";
+  return paymentMethodBadge(method);
 }
 
 async function viewOrder(order: Order) {

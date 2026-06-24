@@ -2,25 +2,26 @@
   <button
     v-if="itemCount > 0"
     type="button"
-    class="touch-pos fixed inset-x-0 bottom-0 z-40 border-t border-gray-200 bg-white px-4 py-3 shadow-lg md:hidden"
+    class="pos-mobile-cart-bar"
     style="padding-bottom: max(0.75rem, env(safe-area-inset-bottom))"
     @click="emit('open')"
   >
     <div class="flex items-center gap-3">
       <span
-        class="inline-flex h-8 min-w-8 items-center justify-center rounded-full bg-primary-600 px-2 text-sm font-bold text-white"
+        class="inline-flex h-8 min-w-8 items-center justify-center rounded-md bg-primary-500 px-2 text-sm font-bold text-white"
+        style="transform: rotate(-2deg)"
       >
         {{ itemCount }}
       </span>
       <div class="min-w-0 flex-1 text-left">
-        <p class="text-xs text-gray-500">
+        <p class="text-xs text-ink-muted">
           {{ t('pos.cartTab', { count: itemCount }) }}
         </p>
-        <p class="text-lg font-bold text-primary-600">
+        <p class="font-display text-lg font-bold text-primary-600">
           {{ formatCurrency(total) }}
         </p>
       </div>
-      <span class="shrink-0 rounded-xl bg-primary-600 px-4 py-2.5 text-sm font-semibold text-white">
+      <span class="shrink-0 rounded-md border-2 border-primary-400 bg-primary-500 px-4 py-2.5 text-sm font-semibold text-white">
         {{ t('pos.viewCart') }}
       </span>
     </div>

@@ -10,7 +10,7 @@
     >
       <div
         v-if="state.visible"
-        class="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4"
+        class="craft-modal-backdrop craft-modal-backdrop--center z-[100]"
         @click.self="onCancel"
         @keydown.escape="onCancel"
       >
@@ -26,7 +26,7 @@
             v-if="state.visible"
             role="dialog"
             aria-modal="true"
-            class="w-full max-w-md rounded-xl bg-white p-6 shadow-xl"
+            :class="['craft-modal-panel', dialogVariant, 'max-w-md']"
             @keydown.enter.prevent="onConfirm"
           >
             <div class="mb-4 flex items-start gap-3">
@@ -52,8 +52,8 @@
                 </svg>
               </div>
               <div class="min-w-0 flex-1">
-                <h3 v-if="title" class="text-lg font-semibold text-gray-900">{{ title }}</h3>
-                <p class="text-sm text-gray-600" :class="title ? 'mt-1' : ''">{{ state.message }}</p>
+                <h3 v-if="title" class="font-display text-lg font-semibold text-ink">{{ title }}</h3>
+                <p class="text-sm text-ink-muted" :class="title ? 'mt-1' : ''">{{ state.message }}</p>
               </div>
             </div>
 
@@ -63,22 +63,22 @@
               v-model="inputValue"
               type="text"
               :placeholder="state.inputPlaceholder"
-              class="mb-4 w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+              class="input mb-4"
             />
 
             <div class="flex justify-end gap-2">
               <button
                 v-if="state.type !== 'alert'"
                 type="button"
-                class="rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                class="btn-secondary"
                 @click="onCancel"
               >
                 {{ cancelLabel }}
               </button>
               <button
                 type="button"
-                class="rounded-lg px-4 py-2.5 text-sm font-medium text-white"
-                :class="confirmButtonClass"
+                class="btn-primary"
+                :class="state.variant === 'danger' ? 'bg-danger-500 hover:bg-danger-700' : ''"
                 @click="onConfirm"
               >
                 {{ confirmLabel }}
@@ -130,14 +130,12 @@ const confirmLabel = computed(() => {
 
 const cancelLabel = computed(() => state.cancelText || t("common.cancel"));
 
-const confirmButtonClass = computed(() =>
-  state.variant === "danger"
-    ? "bg-danger-500 hover:bg-red-600"
-    : "bg-primary-600 hover:bg-primary-700",
+const dialogVariant = computed(() =>
+  state.variant === "danger" ? "craft-modal--label" : "craft-modal--stitched",
 );
 
 const iconBgClass = computed(() =>
-  state.variant === "danger" ? "bg-red-100" : "bg-primary-50",
+  state.variant === "danger" ? "bg-danger-100" : "bg-primary-50",
 );
 
 const iconClass = computed(() =>

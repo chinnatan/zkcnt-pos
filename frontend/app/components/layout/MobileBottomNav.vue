@@ -1,6 +1,6 @@
 <template>
   <nav
-    class="fixed inset-x-0 bottom-0 z-40 border-t border-gray-200 bg-white lg:hidden"
+    class="fixed inset-x-0 bottom-0 z-40 border-t border-border-warm bg-paper lg:hidden"
     style="padding-bottom: max(0.5rem, env(safe-area-inset-bottom))"
     aria-label="Mobile navigation"
   >
@@ -10,14 +10,14 @@
         :key="item.to"
         :to="item.to"
         class="flex flex-1 flex-col items-center justify-center gap-0.5 px-1 py-2 text-[10px] font-medium transition-colors"
-        :class="isActive(item.to) ? 'text-primary-600' : 'text-gray-500'"
+        :class="isActive(item.to) ? 'text-primary-600' : 'text-ink-muted'"
       >
         <div class="h-5 w-5" v-html="item.icon" />
         <span class="truncate">{{ item.label }}</span>
       </NuxtLink>
       <button
         type="button"
-        class="flex flex-1 flex-col items-center justify-center gap-0.5 px-1 py-2 text-[10px] font-medium text-gray-500 transition-colors hover:text-gray-700"
+        class="flex flex-1 flex-col items-center justify-center gap-0.5 px-1 py-2 text-[10px] font-medium text-ink-muted transition-colors hover:text-ink"
         @click="open"
       >
         <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
