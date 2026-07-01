@@ -74,6 +74,7 @@ export interface Category extends BaseRecord {
   image: string;
   sort_order: number;
   is_active: boolean;
+  deleted_at?: string | null;
 }
 
 export interface Product extends BaseRecord {
@@ -89,6 +90,7 @@ export interface Product extends BaseRecord {
   unit: string;
   track_inventory: boolean;
   is_active: boolean;
+  deleted_at?: string | null;
 }
 
 // ─── Customer ────────────────────────────────────────────────────────────────
@@ -102,6 +104,7 @@ export interface Customer extends BaseRecord {
   note: string;
   total_spent: number;
   visit_count: number;
+  deleted_at?: string | null;
 }
 
 // ─── Order ───────────────────────────────────────────────────────────────────
@@ -161,19 +164,6 @@ export interface InventoryTransaction extends BaseRecord {
   created_by: string;
 }
 
-// ─── Discount (legacy) ───────────────────────────────────────────────────────
-
-export interface Discount extends BaseRecord {
-  store: string;
-  name: string;
-  type: 'percent' | 'fixed';
-  value: number;
-  min_purchase: number;
-  start_date: string;
-  end_date: string;
-  is_active: boolean;
-}
-
 // ─── Promotion ───────────────────────────────────────────────────────────────
 
 export type PromotionType =
@@ -189,6 +179,7 @@ export interface PromotionTarget extends BaseRecord {
   promotion: string;
   target_type: 'product' | 'category';
   target_id: string;
+  deleted_at?: string | null;
 }
 
 export interface AppliedPromotionSnapshot {
@@ -219,6 +210,15 @@ export interface Promotion extends BaseRecord {
   end_date: string;
   is_active: boolean;
   targets?: PromotionTarget[];
+  deleted_at?: string | null;
+}
+
+export interface PromotionUsage extends BaseRecord {
+  store: string;
+  promotion: string;
+  order: string;
+  customer: string;
+  discount_amount: number;
 }
 
 // ─── File Blobs (IndexedDB only) ────────────────────────────────────────────

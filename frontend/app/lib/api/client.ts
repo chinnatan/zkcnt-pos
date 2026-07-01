@@ -18,13 +18,15 @@ export interface AuthState {
 }
 
 export interface SyncDelta {
+  stores?: Record<string, unknown>[];
+  store_members?: Record<string, unknown>[];
   categories: Record<string, unknown>[];
   products: Record<string, unknown>[];
   customers: Record<string, unknown>[];
   inventory: Record<string, unknown>[];
-  discounts: Record<string, unknown>[];
   promotions: Record<string, unknown>[];
   promotion_targets: Record<string, unknown>[];
+  promotion_usages?: Record<string, unknown>[];
   orders: Record<string, unknown>[];
   order_items: Record<string, unknown>[];
   inventory_transactions: Record<string, unknown>[];
@@ -251,6 +253,17 @@ export class ApiClient {
     return this.sendRecord(storeId, collection, "DELETE", {}, id);
   }
 
+  async createOrderWithItems(
+    storeId: string,
+    order: Record<string, unknown>,
+    items: Record<string, unknown>[],
+  ) {
+    return this.send<Record<string, unknown>>(`/stores/${storeId}/orders`, {
+      method: "POST",
+      body: { order, items },
+    });
+  }
+
   async uploadProductImage(
     storeId: string,
     productId: string,
@@ -260,6 +273,17 @@ export class ApiClient {
       method: "POST",
       body: form,
     });
+  }
+
+  async uploadStoreLogo(storeId: string, form: FormData) {
+    return this.send(`/stores/${storeId}/logo`, {
+      method: "POST",
+      body: form,
+    });
+  }
+
+  async deleteStoreLogo(storeId: string) {
+    return this.send(`/stores/${storeId}/logo`, { method: "DELETE" });
   }
 
   private async sendRecord(
@@ -273,7 +297,6 @@ export class ApiClient {
       categories: `/stores/${storeId}/categories`,
       products: `/stores/${storeId}/products`,
       customers: `/stores/${storeId}/customers`,
-      discounts: `/stores/${storeId}/discounts`,
       promotions: `/stores/${storeId}/promotions`,
       promotion_targets: `/stores/${storeId}/promotion-targets`,
       inventory: `/stores/${storeId}/inventory`,

@@ -163,8 +163,8 @@
                 <div>
                   <label class="mb-1 block text-sm font-medium text-ink">{{ t('promotionsPage.couponDiscountType') }}</label>
                   <select v-model="form.coupon_discount_type" class="w-full rounded-lg border border-border-warm px-3 py-2.5 text-sm">
-                    <option value="percent">{{ t('discountsPage.percentType') }}</option>
-                    <option value="fixed">{{ t('discountsPage.fixedType') }}</option>
+                    <option value="percent">{{ t('promotionsPage.percentType') }}</option>
+                    <option value="fixed">{{ t('promotionsPage.fixedType') }}</option>
                   </select>
                 </div>
                 <div>

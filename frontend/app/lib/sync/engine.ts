@@ -10,14 +10,96 @@ import {
   remapFileQueueRecordId,
   storeFileBlob,
 } from "../files/blobs";
+import type { OrderItem } from "../types";
 import {
   getPendingItems,
+  hasQueuedOrderCreate,
+  markDeferred,
   markInFlight,
+  markPendingOrderItemsSynced,
   markSynced,
   markError,
+  resetInFlightToPending,
+  sortSyncQueue,
 } from "./queue";
 
+async function resolveOrderId(
+  orderRef: string,
+  orderIdMap: Map<string, string>,
+): Promise<string> {
+  const mapped = orderIdMap.get(orderRef);
+  if (mapped) return mapped;
+  if (!orderRef.startsWith("temp_")) return orderRef;
+
+  const clientId = orderRef.slice("temp_".length);
+  const localOrder = await db.orders
+    .where("client_id")
+    .equals(clientId)
+    .first();
+  if (localOrder && !localOrder.id.startsWith("temp_")) {
+    return localOrder.id;
+  }
+
+  return orderRef;
+}
+
+async function buildOrderItemsPayload(
+  tempOrderId: string,
+): Promise<Record<string, unknown>[]> {
+  const localItems = await db.orderItems
+    .where("order")
+    .equals(tempOrderId)
+    .toArray();
+
+  const payloads: Record<string, unknown>[] = [];
+  for (const item of localItems as OrderItem[]) {
+    const product = await db.products.get(item.product);
+    payloads.push({
+      product: item.product,
+      product_id: item.product,
+      category_id: product?.category ?? "",
+      product_name: item.product_name,
+      product_price: item.product_price,
+      quantity: item.quantity,
+      unit_price: item.unit_price,
+      discount: item.discount,
+      total: item.total,
+      promotion_id: item.promotion_id || "",
+      free_quantity: item.free_quantity ?? 0,
+    });
+  }
+  return payloads;
+}
+
+async function remapLocalOrderItems(tempOrderId: string, realOrderId: string) {
+  const now = new Date().toISOString();
+  const localItems = await db.orderItems
+    .where("order")
+    .equals(tempOrderId)
+    .toArray();
+  for (const item of localItems) {
+    await db.orderItems.update(item.id, { order: realOrderId, updated: now });
+  }
+}
+
 const logger = createLogger("sync");
+
+type SyncRecord = { id: string; deleted_at?: string | null };
+
+async function applySyncedRecords<T extends SyncRecord>(
+  table: { bulkPut: (items: never[]) => Promise<void>; bulkDelete: (keys: string[]) => Promise<void> },
+  records: T[],
+) {
+  if (!records.length) return;
+  const toPut: T[] = [];
+  const toDelete: string[] = [];
+  for (const record of records) {
+    if (record.deleted_at) toDelete.push(record.id);
+    else toPut.push(record);
+  }
+  if (toPut.length) await table.bulkPut(toPut as never[]);
+  if (toDelete.length) await table.bulkDelete(toDelete);
+}
 
 export class SyncEngine {
   private api: ApiClient;
@@ -36,13 +118,15 @@ export class SyncEngine {
     const delta = await this.api.syncDelta(this.storeId, sinceValue);
 
     const counts = {
+      stores: delta.stores?.length ?? 0,
+      store_members: delta.store_members?.length ?? 0,
       categories: delta.categories?.length ?? 0,
       products: delta.products?.length ?? 0,
       customers: delta.customers?.length ?? 0,
       inventory: delta.inventory?.length ?? 0,
-      discounts: delta.discounts?.length ?? 0,
       promotions: delta.promotions?.length ?? 0,
       promotion_targets: delta.promotion_targets?.length ?? 0,
+      promotion_usages: delta.promotion_usages?.length ?? 0,
       orders: delta.orders?.length ?? 0,
       order_items: delta.order_items?.length ?? 0,
     };
@@ -54,26 +138,35 @@ export class SyncEngine {
           .join(" "),
     );
 
+    if (delta.stores?.length) {
+      await db.stores.bulkPut(delta.stores as never[]);
+    }
+    if (delta.store_members?.length) {
+      await db.storeMembers.bulkPut(delta.store_members as never[]);
+    }
     if (delta.categories?.length) {
-      await db.categories.bulkPut(delta.categories as never[]);
+      await applySyncedRecords(db.categories, delta.categories as SyncRecord[]);
     }
     if (delta.products?.length) {
-      await db.products.bulkPut(delta.products as never[]);
+      await applySyncedRecords(db.products, delta.products as SyncRecord[]);
     }
     if (delta.customers?.length) {
-      await db.customers.bulkPut(delta.customers as never[]);
+      await applySyncedRecords(db.customers, delta.customers as SyncRecord[]);
     }
     if (delta.inventory?.length) {
       await db.inventory.bulkPut(delta.inventory as never[]);
     }
-    if (delta.discounts?.length) {
-      await db.discounts.bulkPut(delta.discounts as never[]);
-    }
     if (delta.promotions?.length) {
-      await db.promotions.bulkPut(delta.promotions as never[]);
+      await applySyncedRecords(db.promotions, delta.promotions as SyncRecord[]);
     }
     if (delta.promotion_targets?.length) {
-      await db.promotionTargets.bulkPut(delta.promotion_targets as never[]);
+      await applySyncedRecords(
+        db.promotionTargets,
+        delta.promotion_targets as SyncRecord[],
+      );
+    }
+    if (delta.promotion_usages?.length) {
+      await db.promotionUsages.bulkPut(delta.promotion_usages as never[]);
     }
     if (delta.orders?.length) {
       await db.orders.bulkPut(delta.orders as never[]);
@@ -90,11 +183,20 @@ export class SyncEngine {
     const orderIdMap = new Map<string, string>();
 
     try {
-      const pending = await getPendingItems(this.storeId);
+      await resetInFlightToPending(this.storeId);
+      const pending = sortSyncQueue(await getPendingItems(this.storeId));
       logger.debug(`drainSyncQueue pending=${pending.length} storeId=${this.storeId}`);
 
       for (const item of pending) {
         try {
+          const stillQueued = item.id != null && (await db.syncQueue.get(item.id));
+          if (!stillQueued) {
+            logger.debug(
+              `sync skip ${item.action} ${item.collection} ${item.record_id} (already handled)`,
+            );
+            continue;
+          }
+
           await markInFlight(item.id);
           logger.debug(
             `sync queue ${item.action} ${item.collection} ${item.record_id}`,
@@ -104,25 +206,68 @@ export class SyncEngine {
 
           switch (item.action) {
             case "create": {
-              const payload =
-                item.collection === "order_items" && item.data.order
-                  ? {
-                      ...item.data,
-                      order:
-                        orderIdMap.get(String(item.data.order)) ??
-                        item.data.order,
-                    }
-                  : item.data;
+              if (item.collection === "orders") {
+                const itemsPayload = await buildOrderItemsPayload(item.record_id);
+                record = await this.api.createOrderWithItems(
+                  this.storeId,
+                  item.data as Record<string, unknown>,
+                  itemsPayload,
+                );
+
+                if (item.record_id.startsWith("temp_")) {
+                  const realId = String(record.id);
+                  orderIdMap.set(item.record_id, realId);
+                  await db.orders.delete(item.record_id);
+                  await db.orders.put(record as never);
+                  await remapLocalOrderItems(item.record_id, realId);
+                  await markPendingOrderItemsSynced(
+                    this.storeId,
+                    item.record_id,
+                  );
+                }
+                break;
+              }
+
+              if (item.collection === "order_items") {
+                const rawOrderRef = String(item.data.order ?? "");
+                const resolvedOrderId = await resolveOrderId(
+                  rawOrderRef,
+                  orderIdMap,
+                );
+                if (resolvedOrderId.startsWith("temp_")) {
+                  if (await hasQueuedOrderCreate(rawOrderRef, this.storeId)) {
+                    await markDeferred(item.id!);
+                    logger.debug(
+                      `defer order_items ${item.record_id} waiting for order ${rawOrderRef}`,
+                    );
+                    continue;
+                  }
+                  throw new Error("Order not found");
+                }
+
+                const payload = {
+                  ...item.data,
+                  order: resolvedOrderId,
+                };
+
+                record = (await this.api.collectionCreate(
+                  this.storeId,
+                  item.collection,
+                  payload,
+                )) as Record<string, unknown>;
+
+                if (item.record_id.startsWith("temp_")) {
+                  await db.orderItems.delete(item.record_id);
+                  await db.orderItems.put(record as never);
+                }
+                break;
+              }
 
               record = (await this.api.collectionCreate(
                 this.storeId,
                 item.collection,
-                payload,
+                item.data,
               )) as Record<string, unknown>;
-
-              if (item.collection === "orders" && item.record_id.startsWith("temp_")) {
-                orderIdMap.set(item.record_id, String(record.id));
-              }
 
               if (item.record_id.startsWith("temp_")) {
                 const table = this.getTable(item.collection);
@@ -299,12 +444,12 @@ export class SyncEngine {
         return db.orderItems;
       case "inventory":
         return db.inventory;
-      case "discounts":
-        return db.discounts;
       case "promotions":
         return db.promotions;
       case "promotion_targets":
         return db.promotionTargets;
+      case "promotion_usages":
+        return db.promotionUsages;
       default:
         return null;
     }

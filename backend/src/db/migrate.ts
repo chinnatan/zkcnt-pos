@@ -262,7 +262,40 @@ export function runMigrate() {
   sqlite.exec(DDL);
   migrateOrderPromotionColumns();
   migrateDiscountsToPromotions();
+  dropLegacyDiscountsTable();
+  migrateSoftDeleteColumns();
   backfillOrderAuditEvents();
+}
+
+function migrateSoftDeleteColumns() {
+  const tables = [
+    "categories",
+    "products",
+    "customers",
+    "promotions",
+    "promotion_targets",
+  ] as const;
+
+  for (const table of tables) {
+    const cols = sqlite
+      .query<{ name: string }, []>(`PRAGMA table_info(${table})`)
+      .all()
+      .map((c) => c.name);
+    if (!cols.includes("deleted_at")) {
+      sqlite.exec(`ALTER TABLE ${table} ADD COLUMN deleted_at TEXT`);
+    }
+  }
+}
+
+function dropLegacyDiscountsTable() {
+  const tables = sqlite
+    .query<{ name: string }, []>(
+      "SELECT name FROM sqlite_master WHERE type='table' AND name='discounts'",
+    )
+    .all();
+  if (tables.length > 0) {
+    sqlite.exec("DROP TABLE discounts");
+  }
 }
 
 function migrateOrderPromotionColumns() {

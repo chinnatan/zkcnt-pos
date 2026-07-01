@@ -284,6 +284,17 @@ orderRoutes.post(
     const orderId = generateId();
     const orderNumber = String(orderData.order_number ?? `ORD-${Date.now()}`);
     const clientId = String(orderData.client_id ?? generateId());
+
+    const existingByClient = await db
+      .select()
+      .from(orders)
+      .where(and(eq(orders.store, storeId), eq(orders.clientId, clientId)))
+      .limit(1);
+
+    if (existingByClient[0]) {
+      return c.json(mapOrder(existingByClient[0]), 200);
+    }
+
     const total = Number(orderData.total ?? 0);
     const paymentMethod =
       (orderData.payment_method as "cash" | "qr") ?? "cash";

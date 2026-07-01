@@ -196,6 +196,7 @@
               <button
                 v-for="method in paymentMethods"
                 :key="method.value"
+                :data-testid="`payment-method-${method.value}`"
                 class="pos-pay-pill"
                 :class="paymentMethod === method.value ? 'pos-pay-pill--active' : ''"
                 @click="paymentMethod = method.value"

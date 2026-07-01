@@ -6,6 +6,7 @@ import { customers } from "../db/schema";
 import { buildChanges, logAuditEvent } from "../lib/audit";
 import { generateId } from "../lib/id";
 import { mapCustomer } from "../lib/mappers";
+import { notDeleted } from "../lib/soft-delete";
 import { nowIso } from "../lib/timestamps";
 import {
   authMiddleware,
@@ -29,7 +30,7 @@ customerRoutes.get(
     const rows = await db
       .select()
       .from(customers)
-      .where(eq(customers.store, storeId))
+      .where(and(eq(customers.store, storeId), notDeleted(customers.deletedAt)))
       .orderBy(asc(customers.name));
 
     return c.json(rows.map(mapCustomer));
@@ -147,8 +148,10 @@ customerRoutes.delete(
       .where(and(eq(customers.id, id), eq(customers.store, storeId)))
       .limit(1);
 
+    const now = nowIso();
     await db
-      .delete(customers)
+      .update(customers)
+      .set({ deletedAt: now, updated: now })
       .where(and(eq(customers.id, id), eq(customers.store, storeId)));
 
     if (existing[0]) {

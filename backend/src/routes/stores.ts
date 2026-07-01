@@ -28,11 +28,20 @@ import {
   assertStoreManagerByStoreId,
   assertStoreMemberByStoreId,
   getStoreSettings,
+  requireStoreManager,
   requireStoreMember,
   requireStoreOwner,
   type StoreAccessVariables,
 } from "../middleware/store-access";
 import { createStoreWithOwner } from "../services/store.service";
+import { deleteUpload, saveUpload } from "../lib/uploads";
+import { createLogger } from "../lib/logger";
+
+const logger = createLogger("stores");
+
+function isUploadFile(value: unknown): value is File {
+  return value instanceof File && value.size > 0;
+}
 
 export const storeRoutes = new Hono<{
   Variables: AuthVariables | StoreAccessVariables;
@@ -131,7 +140,7 @@ storeRoutes.get("/:storeId", authMiddleware, requireStoreMember, async (c) => {
 storeRoutes.patch(
   "/:storeId",
   authMiddleware,
-  requireStoreMember,
+  requireStoreManager,
   async (c) => {
     const storeId = c.req.param("storeId");
     const userId = c.get("userId");
@@ -173,6 +182,98 @@ storeRoutes.patch(
         changes,
       });
     }
+
+    return c.json(mapStore(rows[0]!));
+  },
+);
+
+storeRoutes.post(
+  "/:storeId/logo",
+  authMiddleware,
+  requireStoreManager,
+  async (c) => {
+    const storeId = c.req.param("storeId");
+    const userId = c.get("userId");
+    const form = await c.req.parseBody();
+    const file = form.logo;
+
+    const existing = await db
+      .select()
+      .from(stores)
+      .where(eq(stores.id, storeId))
+      .limit(1);
+
+    if (!existing[0]) throw new HTTPException(404, { message: "Store not found" });
+
+    let logoPath = existing[0].logo;
+    if (isUploadFile(file)) {
+      if (existing[0].logo) deleteUpload(existing[0].logo);
+      logoPath = await saveUpload("stores", storeId, "logo", file);
+      logger.debug(`store.logo saved path=${logoPath} storeId=${storeId}`);
+    } else if (form.remove === "true" || file === "") {
+      if (existing[0].logo) deleteUpload(existing[0].logo);
+      logoPath = "";
+    }
+
+    const now = nowIso();
+    await db
+      .update(stores)
+      .set({ logo: logoPath, updated: now })
+      .where(eq(stores.id, storeId));
+
+    const rows = await db.select().from(stores).where(eq(stores.id, storeId)).limit(1);
+
+    if (existing[0].logo !== logoPath) {
+      logAuditEvent(c, {
+        store: storeId,
+        actor: userId,
+        action: "store.logo_update",
+        entityType: "store",
+        entityId: storeId,
+        summary: `อัปเดตโลโก้ร้าน "${existing[0].name}"`,
+        changes: { logo: { from: existing[0].logo, to: logoPath } },
+      });
+    }
+
+    return c.json(mapStore(rows[0]!));
+  },
+);
+
+storeRoutes.delete(
+  "/:storeId/logo",
+  authMiddleware,
+  requireStoreManager,
+  async (c) => {
+    const storeId = c.req.param("storeId");
+    const userId = c.get("userId");
+
+    const existing = await db
+      .select()
+      .from(stores)
+      .where(eq(stores.id, storeId))
+      .limit(1);
+
+    if (!existing[0]) throw new HTTPException(404, { message: "Store not found" });
+
+    if (existing[0].logo) deleteUpload(existing[0].logo);
+
+    const now = nowIso();
+    await db
+      .update(stores)
+      .set({ logo: "", updated: now })
+      .where(eq(stores.id, storeId));
+
+    const rows = await db.select().from(stores).where(eq(stores.id, storeId)).limit(1);
+
+    logAuditEvent(c, {
+      store: storeId,
+      actor: userId,
+      action: "store.logo_update",
+      entityType: "store",
+      entityId: storeId,
+      summary: `ลบโลโก้ร้าน "${existing[0].name}"`,
+      changes: { logo: { from: existing[0].logo, to: "" } },
+    });
 
     return c.json(mapStore(rows[0]!));
   },

@@ -23,12 +23,60 @@ export async function addToSyncQueue(
 export async function getPendingItems(storeId?: string): Promise<SyncQueueItem[]> {
   const items = await db.syncQueue
     .where("status")
-    .anyOf(["pending", "error"])
+    .anyOf(["pending", "error", "in_flight"])
     .sortBy("created_at");
   if (storeId) {
     return items.filter((i) => i.store === storeId) as SyncQueueItem[];
   }
   return items as SyncQueueItem[];
+}
+
+/** Recover queue entries stuck in in_flight from a crashed/interrupted sync. */
+export async function resetInFlightToPending(storeId?: string) {
+  const items = await db.syncQueue.where("status").equals("in_flight").toArray();
+  for (const item of items) {
+    if (item.id == null) continue;
+    if (storeId && item.store !== storeId) continue;
+    await db.syncQueue.update(item.id, { status: "pending" });
+    logger.debug(
+      `reset in_flight → pending ${item.collection} ${item.record_id}`,
+    );
+  }
+}
+
+export async function markDeferred(id: number) {
+  return db.syncQueue.update(id, { status: "pending" });
+}
+
+export async function hasQueuedOrderCreate(
+  tempOrderId: string,
+  storeId: string,
+): Promise<boolean> {
+  const items = await db.syncQueue
+    .where("status")
+    .anyOf(["pending", "error", "in_flight"])
+    .toArray();
+  return items.some(
+    (i) =>
+      i.store === storeId &&
+      i.collection === "orders" &&
+      i.action === "create" &&
+      i.record_id === tempOrderId,
+  );
+}
+
+const COLLECTION_SYNC_PRIORITY: Record<string, number> = {
+  orders: 0,
+  order_items: 1,
+};
+
+export function sortSyncQueue(items: SyncQueueItem[]): SyncQueueItem[] {
+  return [...items].sort((a, b) => {
+    const pa = COLLECTION_SYNC_PRIORITY[a.collection] ?? 2;
+    const pb = COLLECTION_SYNC_PRIORITY[b.collection] ?? 2;
+    if (pa !== pb) return pa - pb;
+    return a.created_at.localeCompare(b.created_at);
+  });
 }
 
 export async function markInFlight(id: number) {
@@ -54,8 +102,35 @@ export async function markError(id: number, errorMessage: string) {
 }
 
 export async function getPendingCount(storeId?: string): Promise<number> {
-  const items = await getPendingItems(storeId);
+  const items = await db.syncQueue
+    .where("status")
+    .anyOf(["pending", "error", "in_flight"])
+    .toArray();
+  if (storeId) {
+    return items.filter((i) => i.store === storeId).length;
+  }
   return items.length;
+}
+
+export async function markPendingOrderItemsSynced(
+  storeId: string,
+  tempOrderId: string,
+) {
+  const items = await db.syncQueue
+    .where("status")
+    .anyOf(["pending", "error", "in_flight"])
+    .toArray();
+
+  for (const item of items) {
+    if (
+      item.store === storeId &&
+      item.collection === "order_items" &&
+      item.data?.order === tempOrderId &&
+      item.id != null
+    ) {
+      await db.syncQueue.delete(item.id);
+    }
+  }
 }
 
 export async function clearSyncedItems() {

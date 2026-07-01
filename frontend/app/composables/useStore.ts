@@ -206,6 +206,28 @@ export function useStore() {
     return updated;
   }
 
+  async function uploadStoreLogo(storeId: string, file: File) {
+    const form = new FormData();
+    form.append("logo", file);
+    const record = await $api.uploadStoreLogo(storeId, form);
+    const updated = toStoreRecord(record as Record<string, unknown>);
+    if (activeStore.value?.id === storeId) {
+      await setActiveStore(updated);
+    }
+    await db.stores.put(updated);
+    return updated;
+  }
+
+  async function removeStoreLogo(storeId: string) {
+    const record = await $api.deleteStoreLogo(storeId);
+    const updated = toStoreRecord(record as Record<string, unknown>);
+    if (activeStore.value?.id === storeId) {
+      await setActiveStore(updated);
+    }
+    await db.stores.put(updated);
+    return updated;
+  }
+
   return {
     activeStore: readonly(activeStore),
     activeStoreId,
@@ -220,5 +242,7 @@ export function useStore() {
     setActiveStore,
     createStore,
     updateStore,
+    uploadStoreLogo,
+    removeStoreLogo,
   };
 }

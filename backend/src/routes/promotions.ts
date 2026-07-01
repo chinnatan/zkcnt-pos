@@ -12,6 +12,7 @@ import { generateId } from "../lib/id";
 import { mapPromotion } from "../lib/mappers";
 import { calculatePromotions } from "../lib/promotions/engine";
 import type { PromotionInput } from "../lib/promotions/types";
+import { notDeleted } from "../lib/soft-delete";
 import { nowIso } from "../lib/timestamps";
 import {
   authMiddleware,
@@ -81,7 +82,9 @@ async function loadPromotionWithTargets(storeId: string, id: string) {
   const targets = await db
     .select()
     .from(promotionTargets)
-    .where(eq(promotionTargets.promotion, id));
+    .where(
+      and(eq(promotionTargets.promotion, id), notDeleted(promotionTargets.deletedAt)),
+    );
 
   return mapPromotion({ ...promo, targets });
 }
@@ -92,8 +95,14 @@ async function replaceTargets(
   now: string,
 ) {
   await db
-    .delete(promotionTargets)
-    .where(eq(promotionTargets.promotion, promotionId));
+    .update(promotionTargets)
+    .set({ deletedAt: now, updated: now })
+    .where(
+      and(
+        eq(promotionTargets.promotion, promotionId),
+        notDeleted(promotionTargets.deletedAt),
+      ),
+    );
 
   for (const target of targets) {
     await db.insert(promotionTargets).values({
@@ -116,7 +125,7 @@ promotionRoutes.get(
     const rows = await db
       .select()
       .from(promotions)
-      .where(eq(promotions.store, storeId))
+      .where(and(eq(promotions.store, storeId), notDeleted(promotions.deletedAt)))
       .orderBy(asc(promotions.name));
 
     const result = [];
@@ -124,7 +133,12 @@ promotionRoutes.get(
       const targets = await db
         .select()
         .from(promotionTargets)
-        .where(eq(promotionTargets.promotion, row.id));
+        .where(
+          and(
+            eq(promotionTargets.promotion, row.id),
+            notDeleted(promotionTargets.deletedAt),
+          ),
+        );
       result.push(mapPromotion({ ...row, targets }));
     }
 
@@ -366,9 +380,16 @@ promotionRoutes.delete(
       .where(and(eq(promotions.id, id), eq(promotions.store, storeId)))
       .limit(1);
 
+    const now = nowIso();
     await db
-      .delete(promotions)
+      .update(promotions)
+      .set({ deletedAt: now, updated: now, isActive: false })
       .where(and(eq(promotions.id, id), eq(promotions.store, storeId)));
+
+    await db
+      .update(promotionTargets)
+      .set({ deletedAt: now, updated: now })
+      .where(eq(promotionTargets.promotion, id));
 
     if (existing[0]) {
       logAuditEvent(c, {
@@ -391,14 +412,19 @@ export async function loadStorePromotions(
   const promoRows = await db
     .select()
     .from(promotions)
-    .where(eq(promotions.store, storeId));
+    .where(and(eq(promotions.store, storeId), notDeleted(promotions.deletedAt)));
 
   const result: PromotionInput[] = [];
   for (const row of promoRows) {
     const targets = await db
       .select()
       .from(promotionTargets)
-      .where(eq(promotionTargets.promotion, row.id));
+      .where(
+        and(
+          eq(promotionTargets.promotion, row.id),
+          notDeleted(promotionTargets.deletedAt),
+        ),
+      );
     result.push({
       id: row.id,
       name: row.name,

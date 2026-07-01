@@ -2,6 +2,12 @@
   <div ref="receiptRef" class="receipt-container hidden print:block">
     <div class="mx-auto max-w-[300px] p-4 font-mono text-xs">
       <div class="mb-3 text-center">
+        <img
+          v-if="storeLogoUrl"
+          :src="storeLogoUrl"
+          alt=""
+          class="mx-auto mb-2 max-h-16 max-w-[80px] object-contain"
+        />
         <h2 class="text-base font-bold">{{ storeName }}</h2>
         <p v-if="storeAddress">{{ storeAddress }}</p>
         <p v-if="storePhone">{{ t('receipt.tel') }} {{ storePhone }}</p>
@@ -102,6 +108,7 @@ const props = defineProps<{
   order: Order | null;
   items: OrderItem[];
   storeName: string;
+  storeLogoUrl?: string;
   storeAddress?: string;
   storePhone?: string;
   taxId?: string;

@@ -31,26 +31,65 @@
 
       <UiCraftCard variant="paper" padding="md">
         <h3 class="mb-4 text-base font-semibold text-ink">{{ t('settingsPage.storeInfo') }}</h3>
+
+        <div v-if="isManager" class="mb-4 flex items-center gap-4">
+          <div class="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border-warm bg-surface">
+            <img
+              v-if="logoPreviewUrl"
+              :src="logoPreviewUrl"
+              alt=""
+              class="h-full w-full object-contain"
+            />
+            <span v-else class="text-xs text-ink-muted">{{ t('settingsPage.noLogo') }}</span>
+          </div>
+          <div class="space-y-2">
+            <input
+              ref="logoInputRef"
+              type="file"
+              accept="image/*"
+              class="hidden"
+              @change="handleLogoSelect"
+            />
+            <button
+              type="button"
+              :disabled="isUploadingLogo"
+              class="rounded-lg border border-border-warm px-3 py-2 text-sm font-medium text-ink hover:bg-surface disabled:opacity-50"
+              @click="logoInputRef?.click()"
+            >
+              {{ isUploadingLogo ? t('common.saving') : t('settingsPage.uploadLogo') }}
+            </button>
+            <button
+              v-if="activeStore?.logo"
+              type="button"
+              :disabled="isUploadingLogo"
+              class="block text-sm text-danger-500 hover:text-danger-600 disabled:opacity-50"
+              @click="handleRemoveLogo"
+            >
+              {{ t('settingsPage.removeLogo') }}
+            </button>
+          </div>
+        </div>
+
         <form @submit.prevent="saveStoreInfo" class="space-y-4">
           <div class="grid gap-4 sm:grid-cols-2">
             <div>
               <label class="mb-1 block text-sm font-medium text-ink">{{ t('settingsPage.storeName') }}</label>
-              <input v-model="storeForm.name" type="text" required class="w-full rounded-lg border border-border-warm px-3 py-2.5 text-sm focus:border-primary-500 focus:outline-none" />
+              <input v-model="storeForm.name" type="text" required :disabled="!isManager" class="w-full rounded-lg border border-border-warm px-3 py-2.5 text-sm focus:border-primary-500 focus:outline-none disabled:bg-surface disabled:text-ink-muted" />
             </div>
             <div>
               <label class="mb-1 block text-sm font-medium text-ink">{{ t('common.phone') }}</label>
-              <input v-model="storeForm.phone" type="tel" class="w-full rounded-lg border border-border-warm px-3 py-2.5 text-sm focus:border-primary-500 focus:outline-none" />
+              <input v-model="storeForm.phone" type="tel" :disabled="!isManager" class="w-full rounded-lg border border-border-warm px-3 py-2.5 text-sm focus:border-primary-500 focus:outline-none disabled:bg-surface disabled:text-ink-muted" />
             </div>
           </div>
           <div>
             <label class="mb-1 block text-sm font-medium text-ink">{{ t('common.address') }}</label>
-            <textarea v-model="storeForm.address" rows="2" class="w-full rounded-lg border border-border-warm px-3 py-2.5 text-sm focus:border-primary-500 focus:outline-none" />
+            <textarea v-model="storeForm.address" rows="2" :disabled="!isManager" class="w-full rounded-lg border border-border-warm px-3 py-2.5 text-sm focus:border-primary-500 focus:outline-none disabled:bg-surface disabled:text-ink-muted" />
           </div>
           <div>
             <label class="mb-1 block text-sm font-medium text-ink">{{ t('settingsPage.taxId') }}</label>
-            <input v-model="storeForm.tax_id" type="text" class="w-full rounded-lg border border-border-warm px-3 py-2.5 text-sm focus:border-primary-500 focus:outline-none" :placeholder="t('settingsPage.taxIdPlaceholder')" />
+            <input v-model="storeForm.tax_id" type="text" :disabled="!isManager" class="w-full rounded-lg border border-border-warm px-3 py-2.5 text-sm focus:border-primary-500 focus:outline-none disabled:bg-surface disabled:text-ink-muted" :placeholder="t('settingsPage.taxIdPlaceholder')" />
           </div>
-          <button type="submit" :disabled="isSaving" class="rounded-lg bg-primary-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-primary-700 disabled:opacity-50">
+          <button v-if="isManager" type="submit" :disabled="isSaving" class="rounded-lg bg-primary-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-primary-700 disabled:opacity-50">
             {{ isSaving ? t('common.saving') : t('settingsPage.saveChanges') }}
           </button>
         </form>
@@ -226,7 +265,8 @@ definePageMeta({ middleware: "auth" });
 
 const { t } = useI18n();
 const { roleLabel } = useLabels();
-const { activeStore, activeStoreId, isManager, isOwner, updateStore } = useStore();
+const { activeStore, activeStoreId, isManager, isOwner, updateStore, uploadStoreLogo, removeStoreLogo } = useStore();
+const { getFileUrl } = useFileUrl();
 const {
   storeMembers,
   pendingInvites,
@@ -243,6 +283,8 @@ const { confirm } = useDialog();
 
 const isSaving = ref(false);
 const isSavingPayment = ref(false);
+const isUploadingLogo = ref(false);
+const logoInputRef = ref<HTMLInputElement | null>(null);
 const showMemberModal = ref(false);
 const memberEmail = ref("");
 const memberRole = ref<"manager" | "cashier">("cashier");
@@ -264,6 +306,11 @@ const storeForm = reactive({
 
 const paymentForm = reactive({
   promptpay_id: "",
+});
+
+const logoPreviewUrl = computed(() => {
+  if (!activeStore.value?.logo) return "";
+  return getFileUrl(activeStore.value);
 });
 
 watch(
@@ -304,6 +351,30 @@ async function savePaymentSettings() {
     });
   } finally {
     isSavingPayment.value = false;
+  }
+}
+
+async function handleLogoSelect(event: Event) {
+  const input = event.target as HTMLInputElement;
+  const file = input.files?.[0];
+  input.value = "";
+  if (!file || !activeStoreId.value) return;
+
+  isUploadingLogo.value = true;
+  try {
+    await uploadStoreLogo(activeStoreId.value, file);
+  } finally {
+    isUploadingLogo.value = false;
+  }
+}
+
+async function handleRemoveLogo() {
+  if (!activeStoreId.value) return;
+  isUploadingLogo.value = true;
+  try {
+    await removeStoreLogo(activeStoreId.value);
+  } finally {
+    isUploadingLogo.value = false;
   }
 }
 

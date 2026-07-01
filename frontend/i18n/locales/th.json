@@ -96,7 +96,6 @@
     "reports": "รายงาน",
     "settings": "ตั้งค่า",
     "stores": "ร้านของฉัน",
-    "discounts": "ส่วนลด",
     "promotions": "โปรโมชัน",
     "logout": "ออกจากระบบ",
     "more": "เพิ่มเติม",
@@ -352,6 +351,9 @@
     "title": "ตั้งค่าร้าน",
     "noStore": "ยังไม่ได้เลือกร้าน",
     "storeInfo": "ข้อมูลร้าน",
+    "uploadLogo": "อัปโหลดโลโก้",
+    "removeLogo": "ลบโลโก้",
+    "noLogo": "ไม่มีโลโก้",
     "storeName": "ชื่อร้าน",
     "taxId": "เลขประจำตัวผู้เสียภาษี",
     "taxIdPlaceholder": "เลขประจำตัวผู้เสียภาษี",
@@ -408,15 +410,6 @@
     "addressPlaceholder": "123 ถนนหลัก",
     "phonePlaceholder": "0812345678"
   },
-  "discountsPage": {
-    "title": "ส่วนลดและโปรโมชัน",
-    "addDiscount": "เพิ่มส่วนลด",
-    "noDiscounts": "ยังไม่มีส่วนลด",
-    "percentType": "เปอร์เซ็นต์ (%)",
-    "fixedType": "จำนวนเงิน (฿)",
-    "editDiscount": "แก้ไขส่วนลด",
-    "addDiscountModal": "เพิ่มส่วนลด"
-  },
   "promotionsPage": {
     "title": "โปรโมชัน",
     "addPromotion": "เพิ่มโปรโมชัน",
@@ -428,6 +421,8 @@
     "typeOrderPercent": "ลดท้ายบิล (%)",
     "typeOrderFixed": "ลดท้ายบิล (฿)",
     "typeCoupon": "คูปอง",
+    "percentType": "เปอร์เซ็นต์ (%)",
+    "fixedType": "จำนวนเงิน (฿)",
     "buyQty": "ซื้อ (ชิ้น)",
     "getQty": "แถม/ลด (ชิ้น)",
     "getDiscountPercent": "ส่วนลดต่อชิ้นแถม (%)",

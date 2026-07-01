@@ -96,7 +96,6 @@
     "reports": "Reports",
     "settings": "Settings",
     "stores": "My Stores",
-    "discounts": "Discounts",
     "promotions": "Promotions",
     "logout": "Logout",
     "more": "More",
@@ -352,6 +351,9 @@
     "title": "Store Settings",
     "noStore": "No store selected",
     "storeInfo": "Store Information",
+    "uploadLogo": "Upload Logo",
+    "removeLogo": "Remove Logo",
+    "noLogo": "No logo",
     "storeName": "Store Name",
     "taxId": "Tax ID",
     "taxIdPlaceholder": "Tax identification number",
@@ -408,15 +410,6 @@
     "addressPlaceholder": "123 Main St",
     "phonePlaceholder": "0812345678"
   },
-  "discountsPage": {
-    "title": "Discounts & Promotions",
-    "addDiscount": "Add Discount",
-    "noDiscounts": "No discounts created yet",
-    "percentType": "Percent (%)",
-    "fixedType": "Fixed Amount (฿)",
-    "editDiscount": "Edit Discount",
-    "addDiscountModal": "Add Discount"
-  },
   "promotionsPage": {
     "title": "Promotions",
     "addPromotion": "Add Promotion",
@@ -428,6 +421,8 @@
     "typeOrderPercent": "Order discount (%)",
     "typeOrderFixed": "Order discount (฿)",
     "typeCoupon": "Coupon",
+    "percentType": "Percent (%)",
+    "fixedType": "Fixed Amount (฿)",
     "buyQty": "Buy (qty)",
     "getQty": "Get/free (qty)",
     "getDiscountPercent": "Discount on free items (%)",

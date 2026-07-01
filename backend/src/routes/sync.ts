@@ -5,19 +5,20 @@ import { db } from "../db/client";
 import {
   categories,
   customers,
-  discounts,
   inventory,
   inventoryTransactions,
   orderItems,
   orders,
   products,
   promotionTargets,
+  promotionUsages,
   promotions,
+  storeMembers,
+  stores,
 } from "../db/schema";
 import {
   mapCategory,
   mapCustomer,
-  mapDiscount,
   mapInventory,
   mapInventoryTransaction,
   mapOrder,
@@ -25,6 +26,9 @@ import {
   mapProduct,
   mapPromotion,
   mapPromotionTarget,
+  mapPromotionUsage,
+  mapStore,
+  mapStoreMember,
 } from "../lib/mappers";
 import { createLogger } from "../lib/logger";
 import {
@@ -50,90 +54,125 @@ syncRoutes.get(
     const storeId = c.req.param("storeId");
     const since = c.req.query("since") ?? "1970-01-01T00:00:00.000Z";
 
-    const [catRows, prodRows, custRows, invRows, discRows, promoRows, targetRows, orderRows, itemRows, txRows] =
-      await Promise.all([
-        db
-          .select()
-          .from(categories)
-          .where(
-            and(eq(categories.store, storeId), gt(categories.updated, since)),
+    const [
+      storeRows,
+      memberRows,
+      catRows,
+      prodRows,
+      custRows,
+      invRows,
+      promoRows,
+      targetRows,
+      usageRows,
+      orderRows,
+      itemRows,
+      txRows,
+    ] = await Promise.all([
+      db
+        .select()
+        .from(stores)
+        .where(and(eq(stores.id, storeId), gt(stores.updated, since))),
+      db
+        .select()
+        .from(storeMembers)
+        .where(
+          and(eq(storeMembers.store, storeId), gt(storeMembers.updated, since)),
+        ),
+      db
+        .select()
+        .from(categories)
+        .where(
+          and(eq(categories.store, storeId), gt(categories.updated, since)),
+        ),
+      db
+        .select()
+        .from(products)
+        .where(and(eq(products.store, storeId), gt(products.updated, since))),
+      db
+        .select()
+        .from(customers)
+        .where(
+          and(eq(customers.store, storeId), gt(customers.updated, since)),
+        ),
+      db
+        .select()
+        .from(inventory)
+        .where(
+          and(eq(inventory.store, storeId), gt(inventory.updated, since)),
+        ),
+      db
+        .select()
+        .from(promotions)
+        .where(
+          and(eq(promotions.store, storeId), gt(promotions.updated, since)),
+        ),
+      db
+        .select()
+        .from(promotionTargets)
+        .where(gt(promotionTargets.updated, since)),
+      db
+        .select()
+        .from(promotionUsages)
+        .where(
+          and(
+            eq(promotionUsages.store, storeId),
+            gt(promotionUsages.updated, since),
           ),
-        db
-          .select()
-          .from(products)
-          .where(and(eq(products.store, storeId), gt(products.updated, since))),
-        db
-          .select()
-          .from(customers)
-          .where(
-            and(eq(customers.store, storeId), gt(customers.updated, since)),
+        ),
+      db
+        .select()
+        .from(orders)
+        .where(and(eq(orders.store, storeId), gt(orders.updated, since))),
+      db
+        .select()
+        .from(orderItems)
+        .where(gt(orderItems.updated, since)),
+      db
+        .select()
+        .from(inventoryTransactions)
+        .where(
+          and(
+            eq(inventoryTransactions.store, storeId),
+            gt(inventoryTransactions.updated, since),
           ),
-        db
-          .select()
-          .from(inventory)
-          .where(
-            and(eq(inventory.store, storeId), gt(inventory.updated, since)),
-          ),
-        db
-          .select()
-          .from(discounts)
-          .where(
-            and(eq(discounts.store, storeId), gt(discounts.updated, since)),
-          ),
-        db
-          .select()
-          .from(promotions)
-          .where(
-            and(eq(promotions.store, storeId), gt(promotions.updated, since)),
-          ),
-        db
-          .select()
-          .from(promotionTargets)
-          .where(gt(promotionTargets.updated, since)),
-        db
-          .select()
-          .from(orders)
-          .where(and(eq(orders.store, storeId), gt(orders.updated, since))),
-        db
-          .select()
-          .from(orderItems)
-          .where(gt(orderItems.updated, since)),
-        db
-          .select()
-          .from(inventoryTransactions)
-          .where(
-            and(
-              eq(inventoryTransactions.store, storeId),
-              gt(inventoryTransactions.updated, since),
-            ),
-          ),
-      ]);
+        ),
+    ]);
 
-    // Filter order items to this store's orders
     const storeOrderIds = new Set(orderRows.map((o) => o.id));
     const filteredItems = itemRows.filter((i) => storeOrderIds.has(i.order));
-    const storePromoIds = new Set(promoRows.map((p) => p.id));
+
+    const storePromotionIds = new Set(
+      (
+        await db
+          .select({ id: promotions.id })
+          .from(promotions)
+          .where(eq(promotions.store, storeId))
+      ).map((row) => row.id),
+    );
     const filteredTargets = targetRows.filter((t) =>
-      storePromoIds.has(t.promotion),
+      storePromotionIds.has(t.promotion),
     );
 
     logger.debug(
       `sync delta storeId=${storeId} since=${since} ` +
+        `stores=${storeRows.length} store_members=${memberRows.length} ` +
         `categories=${catRows.length} products=${prodRows.length} ` +
         `customers=${custRows.length} inventory=${invRows.length} ` +
-        `discounts=${discRows.length} promotions=${promoRows.length} ` +
-        `promotion_targets=${filteredTargets.length} orders=${orderRows.length} ` +
+        `promotions=${promoRows.length} promotion_targets=${filteredTargets.length} ` +
+        `promotion_usages=${usageRows.length} orders=${orderRows.length} ` +
         `order_items=${filteredItems.length} inventory_transactions=${txRows.length}`,
     );
 
     return c.json({
+      stores: storeRows.map(mapStore),
+      store_members: memberRows.map(mapStoreMember),
       categories: catRows.map(mapCategory),
       products: prodRows.map(mapProduct),
       customers: custRows.map(mapCustomer),
       inventory: invRows.map(mapInventory),
-      discounts: discRows.map(mapDiscount),
       promotions: promoRows.map((row) => mapPromotion({ ...row, targets: [] })),
       promotion_targets: filteredTargets.map(mapPromotionTarget),
+      promotion_usages: usageRows.map(mapPromotionUsage),
       orders: orderRows.map(mapOrder),
       order_items: filteredItems.map(mapOrderItem),
       inventory_transactions: txRows.map(mapInventoryTransaction),
@@ -149,7 +188,6 @@ const COLLECTION_HANDLERS: Record<
   categories: { table: "categories", storeField: "store" },
   products: { table: "products", storeField: "store" },
   customers: { table: "customers", storeField: "store" },
-  discounts: { table: "discounts", storeField: "store" },
   promotions: { table: "promotions", storeField: "store" },
   promotion_targets: { table: "promotionTargets" },
   inventory: { table: "inventory", storeField: "store" },

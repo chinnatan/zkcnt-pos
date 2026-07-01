@@ -44,7 +44,12 @@ frontend/
 │   └── components/
 └── e2e/
     ├── helpers/seed.ts
-    └── specs/pos-checkout.spec.ts
+    └── specs/
+        pos-checkout.spec.ts
+        pos-promotions.spec.ts
+        pos-stock-block.spec.ts
+        orders-void-rbac.spec.ts
+        pos-qr-payment.spec.ts
 
 shared/test-fixtures/
 └── promotions.json                # fixtures ร่วม FE/BE
@@ -157,9 +162,13 @@ bun run test:e2e
 
 Playwright จะ start backend (`DATA_DIR=./data-e2e`) และ `nuxt preview` อัตโนมัติ
 
-**Flow ที่ครอบคลุม:**
-1. Login → POS → cash checkout → success modal
+**Flow ที่ครอบคลุม (automated):**
+1. Login → POS → cash checkout → success modal (`pos-checkout.spec.ts`)
 2. Offline checkout → dashboard แสดง pending sync → reconnect → synced
+3. Promotion order % ลดราคาใน cart (`pos-promotions.spec.ts`)
+4. สินค้าหมดสต็อก → ไม่เพิ่มลง cart (`pos-stock-block.spec.ts`)
+5. Cashier ไม่ void ได้ / owner เห็นปุ่ม void (`orders-void-rbac.spec.ts`)
+6. PromptPay QR modal แสดงเมื่อชำระ QR (`pos-qr-payment.spec.ts`)
 
 **ข้อควรระวัง:**
 - ใช้ `nuxt preview` (production build) ไม่ใช่ `nuxt dev` เพื่อหลีกเลี่ยง Workbox cache ใน dev

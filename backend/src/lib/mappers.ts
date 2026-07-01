@@ -97,6 +97,7 @@ export function mapCategory(row: {
   image: string;
   sortOrder: number;
   isActive: boolean;
+  deletedAt?: string | null;
   created: string;
   updated: string;
 }) {
@@ -108,6 +109,7 @@ export function mapCategory(row: {
     image: row.image,
     sort_order: row.sortOrder,
     is_active: row.isActive,
+    deleted_at: row.deletedAt ?? null,
     created: row.created,
     updated: row.updated,
   });
@@ -127,6 +129,7 @@ export function mapProduct(row: {
   unit: string;
   trackInventory: boolean;
   isActive: boolean;
+  deletedAt?: string | null;
   created: string;
   updated: string;
 }) {
@@ -144,6 +147,7 @@ export function mapProduct(row: {
     unit: row.unit,
     track_inventory: row.trackInventory,
     is_active: row.isActive,
+    deleted_at: row.deletedAt ?? null,
     created: row.created,
     updated: row.updated,
   });
@@ -159,6 +163,7 @@ export function mapCustomer(row: {
   note: string;
   totalSpent: number;
   visitCount: number;
+  deletedAt?: string | null;
   created: string;
   updated: string;
 }) {
@@ -172,6 +177,7 @@ export function mapCustomer(row: {
     note: row.note,
     total_spent: row.totalSpent,
     visit_count: row.visitCount,
+    deleted_at: row.deletedAt ?? null,
     created: row.created,
     updated: row.updated,
   });
@@ -340,34 +346,6 @@ export function mapAuditEvent(row: {
   };
 }
 
-export function mapDiscount(row: {
-  id: string;
-  store: string;
-  name: string;
-  type: string;
-  value: number;
-  minPurchase: number;
-  startDate: string;
-  endDate: string;
-  isActive: boolean;
-  created: string;
-  updated: string;
-}) {
-  return withMeta("discounts", {
-    id: row.id,
-    store: row.store,
-    name: row.name,
-    type: row.type,
-    value: row.value,
-    min_purchase: row.minPurchase,
-    start_date: row.startDate,
-    end_date: row.endDate,
-    is_active: row.isActive,
-    created: row.created,
-    updated: row.updated,
-  });
-}
-
 export function mapPromotion(row: {
   id: string;
   store: string;
@@ -389,6 +367,7 @@ export function mapPromotion(row: {
   startDate: string;
   endDate: string;
   isActive: boolean;
+  deletedAt?: string | null;
   created: string;
   updated: string;
   targets?: Array<{
@@ -421,6 +400,7 @@ export function mapPromotion(row: {
     start_date: row.startDate,
     end_date: row.endDate,
     is_active: row.isActive,
+    deleted_at: row.deletedAt ?? null,
     targets: (row.targets ?? []).map(mapPromotionTarget),
     created: row.created,
     updated: row.updated,
@@ -432,6 +412,7 @@ export function mapPromotionTarget(row: {
   promotion: string;
   targetType: string;
   targetId: string;
+  deletedAt?: string | null;
   created: string;
   updated: string;
 }) {
@@ -440,6 +421,29 @@ export function mapPromotionTarget(row: {
     promotion: row.promotion,
     target_type: row.targetType,
     target_id: row.targetId,
+    deleted_at: row.deletedAt ?? null,
+    created: row.created,
+    updated: row.updated,
+  });
+}
+
+export function mapPromotionUsage(row: {
+  id: string;
+  store: string;
+  promotion: string;
+  order: string;
+  customer: string | null;
+  discountAmount: number;
+  created: string;
+  updated: string;
+}) {
+  return withMeta("promotion_usages", {
+    id: row.id,
+    store: row.store,
+    promotion: row.promotion,
+    order: row.order,
+    customer: row.customer ?? "",
+    discount_amount: row.discountAmount,
     created: row.created,
     updated: row.updated,
   });

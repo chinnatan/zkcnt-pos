@@ -20,9 +20,12 @@ describe("GET /api/stores/:storeId/sync", () => {
     );
 
     expect(res.status).toBe(200);
+    expect(json).toHaveProperty("stores");
+    expect(json).toHaveProperty("store_members");
     expect(json).toHaveProperty("categories");
     expect(json).toHaveProperty("products");
     expect(json).toHaveProperty("promotions");
+    expect(json).toHaveProperty("promotion_usages");
     expect(json).toHaveProperty("orders");
     expect(json).toHaveProperty("order_items");
 

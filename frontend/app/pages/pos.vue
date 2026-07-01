@@ -473,15 +473,19 @@ function handleNewOrder() {
   showMobileCart.value = false;
 }
 
-onMounted(async () => {
-  await Promise.all([
-    fetchProducts(),
-    fetchCategories(),
-    fetchInventory(),
-    fetchPromotions(),
-  ]);
-  setPromotionInputs(getPromotionInputs());
-});
+watch(
+  activeStoreId,
+  (id) => {
+    if (!id) return;
+    void Promise.all([
+      fetchProducts(),
+      fetchCategories(),
+      fetchInventory(),
+      fetchPromotions(),
+    ]).then(() => setPromotionInputs(getPromotionInputs()));
+  },
+  { immediate: true },
+);
 
 watch(
   activePromotions,

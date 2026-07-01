@@ -1,8 +1,9 @@
 <template>
   <Teleport to="body">
-    <div
-      v-if="show"
-      class="craft-modal-backdrop craft-modal-backdrop--center z-[110]"
+      <div
+        v-if="show"
+        data-testid="qr-payment-modal"
+        class="craft-modal-backdrop craft-modal-backdrop--center z-[110]"
       @click.self="$emit('cancel')"
     >
       <div

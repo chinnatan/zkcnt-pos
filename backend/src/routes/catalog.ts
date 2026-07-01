@@ -6,6 +6,7 @@ import { categories, products } from "../db/schema";
 import { buildChanges, logAuditEvent } from "../lib/audit";
 import { generateId } from "../lib/id";
 import { mapCategory, mapProduct } from "../lib/mappers";
+import { notDeleted } from "../lib/soft-delete";
 import { nowIso } from "../lib/timestamps";
 import { createLogger } from "../lib/logger";
 import { deleteUpload, saveUpload } from "../lib/uploads";
@@ -54,7 +55,7 @@ catalogRoutes.get(
     const rows = await db
       .select()
       .from(categories)
-      .where(eq(categories.store, storeId))
+      .where(and(eq(categories.store, storeId), notDeleted(categories.deletedAt)))
       .orderBy(asc(categories.sortOrder), asc(categories.name));
 
     return c.json(rows.map(mapCategory));
@@ -181,15 +182,23 @@ catalogRoutes.delete(
     const linked = await db
       .select({ id: products.id })
       .from(products)
-      .where(and(eq(products.store, storeId), eq(products.category, id)))
+      .where(
+        and(
+          eq(products.store, storeId),
+          eq(products.category, id),
+          notDeleted(products.deletedAt),
+        ),
+      )
       .limit(1);
 
     if (linked.length > 0) {
       throw new HTTPException(409, { message: "category_has_products" });
     }
 
+    const now = nowIso();
     await db
-      .delete(categories)
+      .update(categories)
+      .set({ deletedAt: now, updated: now, isActive: false })
       .where(and(eq(categories.id, id), eq(categories.store, storeId)));
 
     if (existing[0]) {
@@ -217,7 +226,7 @@ catalogRoutes.get(
     const rows = await db
       .select()
       .from(products)
-      .where(eq(products.store, storeId))
+      .where(and(eq(products.store, storeId), notDeleted(products.deletedAt)))
       .orderBy(asc(products.name));
 
     return c.json(rows.map(mapProduct));
@@ -513,10 +522,12 @@ catalogRoutes.delete(
       .where(and(eq(products.id, id), eq(products.store, storeId)))
       .limit(1);
 
-    if (existing[0]?.image) deleteUpload(existing[0].image);
+    if (!existing[0]) throw new HTTPException(404, { message: "Not found" });
 
+    const now = nowIso();
     await db
-      .delete(products)
+      .update(products)
+      .set({ deletedAt: now, updated: now, isActive: false })
       .where(and(eq(products.id, id), eq(products.store, storeId)));
 
     if (existing[0]) {

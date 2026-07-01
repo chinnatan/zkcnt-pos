@@ -114,6 +114,7 @@ export const categories = sqliteTable("categories", {
   image: text("image").notNull().default(""),
   sortOrder: integer("sort_order").notNull().default(0),
   isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
+  deletedAt: text("deleted_at"),
   ...timestamps,
 });
 
@@ -135,6 +136,7 @@ export const products = sqliteTable("products", {
     .notNull()
     .default(false),
   isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
+  deletedAt: text("deleted_at"),
   ...timestamps,
 });
 
@@ -150,6 +152,7 @@ export const customers = sqliteTable("customers", {
   note: text("note").notNull().default(""),
   totalSpent: real("total_spent").notNull().default(0),
   visitCount: integer("visit_count").notNull().default(0),
+  deletedAt: text("deleted_at"),
   ...timestamps,
 });
 
@@ -257,21 +260,6 @@ export const inventoryTransactions = sqliteTable("inventory_transactions", {
   ...timestamps,
 });
 
-export const discounts = sqliteTable("discounts", {
-  id: text("id").primaryKey(),
-  store: text("store")
-    .notNull()
-    .references(() => stores.id, { onDelete: "cascade" }),
-  name: text("name").notNull(),
-  type: text("type", { enum: ["percent", "fixed"] }).notNull(),
-  value: real("value").notNull(),
-  minPurchase: real("min_purchase").notNull().default(0),
-  startDate: text("start_date").notNull().default(""),
-  endDate: text("end_date").notNull().default(""),
-  isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
-  ...timestamps,
-});
-
 export const promotions = sqliteTable(
   "promotions",
   {
@@ -313,6 +301,7 @@ export const promotions = sqliteTable(
     startDate: text("start_date").notNull().default(""),
     endDate: text("end_date").notNull().default(""),
     isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
+    deletedAt: text("deleted_at"),
     ...timestamps,
   },
 );
@@ -328,6 +317,7 @@ export const promotionTargets = sqliteTable(
       enum: ["product", "category"],
     }).notNull(),
     targetId: text("target_id").notNull(),
+    deletedAt: text("deleted_at"),
     ...timestamps,
   },
   (t) => [
@@ -399,7 +389,6 @@ export const schema = {
   orderItems,
   inventory,
   inventoryTransactions,
-  discounts,
   promotions,
   promotionTargets,
   promotionUsages,

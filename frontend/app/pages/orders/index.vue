@@ -63,6 +63,7 @@
                     <td class="px-4 py-3">
                       <button
                         class="rounded px-2 py-1 text-xs text-primary-600 hover:bg-primary-50"
+                        :data-testid="`view-order-${order.id}`"
                         @click="viewOrder(order)"
                       >
                         {{ t('common.view') }}
@@ -118,7 +119,7 @@
 
     <Teleport to="body">
       <div v-if="selectedOrder" class="craft-modal-backdrop craft-modal-backdrop--center z-50" @click.self="selectedOrder = null">
-        <div class="craft-modal-panel craft-modal--ticket max-w-lg">
+        <div class="craft-modal-panel craft-modal--ticket max-w-lg" data-testid="order-detail-modal">
           <div class="mb-4 flex items-center justify-between">
             <h3 class="text-lg font-semibold">{{ t('ordersPage.orderDetail', { number: selectedOrder.order_number }) }}</h3>
             <button class="text-ink-muted hover:text-ink-muted" @click="selectedOrder = null">
@@ -177,6 +178,7 @@
               class="mt-4 flex gap-2 border-t border-border-warm pt-4"
             >
               <button
+                data-testid="void-order-btn"
                 class="flex-1 rounded-lg border border-danger-100 bg-danger-50 px-3 py-2 text-sm font-medium text-danger-700 hover:bg-danger-100 disabled:opacity-50"
                 :disabled="isUpdatingStatus"
                 @click="confirmStatusChange('voided')"
