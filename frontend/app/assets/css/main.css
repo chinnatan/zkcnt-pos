@@ -49,7 +49,7 @@
   --color-danger-500: #d4898a;
   --color-danger-700: #a86668;
 
-  --font-display: "Fraunces", "Noto Serif Thai", serif;
+  --font-display: "Noto Sans Thai", system-ui, sans-serif;
   --font-sans: "Noto Sans Thai", system-ui, sans-serif;
 }
 

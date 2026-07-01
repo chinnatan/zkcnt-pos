@@ -43,7 +43,7 @@ const options = {
   plugins: {
     legend: {
       position: "bottom" as const,
-      labels: { boxWidth: 12, padding: 8, font: { size: 11 } },
+      labels: { boxWidth: 12, padding: 8, font: { size: 11, family: '"Noto Sans Thai", system-ui, sans-serif' } },
     },
   },
 };
