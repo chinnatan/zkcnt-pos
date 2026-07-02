@@ -45,7 +45,8 @@ function onError() {
 }
 
 watch(
-  () => props.product.id,
+  () =>
+    [props.product.id, props.product.image, props.product.updated] as const,
   () => {
     showFallback.value = false;
     if (cachedUrl.value) {

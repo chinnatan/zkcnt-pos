@@ -95,6 +95,28 @@ async function queueOfflineImageUpload(
   });
 }
 
+async function refreshProductImageBlobCache(
+  storeId: string,
+  productId: string,
+  imageFile: File | null | undefined,
+  removeImage: boolean | undefined,
+): Promise<void> {
+  if (removeImage) {
+    await deleteFileBlob("products", productId, "image");
+    return;
+  }
+  if (!imageFile) return;
+  await deleteFileBlob("products", productId, "image");
+  await storeFileBlob(
+    "products",
+    productId,
+    "image",
+    storeId,
+    imageFile,
+    imageFile.type,
+  );
+}
+
 export function useProducts() {
   const { $api } = useNuxtApp();
   const { activeStoreId } = useStore();
@@ -177,6 +199,12 @@ export function useProducts() {
         removeImage,
       );
       if (withImage) record = withImage;
+      await refreshProductImageBlobCache(
+        storeId,
+        record.id,
+        imageFile,
+        removeImage,
+      );
       await db.products.put(record);
       await fetchProducts();
       return record;
@@ -255,6 +283,12 @@ export function useProducts() {
         removeImage,
       );
       if (withImage) record = withImage;
+      await refreshProductImageBlobCache(
+        storeId,
+        id,
+        imageFile,
+        removeImage,
+      );
       await db.products.put(record);
       await fetchProducts();
       return record;

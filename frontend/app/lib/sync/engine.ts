@@ -8,6 +8,7 @@ import {
   markFileInFlight,
   markFileSynced,
   remapFileQueueRecordId,
+  deleteFileBlob,
   storeFileBlob,
 } from "../files/blobs";
 import type { OrderItem } from "../types";
@@ -392,13 +393,23 @@ export class SyncEngine {
 
       const cacheId = blobCacheId("products", product.id, "image");
       const existing = await db.fileBlobs.get(cacheId);
-      if (existing) {
+      if (
+        existing &&
+        (!product.updated || product.updated <= existing.created_at)
+      ) {
         skipped++;
         continue;
       }
+      if (existing) {
+        await deleteFileBlob("products", product.id, "image");
+      }
 
       try {
-        const url = this.api.getFileUrl(product.image);
+        const url = this.api.getFileUrl(
+          product.image,
+          undefined,
+          product.updated,
+        );
         const res = await fetch(url);
         if (!res.ok) continue;
 

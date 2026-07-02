@@ -218,11 +218,15 @@ export class ApiClient {
     });
   }
 
-  getFileUrl(relativePath: string, thumb?: string): string {
+  getFileUrl(relativePath: string, thumb?: string, version?: string): string {
     if (!relativePath) return "";
     if (relativePath.startsWith("http")) return relativePath;
     const base = `${this.uploadsBase}/${relativePath.replace(/^\//, "")}`;
-    return thumb ? `${base}?thumb=${thumb}` : base;
+    const params = new URLSearchParams();
+    if (thumb) params.set("thumb", thumb);
+    if (version) params.set("v", version);
+    const qs = params.toString();
+    return qs ? `${base}?${qs}` : base;
   }
 
   async syncDelta(storeId: string, since: string): Promise<SyncDelta> {
