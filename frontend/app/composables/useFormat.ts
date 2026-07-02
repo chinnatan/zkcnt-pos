@@ -5,7 +5,7 @@ export function useFormat() {
   const timeZone = "Asia/Bangkok";
 
   function formatCurrency(amount: number): string {
-    return `฿${amount.toLocaleString(localeTag.value, { minimumFractionDigits: 2 })}`;
+    return `${amount.toLocaleString(localeTag.value, { minimumFractionDigits: 2 })}฿`;
   }
 
   function formatDate(date?: string | Date): string {

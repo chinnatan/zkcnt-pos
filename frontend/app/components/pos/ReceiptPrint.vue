@@ -39,12 +39,12 @@
             <span class="flex-1">{{ item.product_name }}</span>
           </div>
           <div class="flex justify-between pl-2">
-            <span>{{ item.quantity }} x {{ formatAmount(item.unit_price) }}</span>
-            <span>{{ formatAmount(item.total) }}</span>
+            <span>{{ item.quantity }} x {{ formatCurrency(item.unit_price) }}</span>
+            <span>{{ formatCurrency(item.total) }}</span>
           </div>
           <div v-if="item.discount > 0" class="flex justify-between pl-2 text-ink-muted">
             <span>{{ t('receipt.discount') }}</span>
-            <span>-{{ formatAmount(item.discount) }}</span>
+            <span>-{{ formatCurrency(item.discount) }}</span>
           </div>
         </div>
       </div>
@@ -54,11 +54,11 @@
       <div class="mb-2 space-y-0.5">
         <div class="flex justify-between">
           <span>{{ t('common.subtotal') }}</span>
-          <span>{{ formatAmount(order?.subtotal ?? 0) }}</span>
+          <span>{{ formatCurrency(order?.subtotal ?? 0) }}</span>
         </div>
         <div v-if="(order?.discount_amount ?? 0) > 0" class="flex justify-between">
           <span>{{ t('receipt.discount') }}</span>
-          <span>-{{ formatAmount(order?.discount_amount ?? 0) }}</span>
+          <span>-{{ formatCurrency(order?.discount_amount ?? 0) }}</span>
         </div>
         <div
           v-for="promo in order?.applied_promotions ?? []"
@@ -66,15 +66,15 @@
           class="flex justify-between text-ink-muted"
         >
           <span>{{ promo.name }}</span>
-          <span>-{{ formatAmount(promo.amount) }}</span>
+          <span>-{{ formatCurrency(promo.amount) }}</span>
         </div>
         <div v-if="(order?.tax_amount ?? 0) > 0" class="flex justify-between">
           <span>{{ t('receipt.vat') }}</span>
-          <span>{{ formatAmount(order?.tax_amount ?? 0) }}</span>
+          <span>{{ formatCurrency(order?.tax_amount ?? 0) }}</span>
         </div>
         <div class="flex justify-between text-sm font-bold">
           <span>{{ t('receipt.total') }}</span>
-          <span>{{ formatAmount(order?.total ?? 0) }}</span>
+          <span>{{ formatCurrency(order?.total ?? 0) }}</span>
         </div>
       </div>
 
@@ -83,11 +83,11 @@
       <div class="mb-3 space-y-0.5">
         <div class="flex justify-between">
           <span>{{ t('receipt.payment', { method: paymentLabel(order?.payment_method ?? '') }) }}</span>
-          <span>{{ formatAmount(order?.payment_received ?? 0) }}</span>
+          <span>{{ formatCurrency(order?.payment_received ?? 0) }}</span>
         </div>
         <div class="flex justify-between font-bold">
           <span>{{ t('receipt.change') }}</span>
-          <span>{{ formatAmount(order?.change_amount ?? 0) }}</span>
+          <span>{{ formatCurrency(order?.change_amount ?? 0) }}</span>
         </div>
       </div>
 
@@ -117,7 +117,7 @@ const props = defineProps<{
 }>();
 
 const { t } = useI18n();
-const { formatDate, formatAmount } = useFormat();
+const { formatDate, formatCurrency } = useFormat();
 const { paymentLabel } = useLabels();
 
 const receiptRef = ref<HTMLDivElement>();

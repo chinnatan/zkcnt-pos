@@ -5,7 +5,7 @@ import { getCachedBlobUrl } from "~/lib/files/blobs";
 const props = withDefaults(
   defineProps<{
     product: Product;
-    size?: "sm" | "md" | "lg";
+    size?: "sm" | "md" | "lg" | "fill";
     thumb?: string;
     square?: boolean;
   }>(),
@@ -20,6 +20,8 @@ const sizeClass = computed(() => {
       return "h-10 w-10 text-sm";
     case "lg":
       return "h-16 w-16 text-2xl";
+    case "fill":
+      return "pos-tile-image w-full text-xl md:text-2xl";
     default:
       return "h-10 w-10 text-base";
   }
@@ -65,8 +67,8 @@ onUnmounted(() => {
 
 <template>
   <div
-    class="flex flex-shrink-0 items-center justify-center overflow-hidden bg-primary-100 font-display font-bold text-primary-700"
-    :class="[sizeClass, square ? 'rounded-sm' : 'rounded-xl']"
+    class="flex items-center justify-center overflow-hidden bg-primary-100 font-display font-bold text-primary-700"
+    :class="[sizeClass, square ? 'rounded-sm' : 'rounded-xl', size !== 'fill' ? 'flex-shrink-0' : '']"
   >
     <img
       v-if="displayUrl && !showFallback"

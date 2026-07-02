@@ -687,15 +687,15 @@ onUnmounted(() => {
                   <div>
                     <label class="mb-1 block text-sm font-medium text-ink">{{ t('common.price') }} <span class="text-danger-500">*</span></label>
                     <div class="relative">
-                      <span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-ink-muted">฿</span>
-                      <input v-model.number="productForm.price" type="number" step="0.01" min="0" required class="w-full rounded-lg border border-border-warm py-2 pl-8 pr-3 text-sm transition focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20" />
+                      <span class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-ink-muted">฿</span>
+                      <input v-model.number="productForm.price" type="number" step="0.01" min="0" required class="w-full rounded-lg border border-border-warm py-2 pl-3 pr-8 text-sm transition focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20" />
                     </div>
                   </div>
                   <div>
                     <label class="mb-1 block text-sm font-medium text-ink">{{ t('common.cost') }}</label>
                     <div class="relative">
-                      <span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-ink-muted">฿</span>
-                      <input v-model.number="productForm.cost" type="number" step="0.01" min="0" class="w-full rounded-lg border border-border-warm py-2 pl-8 pr-3 text-sm transition focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20" />
+                      <span class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-ink-muted">฿</span>
+                      <input v-model.number="productForm.cost" type="number" step="0.01" min="0" class="w-full rounded-lg border border-border-warm py-2 pl-3 pr-8 text-sm transition focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20" />
                     </div>
                   </div>
                 </div>

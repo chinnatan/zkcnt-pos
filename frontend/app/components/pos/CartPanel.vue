@@ -1,5 +1,5 @@
 <template>
-  <div class="flex h-full min-h-0 flex-col">
+  <div class="flex h-full min-h-0 flex-1 flex-col overflow-hidden">
     <!-- Cart Header -->
     <div class="pos-cart-header">
       <h2 class="font-display text-base font-bold text-ink">
@@ -22,7 +22,7 @@
     </div>
 
     <!-- Scroll body: items + checkout fields -->
-    <div class="min-h-0 flex-1 overflow-y-auto">
+    <div class="pos-cart-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain">
       <div v-if="cartItems.length === 0" class="flex h-full items-center justify-center p-8">
         <div class="text-center text-ink-muted">
           <svg

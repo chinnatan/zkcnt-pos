@@ -52,8 +52,8 @@
 
         <!-- Product Grid -->
         <div
-          class="flex-1 overflow-y-auto p-4"
-          :class="itemCount > 0 ? 'pb-24 md:pb-4' : ''"
+          class="flex-1 overflow-y-auto overscroll-contain p-3 min-[480px]:p-4"
+          :class="itemCount > 0 ? 'pb-28 md:pb-4' : ''"
         >
           <div v-if="isLoading" class="flex h-full items-center justify-center">
             <div class="text-center text-ink-muted">
@@ -104,43 +104,47 @@
 
           <div
             v-else
-            class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5"
+            class="pos-product-grid grid grid-cols-2 gap-2.5 md:grid-cols-3 md:gap-3 xl:grid-cols-4"
           >
             <button
               v-for="product in filteredProducts"
               :key="product.id"
               :data-testid="`product-card-${product.id}`"
-              class="touch-pos craft-tile-polaroid group flex flex-col items-center"
+              class="touch-pos craft-tile-polaroid group flex flex-col items-stretch active:scale-[0.98]"
               :class="
                 isOutOfStock(product)
                   ? 'cursor-not-allowed opacity-50'
-                  : 'lg:active:scale-[0.98]'
+                  : ''
               "
               :disabled="isOutOfStock(product)"
               @click="handleAddItem(product)"
             >
-              <div class="pos-photo-frame mb-3">
-                <ProductImage :product="product" size="lg" square />
+              <div class="pos-photo-frame mb-1.5 w-full">
+                <ProductImage :product="product" size="fill" thumb="200x200" square />
               </div>
-              <span
-                class="mb-1 line-clamp-2 w-full text-sm font-medium text-ink"
-              >
-                {{ product.name }}
-              </span>
-              <span class="font-display text-sm font-semibold text-primary-700">
-                {{ formatCurrency(product.price) }}
-              </span>
-              <span
-                v-if="product.track_inventory"
-                class="mt-1 text-xs"
-                :class="isOutOfStock(product) ? 'text-danger-500' : 'text-ink-muted'"
-              >
-                {{
-                  isOutOfStock(product)
-                    ? t('stock.outOfStock')
-                    : t('pos.stockRemaining', { count: getAvailableQty(product.id) })
-                }}
-              </span>
+              <div class="min-w-0 px-0.5">
+                <span
+                  class="line-clamp-1 w-full text-xs font-medium leading-tight text-ink md:line-clamp-2 md:text-sm"
+                >
+                  {{ product.name }}
+                </span>
+                <div class="mt-0.5 flex items-baseline justify-between gap-1">
+                  <span class="font-display text-sm font-bold text-primary-700">
+                    {{ formatCurrency(product.price) }}
+                  </span>
+                  <span
+                    v-if="product.track_inventory"
+                    class="shrink-0 text-[10px] leading-none md:text-xs"
+                    :class="isOutOfStock(product) ? 'text-danger-500' : 'text-ink-muted'"
+                  >
+                    {{
+                      isOutOfStock(product)
+                        ? t('stock.outOfStock')
+                        : t('pos.stockRemaining', { count: getAvailableQty(product.id) })
+                    }}
+                  </span>
+                </div>
+              </div>
             </button>
           </div>
         </div>

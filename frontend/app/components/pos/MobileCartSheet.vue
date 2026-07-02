@@ -16,12 +16,14 @@
         <div
           ref="panelRef"
           class="pos-mobile-sheet-panel"
-          style="padding-bottom: env(safe-area-inset-bottom)"
-          @touchstart.passive="onTouchStart"
-          @touchmove.passive="onTouchMove"
-          @touchend="onTouchEnd"
         >
-          <div class="relative flex shrink-0 flex-col items-center border-b border-primary-200/60 px-4 py-3" style="border-bottom-style: dashed">
+          <div
+            class="relative flex shrink-0 flex-col items-center border-b border-primary-200/60 px-4 py-3"
+            style="border-bottom-style: dashed"
+            @touchstart.passive="onTouchStart"
+            @touchmove.passive="onTouchMove"
+            @touchend="onTouchEnd"
+          >
             <div class="mb-1 h-1 w-10 cursor-grab rounded-full bg-primary-200 active:cursor-grabbing" />
             <button
               type="button"
@@ -35,7 +37,7 @@
             </button>
           </div>
 
-          <div class="min-h-0 flex-1 overflow-hidden">
+          <div class="pos-mobile-sheet-body">
             <slot />
           </div>
         </div>
