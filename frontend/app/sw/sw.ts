@@ -106,3 +106,15 @@ registerRoute(
   }),
   "GET",
 );
+
+registerRoute(
+  /^https?:\/\/.*\/uploads\/.*/i,
+  new NetworkFirst({
+    cacheName: "uploads-cache",
+    plugins: [
+      new CacheableResponsePlugin({ statuses: [0, 200] }),
+      new ExpirationPlugin({ maxEntries: 200, maxAgeSeconds: 604800 }),
+    ],
+  }),
+  "GET",
+);

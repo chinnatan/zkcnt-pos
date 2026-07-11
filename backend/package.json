@@ -6,19 +6,29 @@
     "dev": "bun run --watch src/index.ts",
     "start": "bun run src/index.ts",
     "migrate": "bun run src/db/migrate.ts",
+    "cf:dev": "wrangler dev",
+    "cf:deploy": "wrangler deploy",
+    "cf:db:migrate": "wrangler d1 migrations apply zkcnt-pos --remote",
+    "cf:db:migrate:local": "wrangler d1 migrations apply zkcnt-pos --local",
+    "migrate:d1": "bun run scripts/migrate-to-d1.ts",
+    "sync:uploads:r2": "bun run scripts/sync-uploads-to-r2.ts",
     "test": "bun test",
     "test:integration": "bun test src/test/integration",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "bcryptjs": "^3.0.2",
     "drizzle-orm": "^0.44.2",
     "hono": "^4.8.3",
     "jose": "^6.0.11",
     "resend": "^6.14.0"
   },
   "devDependencies": {
+    "@cloudflare/workers-types": "^4.20250715.0",
+    "@types/bcryptjs": "^3.0.0",
     "@types/bun": "latest",
     "drizzle-kit": "^0.31.1",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "wrangler": "^4.25.0"
   }
 }

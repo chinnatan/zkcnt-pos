@@ -1,4 +1,4 @@
-import { env } from "../env";
+import { getRuntimeConfig, parseLogLevel } from "../env";
 
 export type LogLevel = "debug" | "info" | "warn" | "error" | "silent";
 
@@ -19,8 +19,16 @@ const SENSITIVE_KEYS = new Set([
   "Authorization",
 ]);
 
+function getLogLevel(): LogLevel {
+  try {
+    return getRuntimeConfig().logLevel;
+  } catch {
+    return parseLogLevel(process.env.LOG_LEVEL);
+  }
+}
+
 function shouldLog(level: LogLevel): boolean {
-  return LEVEL_RANK[level] >= LEVEL_RANK[env.logLevel];
+  return LEVEL_RANK[level] >= LEVEL_RANK[getLogLevel()];
 }
 
 function formatMessage(namespace: string, level: string, message: string): string {

@@ -1,11 +1,31 @@
-import { Database } from "bun:sqlite";
-import { drizzle } from "drizzle-orm/bun-sqlite";
-import { env } from "../env";
+import { drizzle as drizzleD1 } from "drizzle-orm/d1";
 import * as schema from "./schema";
 
-const sqlite = new Database(env.dbPath);
-sqlite.exec("PRAGMA journal_mode = WAL;");
-sqlite.exec("PRAGMA foreign_keys = ON;");
+export type AppDb = ReturnType<typeof drizzleD1<typeof schema>>;
 
-export const db = drizzle(sqlite, { schema });
-export { sqlite };
+let activeDb: AppDb | null = null;
+
+export function createDbFromD1(d1: D1Database): AppDb {
+  return drizzleD1(d1, { schema });
+}
+
+export function initDb(db: AppDb): AppDb {
+  activeDb = db;
+  return db;
+}
+
+export function getDb(): AppDb {
+  if (!activeDb) {
+    throw new Error("Database not initialized. Call initDb() first.");
+  }
+  return activeDb;
+}
+
+/** @deprecated Prefer getDb() — kept for gradual migration of route imports */
+export const db: AppDb = new Proxy({} as AppDb, {
+  get(_target, prop, receiver) {
+    const instance = getDb();
+    const value = Reflect.get(instance as object, prop, receiver);
+    return typeof value === "function" ? value.bind(instance) : value;
+  },
+});

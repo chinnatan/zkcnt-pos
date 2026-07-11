@@ -3,7 +3,7 @@ import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
 import { db } from "../db/client";
 import { passwordResetTokens, users } from "../db/schema";
-import { env } from "../env";
+import { getRuntimeConfig } from "../env";
 import { sendPasswordResetEmail } from "../lib/email";
 import { signAccessToken, signRefreshToken, verifyToken } from "../lib/jwt";
 import { mapUser } from "../lib/mappers";
@@ -202,7 +202,7 @@ authRoutes.post("/forgot-password", async (c) => {
       created: now,
     });
 
-    const resetLink = `${env.appUrl}/reset-password/${token}`;
+    const resetLink = `${getRuntimeConfig().appUrl}/reset-password/${token}`;
 
     try {
       await sendPasswordResetEmail(email, resetLink, user.name);

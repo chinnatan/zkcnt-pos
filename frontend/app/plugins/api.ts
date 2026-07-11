@@ -2,7 +2,10 @@ import { createApiClient, type ApiClient } from "~/lib/api/client";
 
 export default defineNuxtPlugin(() => {
   const config = useRuntimeConfig();
-  const api = createApiClient(config.public.apiUrl as string);
+  const api = createApiClient(
+    config.public.apiUrl as string,
+    config.public.uploadsUrl as string,
+  );
 
   return {
     provide: {

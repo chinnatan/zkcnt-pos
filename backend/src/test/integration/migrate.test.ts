@@ -1,9 +1,11 @@
 import { describe, expect, test } from "bun:test";
-import { sqlite } from "../../db/client";
+import { sqlite } from "../../db/client.bun";
 
 describe("database migration", () => {
   test("fresh migrate creates promotions and orders tables", () => {
-    const rows = sqlite
+    expect(sqlite).not.toBeNull();
+    const db = sqlite!;
+    const rows = db
       .query<{ name: string }, []>("SELECT name FROM sqlite_master WHERE type='table'")
       .all();
 

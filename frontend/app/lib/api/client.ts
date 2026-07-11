@@ -46,9 +46,9 @@ export class ApiClient {
   private uploadsBase: string;
   private authState: AuthState | null = null;
 
-  constructor(baseUrl?: string) {
+  constructor(baseUrl?: string, uploadsUrl?: string) {
     this.baseUrl = resolveApiBaseUrl(baseUrl);
-    this.uploadsBase = resolveUploadsBaseUrl(this.baseUrl);
+    this.uploadsBase = resolveUploadsBaseUrl(this.baseUrl, uploadsUrl);
     if (import.meta.client) {
       this.restoreAuth();
     }
@@ -336,6 +336,6 @@ export class ApiClient {
   }
 }
 
-export function createApiClient(baseUrl?: string) {
-  return new ApiClient(baseUrl);
+export function createApiClient(baseUrl?: string, uploadsUrl?: string) {
+  return new ApiClient(baseUrl, uploadsUrl);
 }

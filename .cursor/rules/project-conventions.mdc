@@ -6,10 +6,12 @@ alwaysApply: true
 # zKCNT POS Project Conventions
 
 ## Tech Stack
-- Frontend: Nuxt 3 (Vue 3) with Tailwind CSS v4, SSR disabled (SPA/PWA)
-- Local DB: Dexie.js (IndexedDB wrapper)
-- Backend: Bun + Hono + Drizzle ORM + SQLite (`backend/data/pos.db`)
-- Containerization: Docker with separate dev/prod compose files
+- Frontend: Nuxt 3 (Vue 3) with Tailwind CSS v4, SSR disabled (SPA/PWA) → **Cloudflare Pages**
+- Local DB: Dexie.js (IndexedDB)
+- Backend: Hono → **Cloudflare Workers** (local dev: Bun + SQLite)
+- Database: **Cloudflare D1** (SQLite) — local dev uses `backend/data/pos.db`
+- Uploads: **Cloudflare R2** — local dev uses `backend/data/uploads/`
+- Containerization: Docker (local dev optional)
 - Task Runner: go-task (`Taskfile.yml` at project root)
 - Package Manager: Bun (`bun.lock`, not npm)
 

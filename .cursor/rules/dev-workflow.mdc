@@ -13,8 +13,10 @@ Always prefer `task` commands over raw docker/bun commands in docs and scripts.
 | Mode | Command | When to use |
 |------|---------|-------------|
 | Local (hybrid) | `task local` | Daily development — fast hot reload |
+| Cloudflare local | `task cf:dev` | Test Workers + D1 via wrangler |
+| Cloudflare deploy | `task deploy:cloudflare` | Production deploy (Workers + Pages + D1) |
 | Dev (full Docker) | `task dev` | When Bun is not installed on host |
-| Prod | `task prod` | Production deployment testing |
+| Prod (legacy Pi) | `task prod` | Deprecated — use Cloudflare |
 | DB admin | `task db-admin` | Browse SQLite (dev only) |
 
 ### URLs

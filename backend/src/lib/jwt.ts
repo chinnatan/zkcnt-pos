@@ -1,11 +1,13 @@
 import { SignJWT, jwtVerify } from "jose";
-import { env } from "../env";
-
-const secret = new TextEncoder().encode(env.jwtSecret);
+import { getRuntimeConfig } from "../env";
 
 export interface TokenPayload {
   sub: string;
   type: "access" | "refresh";
+}
+
+function getSecret() {
+  return new TextEncoder().encode(getRuntimeConfig().jwtSecret);
 }
 
 export async function signAccessToken(userId: string): Promise<string> {
@@ -13,7 +15,7 @@ export async function signAccessToken(userId: string): Promise<string> {
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
     .setExpirationTime("7d")
-    .sign(secret);
+    .sign(getSecret());
 }
 
 export async function signRefreshToken(userId: string): Promise<string> {
@@ -21,11 +23,11 @@ export async function signRefreshToken(userId: string): Promise<string> {
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
     .setExpirationTime("30d")
-    .sign(secret);
+    .sign(getSecret());
 }
 
 export async function verifyToken(token: string): Promise<TokenPayload> {
-  const { payload } = await jwtVerify(token, secret);
+  const { payload } = await jwtVerify(token, getSecret());
   return {
     sub: String(payload.sub),
     type: payload.type as "access" | "refresh",

@@ -6,9 +6,10 @@ globs: "backend/**/*.ts"
 # API Schema Conventions
 
 ## Database
-- Location: `backend/data/pos.db` (SQLite via Drizzle ORM)
+- Local dev: `backend/data/pos.db` (SQLite via Drizzle ORM + Bun)
+- Production: Cloudflare D1 (`backend/migrations/`, `wrangler d1 migrations apply`)
 - Schema: `backend/src/db/schema.ts`
-- Migrations: `backend/src/db/migrate.ts` (runs on API startup)
+- Local migrations: `backend/src/db/migrate.ts` (Bun only)
 
 ## Multi-Tenant Authorization
 Every store-scoped table must enforce membership via middleware:
@@ -30,6 +31,7 @@ Every store-scoped table must enforce membership via middleware:
 5. Register in sync engine's `getTable()` map and delta sync endpoint
 
 ## File Uploads
-- Stored at `backend/data/uploads/{collection}/{recordId}/{field}.{ext}`
+- Production: Cloudflare R2 via Workers binding `UPLOADS`
+- Local dev: `backend/data/uploads/{collection}/{recordId}/{field}.{ext}`
 - DB stores relative path (e.g. `products/abc123/image.webp`)
-- Served by Nginx at `/uploads/` (not through API)
+- Served at `/uploads/` through Workers (or Bun local API)

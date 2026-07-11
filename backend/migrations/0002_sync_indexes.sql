@@ -1,0 +1,12 @@
+CREATE INDEX IF NOT EXISTS idx_stores_updated ON stores(updated);
+CREATE INDEX IF NOT EXISTS idx_store_members_store_updated ON store_members(store, updated);
+CREATE INDEX IF NOT EXISTS idx_categories_store_updated ON categories(store, updated);
+CREATE INDEX IF NOT EXISTS idx_products_store_updated ON products(store, updated);
+CREATE INDEX IF NOT EXISTS idx_customers_store_updated ON customers(store, updated);
+CREATE INDEX IF NOT EXISTS idx_orders_store_updated ON orders(store, updated);
+CREATE INDEX IF NOT EXISTS idx_order_items_updated ON order_items(updated);
+CREATE INDEX IF NOT EXISTS idx_inventory_store_updated ON inventory(store, updated);
+CREATE INDEX IF NOT EXISTS idx_promotions_store_updated ON promotions(store, updated);
+CREATE INDEX IF NOT EXISTS idx_promotion_targets_updated ON promotion_targets(updated);
+CREATE INDEX IF NOT EXISTS idx_promotion_usages_store_updated ON promotion_usages(store, updated);
+CREATE INDEX IF NOT EXISTS idx_inventory_transactions_store_updated ON inventory_transactions(store, updated);

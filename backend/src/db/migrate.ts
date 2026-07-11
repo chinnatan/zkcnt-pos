@@ -1,7 +1,8 @@
 import { mkdirSync } from "node:fs";
-import { env } from "../env";
+import type { Database } from "bun:sqlite";
+import { bunEnv } from "../env.bun";
 import { generateId } from "../lib/id";
-import { sqlite } from "./client";
+import { sqlite } from "./client.bun";
 
 const DDL = `
 CREATE TABLE IF NOT EXISTS users (
@@ -258,16 +259,20 @@ CREATE INDEX IF NOT EXISTS idx_promotion_usages_customer ON promotion_usages(sto
 `;
 
 export function runMigrate() {
-  mkdirSync(env.dataDir, { recursive: true });
-  sqlite.exec(DDL);
-  migrateOrderPromotionColumns();
-  migrateDiscountsToPromotions();
-  dropLegacyDiscountsTable();
-  migrateSoftDeleteColumns();
-  backfillOrderAuditEvents();
+  if (!sqlite) {
+    throw new Error("SQLite not initialized — call initBunDb() before runMigrate()");
+  }
+  const db = sqlite;
+  mkdirSync(bunEnv.dataDir, { recursive: true });
+  db.exec(DDL);
+  migrateOrderPromotionColumns(db);
+  migrateDiscountsToPromotions(db);
+  dropLegacyDiscountsTable(db);
+  migrateSoftDeleteColumns(db);
+  backfillOrderAuditEvents(db);
 }
 
-function migrateSoftDeleteColumns() {
+function migrateSoftDeleteColumns(db: Database) {
   const tables = [
     "categories",
     "products",
@@ -277,61 +282,61 @@ function migrateSoftDeleteColumns() {
   ] as const;
 
   for (const table of tables) {
-    const cols = sqlite
+    const cols = db
       .query<{ name: string }, []>(`PRAGMA table_info(${table})`)
       .all()
       .map((c) => c.name);
     if (!cols.includes("deleted_at")) {
-      sqlite.exec(`ALTER TABLE ${table} ADD COLUMN deleted_at TEXT`);
+      db.exec(`ALTER TABLE ${table} ADD COLUMN deleted_at TEXT`);
     }
   }
 }
 
-function dropLegacyDiscountsTable() {
-  const tables = sqlite
+function dropLegacyDiscountsTable(db: Database) {
+  const tables = db
     .query<{ name: string }, []>(
       "SELECT name FROM sqlite_master WHERE type='table' AND name='discounts'",
     )
     .all();
   if (tables.length > 0) {
-    sqlite.exec("DROP TABLE discounts");
+    db.exec("DROP TABLE discounts");
   }
 }
 
-function migrateOrderPromotionColumns() {
-  const orderCols = sqlite
+function migrateOrderPromotionColumns(db: Database) {
+  const orderCols = db
     .query<{ name: string }, []>("PRAGMA table_info(orders)")
     .all()
     .map((c) => c.name);
 
   if (!orderCols.includes("coupon_code")) {
-    sqlite.exec(
+    db.exec(
       `ALTER TABLE orders ADD COLUMN coupon_code TEXT NOT NULL DEFAULT ''`,
     );
   }
   if (!orderCols.includes("applied_promotions")) {
-    sqlite.exec(
+    db.exec(
       `ALTER TABLE orders ADD COLUMN applied_promotions TEXT NOT NULL DEFAULT '[]'`,
     );
   }
 
-  const itemCols = sqlite
+  const itemCols = db
     .query<{ name: string }, []>("PRAGMA table_info(order_items)")
     .all()
     .map((c) => c.name);
 
   if (!itemCols.includes("promotion_id")) {
-    sqlite.exec(`ALTER TABLE order_items ADD COLUMN promotion_id TEXT`);
+    db.exec(`ALTER TABLE order_items ADD COLUMN promotion_id TEXT`);
   }
   if (!itemCols.includes("free_quantity")) {
-    sqlite.exec(
+    db.exec(
       `ALTER TABLE order_items ADD COLUMN free_quantity INTEGER NOT NULL DEFAULT 0`,
     );
   }
 }
 
-function migrateDiscountsToPromotions() {
-  const legacyDiscounts = sqlite
+function migrateDiscountsToPromotions(db: Database) {
+  const legacyDiscounts = db
     .query<
       {
         id: string;
@@ -353,7 +358,7 @@ function migrateDiscountsToPromotions() {
     )
     .all();
 
-  const insert = sqlite.prepare(
+  const insert = db.prepare(
     `INSERT OR IGNORE INTO promotions (
       id, store, name, type, buy_quantity, get_quantity, get_discount_percent,
       pool_mode, reward_mode, value, min_purchase, coupon_code, coupon_discount_type,
@@ -381,8 +386,8 @@ function migrateDiscountsToPromotions() {
   }
 }
 
-function backfillOrderAuditEvents() {
-  const orders = sqlite
+function backfillOrderAuditEvents(db: Database) {
+  const orders = db
     .query<
       {
         id: string;
@@ -405,7 +410,7 @@ function backfillOrderAuditEvents() {
     )
     .all();
 
-  const insert = sqlite.prepare(
+  const insert = db.prepare(
     `INSERT INTO audit_events (id, store, actor, action, entity_type, entity_id, summary, changes, metadata, created)
      VALUES (?, ?, ?, 'order.create', 'order', ?, ?, '{}', ?, ?)`,
   );
@@ -432,6 +437,24 @@ function backfillOrderAuditEvents() {
 }
 
 if (import.meta.main) {
+  const { initBunDb } = await import("./client.bun");
+  const { initRuntimeConfig } = await import("../env");
+  const { bunEnv } = await import("../env.bun");
+  const { initFilesystemUploads } = await import("../lib/uploads.bun");
+
+  initRuntimeConfig({
+    jwtSecret: process.env.JWT_SECRET ?? "dev-secret-change-in-production",
+    appUrl: (process.env.APP_URL ?? "http://localhost:4000").replace(/\/$/, ""),
+    logLevel: "info",
+    allowedOrigin: process.env.ALLOWED_ORIGIN ?? "http://localhost:4000",
+    resend: {
+      apiKey: process.env.RESEND_API_KEY ?? "",
+      from: process.env.RESEND_FROM ?? "",
+    },
+    uploadsDir: bunEnv.uploadsDir,
+  });
+  initBunDb(bunEnv.dbPath);
+  initFilesystemUploads(bunEnv.uploadsDir);
   runMigrate();
-  console.log("Database migrated at", env.dbPath);
+  console.log("Database migrated at", bunEnv.dbPath);
 }

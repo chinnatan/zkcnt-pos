@@ -12,10 +12,16 @@ export function resolveApiBaseUrl(configured?: string): string {
   return "http://localhost:4001/api";
 }
 
-export function resolveUploadsBaseUrl(apiBase: string): string {
+export function resolveUploadsBaseUrl(apiBase: string, configured?: string): string {
+  const uploadsUrl = configured?.trim();
+  if (uploadsUrl) {
+    return uploadsUrl.replace(/\/$/, "");
+  }
+
   if (import.meta.client && apiBase.startsWith(window.location.origin)) {
     return `${window.location.origin}/uploads`;
   }
+
   const root = apiBase.replace(/\/api\/?$/, "");
   return `${root}/uploads`;
 }

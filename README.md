@@ -1,15 +1,34 @@
 # zKCNT POS - Offline-First Point of Sale System
 
-ระบบ POS แบบ offline-first multi-tenant รองรับหลายร้านค้า สร้างด้วย Nuxt 3 + Tailwind CSS + Bun API + Dexie.js
+ระบบ POS แบบ offline-first multi-tenant รองรับหลายร้านค้า สร้างด้วย Nuxt 3 + Tailwind CSS + Hono API + Dexie.js
 
 ## Tech Stack
 
-- **Frontend**: Nuxt 3 (Vue 3) + Tailwind CSS v4 + Bun runtime
-- **Local Database**: Dexie.js (IndexedDB)
-- **Backend**: Bun + Hono + Drizzle ORM + SQLite
-- **PWA**: @vite-pwa/nuxt
-- **Task Runner**: [go-task/task](https://taskfile.dev/)
-- **Containerization**: Docker (dev + prod)
+| Layer | Technology |
+|-------|------------|
+| **Frontend** | Nuxt 3 SPA/PWA → **Cloudflare Pages** |
+| **API** | Hono → **Cloudflare Workers** |
+| **Database** | SQLite → **Cloudflare D1** |
+| **Uploads** | **Cloudflare R2** |
+| **Email** | Resend (external) |
+| **Local cache** | Dexie.js (IndexedDB) |
+| **Local dev** | Bun + SQLite (`task local`) |
+
+## Architecture
+
+```
+Browser PWA (Dexie offline cache)
+        │
+        ▼
+Cloudflare Pages  ── /api/* ──►  Cloudflare Workers (Hono)
+        │                              │
+        │                              ├── D1 (SQLite)
+        │                              └── R2 (product images)
+        └── static SPA shell
+```
+
+- **Offline-first**: ขายหน้าร้านอ่าน/เขียน Dexie ก่อน sync ขึ้น Workers เมื่อ online
+- **Multi-tenant**: ทุก business table มี `store` field + RBAC ผ่าน `store_members`
 
 ## Features
 
@@ -32,250 +51,234 @@
 | Tool | ใช้สำหรับ | ติดตั้ง (macOS) |
 |------|-----------|-----------------|
 | [go-task](https://taskfile.dev/) | รันโปรเจคด้วย `task` | `brew install go-task/tap/go-task` |
-| [Bun](https://bun.sh/) | Frontend package manager & runtime | `brew install oven-sh/bun/bun` |
-| [Docker](https://www.docker.com/) | Backend API (local), dev stack, prod stack | Docker Desktop |
+| [Bun](https://bun.sh/) | Frontend/backend local dev | `brew install oven-sh/bun/bun` |
+| [wrangler](https://developers.cloudflare.com/workers/wrangler/) | Deploy Workers/Pages/D1 | `bun add -g wrangler` |
+| Cloudflare account | Production (Workers Paid ~$5/mo) | [dash.cloudflare.com](https://dash.cloudflare.com) |
+| Resend account | Transactional email | [resend.com](https://resend.com) |
+| Docker (optional) | `task dev` full Docker stack | Docker Desktop |
 
-## Quick Start
+## Quick Start (Local Dev)
 
 ```bash
-# 1. Clone และเข้าโปรเจค
 cd zkcnt-pos
-
-# 2. สร้างไฟล์ .env
 task env
-
-# 3. รันโหมด local (แนะนำสำหรับ dev ประจำวัน)
 task local
 ```
 
 เปิดใช้งาน:
 - **Frontend**: http://localhost:4000
 - **Backend API**: http://localhost:4001/api/health
-- **DB Admin** (optional): `task db-admin` → http://localhost:8080
 
 ## Task Commands
 
 | Task | คำอธิบาย |
 |------|----------|
-| `task` | แสดงรายการ tasks ทั้งหมด |
-| `task env` | สร้าง `.env` จาก `.env.example` |
-| `task install` | ติดตั้ง dependencies (`bun install`) |
-| `task build` | Build frontend สำหรับ production |
-| `task local` | **Hybrid local** — Backend ใน Docker + Frontend ด้วย Bun บนเครื่อง |
-| `task local:backend` | Start backend container เท่านั้น |
-| `task local:frontend` | Start frontend dev server เท่านั้น |
-| `task local:stop` | หยุด backend container |
-| `task dev` | **Full Docker dev** — รันทั้ง stack ใน container |
-| `task dev:down` | หยุดและลบ dev containers |
-| `task dev:logs` | ดู logs ของ dev stack |
-| `task db-admin` | Start SQLite admin UI (dev only) |
-| `task db-admin:stop` | หยุด DB admin container |
-| `task backend:install` | ติดตั้ง backend dependencies |
-| `task backend:migrate` | รัน database migrations |
-| `task prod` | **Production** — รัน stack แบบ detached (Nginx + built frontend) |
-| `task prod:down` | หยุดและลบ prod containers |
-| `task prod:logs` | ดู logs ของ prod stack |
+| `task local` | **Hybrid local** — Backend Docker + Frontend Bun (dev ประจำวัน) |
+| `task cf:dev` | ทดสอบ Workers + D1 local (`wrangler dev`) |
+| `task cf:deploy` | Deploy Workers API ไป Cloudflare |
+| `task cf:db:migrate` | Apply D1 migrations (remote) |
+| `task cf:db:migrate:local` | Apply D1 migrations (local) |
+| `task cf:export-d1` | Export `pos.db` → SQL สำหรับ import D1 |
+| `task cf:sync-uploads` | อัปโหลด `backend/data/uploads/` ไป R2 |
+| `task pages:deploy` | Build + deploy frontend ไป Cloudflare Pages |
+| `task deploy:cloudflare` | Migrate D1 + deploy API + Pages |
 | `task test` | รัน backend + frontend tests |
-| `task test:e2e` | Build + Playwright E2E tests |
-| `task backup` | สร้าง backup archive (pos.db + uploads + .env) แบบ online |
-| `task backup:upload` | Backup แล้วอัปโหลดไป Google Drive ผ่าน rclone |
-| `task restore -- <archive>` | กู้คืนจาก backup archive |
+| `task test:e2e` | Playwright E2E tests |
+| `task build` | Build frontend สำหรับ production |
 
-### โหมดการรัน
+### Legacy (Raspberry Pi / Docker)
 
-**`task local`** (แนะนำ) — Backend API รันใน Docker, Frontend รันด้วย Bun บนเครื่อง (hot reload เร็ว)
+| Task | คำอธิบาย |
+|------|----------|
+| `task prod` | Production Docker stack บน Pi (deprecated) |
+| `task backup` | Backup SQLite + uploads (deprecated — ใช้ D1/R2 backup แทน) |
 
-**`task dev`** — รันทั้ง Backend และ Frontend ใน Docker (เหมาะเมื่อไม่ต้องการติดตั้ง Bun บนเครื่อง)
+## First-Time Cloudflare Setup
 
-**`task prod`** — Production build พร้อม Nginx reverse proxy ที่ port 80
+ขั้นตอนครั้งเดียวสำหรับ production:
 
-## First-Time Setup
-
-1. รัน `task local` หรือ `task dev`
-2. เปิดแอปที่ http://localhost:4000
-3. Register user account ใหม่
-4. สร้างร้านแรก (Create Store)
-5. เพิ่มสินค้าและเริ่มขาย!
+1. สร้าง Cloudflare account + เปิด **Workers Paid** plan (~$5/mo)
+2. Login: `wrangler login`
+3. สร้าง D1 database:
+   ```bash
+   cd backend
+   wrangler d1 create zkcnt-pos
+   ```
+   อัปเดต `database_id` ใน [backend/wrangler.toml](backend/wrangler.toml)
+4. สร้าง R2 bucket `zkcnt-pos-uploads` ใน Cloudflare dashboard
+5. ตั้ง Workers Secrets:
+   ```bash
+   cd backend
+   wrangler secret put JWT_SECRET
+   wrangler secret put RESEND_API_KEY
+   wrangler secret put RESEND_FROM
+   ```
+6. อัปเดต `[vars]` ใน `wrangler.toml`: `APP_URL`, `ALLOWED_ORIGIN`
+7. Apply schema:
+   ```bash
+   task cf:db:migrate:local   # ทดสอบ local ก่อน
+   task cf:db:migrate         # production
+   ```
+8. Import ข้อมูล (ถ้ามีจาก Pi):
+   ```bash
+   task cf:export-d1
+   wrangler d1 execute zkcnt-pos --remote --file=backend/d1-import.sql
+   task cf:sync-uploads
+   ```
+9. ตั้ง DNS + routing:
+   - `pos.yourdomain.com` → Cloudflare Pages
+   - `pos.yourdomain.com/api/*` → Workers route
+10. ตั้ง GitHub Secrets: `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`
+11. Deploy:
+    ```bash
+    task deploy:cloudflare
+    ```
 
 ## Environment Variables
 
-Copy จาก `.env.example`:
+### Workers Secrets (`wrangler secret put`)
 
-```env
-# API URL (local dev — browser ต้องเข้าถึงได้)
-API_URL=http://localhost:4001
-NUXT_PUBLIC_API_URL=http://localhost:4001
-NUXT_PUBLIC_APP_URL=http://localhost:4000
+| Variable | คำอธิบาย |
+|----------|----------|
+| `JWT_SECRET` | ลงนาม JWT |
+| `RESEND_API_KEY` | Resend API key |
+| `RESEND_FROM` | อีเมลผู้ส่ง |
 
-# Production (task prod): ตั้ง NUXT_PUBLIC_API_URL ว่าง แล้ว rebuild
-# NUXT_PUBLIC_API_URL=
-# NUXT_PUBLIC_APP_URL=https://pos.yourdomain.com
+### wrangler.toml `[vars]`
 
-# JWT secret (เปลี่ยนใน production)
-JWT_SECRET=change-me-in-production
+| Variable | คำอธิบาย |
+|----------|----------|
+| `APP_URL` | Public app URL (ลิงก์ในอีเมล) |
+| `ALLOWED_ORIGIN` | CORS origin ที่อนุญาต |
+| `LOG_LEVEL` | `debug` / `info` / `warn` |
 
-# Production port (Nginx)
-PORT=3000
+### Frontend build-time (`.env` / Pages)
 
-# DB admin (dev only)
-DB_ADMIN_USER=admin
-DB_ADMIN_PASS=changeme
-```
+| Variable | Local | Production |
+|----------|-------|------------|
+| `NUXT_PUBLIC_API_URL` | `http://localhost:4001` | **ว่าง** (same-origin `/api`) |
+| `NUXT_PUBLIC_UPLOADS_URL` | ว่าง | ว่าง (same-origin `/uploads`) หรือ R2 custom domain |
+| `NUXT_PUBLIC_APP_URL` | `http://localhost:4000` | `https://pos.yourdomain.com` |
 
-Frontend อ่านค่า `NUXT_PUBLIC_API_URL` — ในโหมด `task local` จะถูก set อัตโนมัติเป็น `http://localhost:4001`
-
-บน production (`task prod`) ให้ `NUXT_PUBLIC_API_URL` **ว่าง** ใน `.env` แล้วรัน `task prod` ใหม่ (rebuild) — client จะใช้ `window.location.origin + '/api'` และรูปจาก `window.location.origin + '/uploads'` ผ่าน Nginx
-
-**สำคัญ:** ถ้า `.env` ยังเป็น `NUXT_PUBLIC_API_URL=http://localhost:4001` ตอน build prod รูปสินค้าจะโหลดไม่ได้เพราะ browser พยายามเข้า port 4001 ที่ไม่ได้ expose
-
-## Deploy to Raspberry Pi 5
-
-CI/CD ใช้ GitHub Actions: **CI** รันบน cloud ทุก push/PR, **Deploy** รันบน Pi ผ่าน self-hosted runner ใน Docker
-
-### One-time setup บน Pi
-
-```bash
-# 1. Clone repo (repo root = โฟลเดอร์ที่มี docker-compose.prod.yml)
-git clone https://github.com/chinnatan/zkcnt-pos.git ~/Desktop/zkcnt-pos
-cd ~/Desktop/zkcnt-pos
-
-# 2. สร้าง .env ที่ repo root (ไม่ใช่ใน subdirectory)
-cp .env.example .env
-# แก้ JWT_SECRET และ NUXT_PUBLIC_APP_URL เป็น domain/IP ของ Pi
-
-# 3. Deploy ครั้งแรก (manual)
-docker compose -f docker-compose.prod.yml up -d --build
-```
-
-### Deploy flow
+## Deploy & CI/CD
 
 | Event | ผลลัพธ์ |
 |-------|---------|
-| Push / PR (ทุก branch) | CI — `bun test`, Vitest, build, Playwright E2E |
-| Push `main` (หลัง CI ผ่าน) | Deploy อัตโนมัติบน Pi |
-| Manual (Actions → Deploy to Pi 5 → Run workflow) | Deploy ทันทีบน Pi |
+| Push / PR | CI — tests + build ([.github/workflows/ci.yml](.github/workflows/ci.yml)) |
+| Push `main` | Auto-deploy Workers + Pages + D1 migrate ([.github/workflows/deploy.yml](.github/workflows/deploy.yml)) |
 
-### Troubleshooting
+### Manual deploy
 
 ```bash
-# ดู logs บน Pi
-cd ~/Desktop/zkcnt-pos
-docker compose -f docker-compose.prod.yml logs -f
-
-# Build บน Pi ช้า — ปกติสำหรับ ARM64, ใช้ manual deploy ตอนที่ Pi ว่างได้
+task deploy:cloudflare
 ```
+
+### Rollback
+
+```bash
+cd backend && wrangler rollback
+# Pages: ใช้ deployment history ใน Cloudflare dashboard
+```
+
+## Maintenance
+
+| งาน | ความถี่ | วิธีทำ |
+|-----|---------|--------|
+| ตรวจ D1 backup | รายสัปดาห์ | ดู R2 bucket `backups/` (Cron Worker รันทุกวัน 01:00 UTC) |
+| Monitor Workers errors | รายวัน | Cloudflare dashboard → Workers → Logs |
+| D1 storage usage | รายเดือน | dashboard → D1 → metrics |
+| R2 storage usage | รายเดือน | dashboard → R2 |
+| Rotate JWT secret | ตามนโยบาย | `wrangler secret put JWT_SECRET` (ผู้ใช้ต้อง login ใหม่) |
+| Dependency updates | รายเดือน | `bun update` + CI pass + deploy |
 
 ## Backup & Restore
 
-ระบบ backup ใช้ `VACUUM INTO` สร้าง SQLite snapshot ขณะ backend รันอยู่ (ไม่ต้องหยุด service) แล้วรวม `uploads/` และ `.env` เป็น `tar.gz`
+### D1 (อัตโนมัติ)
 
-### Manual backup
+Cron Worker (`backend/src/cron.ts`) เขียน backup marker ไป R2 `backups/d1-YYYY-MM-DD.sql` ทุกวัน
 
-```bash
-# สร้าง backup local (เก็บใน backups/)
-task backup
-
-# backup แล้วอัปโหลดไป Google Drive
-task backup:upload
-```
-
-Environment variables (optional):
-
-| Variable | Default | คำอธิบาย |
-|---|---|---|
-| `BACKUP_DIR` | `./backups` | โฟลเดอร์เก็บ archive |
-| `BACKUP_RETENTION_DAYS` | `7` | ลบ local backup เก่ากว่ากี่วัน |
-| `RCLONE_REMOTE` | `gdrive:zkcnt_com/zkcnt-pos` | rclone remote สำหรับ upload |
-| `COMPOSE_FILE` | `docker-compose.prod.yml` | compose file ที่ใช้ |
-
-### Restore
+### D1 (manual)
 
 ```bash
-# กู้คืน pos.db + uploads (จะถามยืนยันก่อน)
-task restore -- backups/zkcnt-20250620_030000.tar.gz
-
-# กู้คืนรวม .env ด้วย (non-interactive)
-bash scripts/restore.sh --yes --with-env backups/zkcnt-20250620_030000.tar.gz
+wrangler d1 export zkcnt-pos --remote --output=backup.sql
+wrangler r2 object put zkcnt-pos-uploads/backups/manual-$(date +%F).sql --file=backup.sql
 ```
 
-ก่อน restore จะสร้าง safety backup อัตโนมัติที่ `backups/pre-restore-*.tar.gz` หาก DB เก่ากว่าโค้ดปัจจุบัน ให้รัน `task backend:migrate` หลัง restore
-
-### rclone setup (ครั้งเดียวบน Pi)
+### Restore D1
 
 ```bash
-rclone config   # สร้าง remote ชื่อ "gdrive"
-rclone ls gdrive:zkcnt_com/zkcnt-pos/
+wrangler d1 execute zkcnt-pos --remote --file=backup.sql
 ```
 
-### Jenkins (Docker บน Pi)
-
-ใช้ pipeline จาก [jenkins/Jenkinsfile](jenkins/Jenkinsfile) — รัน backup ทุกวัน 03:00 แล้ว upload ไป Google Drive
-
-Jenkins container ต้อง mount:
-
-| Mount | เหตุผล |
-|---|---|
-| `/var/run/docker.sock` | `docker compose exec` เข้า backend container |
-| `/home/pi/Desktop/zkcnt-pos:/home/pi/Desktop/zkcnt-pos` | เข้าถึง project และโฟลเดอร์ backups |
-| `~/.config/rclone:/var/jenkins_home/.config/rclone` | rclone credentials |
-
-ปรับ `PROJECT_DIR` ใน Jenkinsfile ให้ตรง path บน Pi
-
-### ทดสอบ restore เป็นระยะ
+### Restore uploads
 
 ```bash
-# 1. download archive จาก Google Drive
-rclone copy gdrive:zkcnt_com/zkcnt-pos/zkcnt-YYYYMMDD_HHMMSS.tar.gz backups/
-
-# 2. restore บน dev/staging
-task restore -- backups/zkcnt-YYYYMMDD_HHMMSS.tar.gz
+task cf:sync-uploads
+# หรือ restore จาก R2 object ทีละไฟล์ด้วย wrangler r2 object get
 ```
+
+## Troubleshooting
+
+| อาการ | สาเหตุที่เป็นไปได้ | แก้ไข |
+|-------|-------------------|-------|
+| Sync ช้า/timeout ตอนเช้า | Workers/D1 cold start | ใช้ Workers Paid; ตรวจ cron warm-up |
+| รูปสินค้าไม่โหลด | Upload path / CORS | ตรวจ `NUXT_PUBLIC_UPLOADS_URL`, `/uploads/*` route บน Worker |
+| 401 หลัง deploy | JWT_SECRET เปลี่ยน | re-login ทุก device |
+| CORS error | Origin ไม่ตรง | ตั้ง `ALLOWED_ORIGIN` ให้ตรงกับ Pages domain |
+| D1 migration fail | schema drift | `wrangler d1 migrations list` แล้วแก้ SQL |
+| Offline sync ค้าง | syncQueue error | ดู Dexie `syncQueue` ใน DevTools |
+
+## Cost (ประมาณ 2 ร้าน)
+
+| รายการ | ราคา/เดือน |
+|--------|-----------|
+| Workers Paid | $5 |
+| Pages | $0 |
+| D1 | $0 (free tier) |
+| R2 | $0 (free tier) |
+| **รวม** | **~$5 (~฿175)** |
 
 ## Project Structure
 
 ```
 zkcnt-pos/
-├── Taskfile.yml            # Task runner (local/dev/prod)
-├── frontend/               # Nuxt 3 SPA/PWA
+├── Taskfile.yml
+├── frontend/                 # Nuxt 3 SPA/PWA → Cloudflare Pages
 │   ├── app/
-│   │   ├── components/     # Vue components
-│   │   ├── composables/    # Business logic (useAuth, useProducts, etc.)
-│   │   ├── layouts/        # Page layouts
-│   │   ├── lib/            # Dexie DB, ApiClient, sync engine
-│   │   ├── pages/          # File-based routing
-│   │   ├── middleware/     # Auth middleware
-│   │   └── plugins/        # API & Dexie plugins
-│   ├── bun.lock
-│   └── nuxt.config.ts
+│   │   ├── lib/db.ts       # Dexie schema
+│   │   ├── lib/sync/       # Offline sync engine
+│   │   └── composables/    # useProducts, useOrders, etc.
+│   └── public/_routes.json # Pages routing (exclude /api, /uploads)
 ├── backend/
-│   ├── src/                # Hono API, Drizzle schema
-│   ├── data/               # pos.db + uploads (gitignored)
-│   └── Dockerfile
-├── nginx/                  # Production reverse proxy
-├── scripts/                # backup.sh, restore.sh
-├── jenkins/                # Jenkins pipeline template
-├── backups/                # Local backup archives (gitignored)
-├── .cursor/
-│   ├── rules/              # Cursor AI rules
-│   └── skills/             # Cursor AI skills
-├── docker-compose.dev.yml  # Development
-└── docker-compose.prod.yml # Production
+│   ├── wrangler.toml       # Workers + D1 + R2 config
+│   ├── migrations/         # D1 SQL migrations
+│   ├── scripts/            # migrate-to-d1, sync-uploads-to-r2
+│   └── src/
+│       ├── worker.ts       # Cloudflare Workers entry
+│       ├── index.ts        # Bun local entry
+│       └── routes/         # Hono API routes
+└── .github/workflows/
+    ├── ci.yml
+    └── deploy.yml
 ```
 
-## Manual Commands (Fallback)
+## Dual Dev Workflow
 
-ใช้เมื่อไม่มี `task` หรือต้องการรันแยกส่วน:
+| Command | ใช้เมื่อ |
+|---------|---------|
+| `task local` | พัฒนาประจำวัน — Bun API + pos.db + hot reload |
+| `task cf:dev` | ทดสอบ Workers runtime + D1 local |
+| `wrangler dev --remote` | ทดสอบกับ D1/R2 บน Cloudflare จริง |
 
-```bash
-# Frontend only
-cd frontend && bun install && bun run dev
+## First-Time App Setup
 
-# Backend only (Docker)
-docker compose -f docker-compose.dev.yml up backend -d
+1. รัน `task local` หรือเปิด production URL
+2. Register user account ใหม่
+3. สร้างร้านแรก (Create Store)
+4. เพิ่มสินค้าและเริ่มขาย!
 
-# Full dev stack (Docker)
-docker compose -f docker-compose.dev.yml up --build
+## Legacy: Raspberry Pi Deployment
 
-# Production (Docker)
-docker compose -f docker-compose.prod.yml up -d --build
-```
+> **Deprecated** — ใช้ Cloudflare stack แทน ดู [First-Time Cloudflare Setup](#first-time-cloudflare-setup)
+
+การ deploy บน Pi ด้วย `task prod` + Cloudflare Tunnel ยังอยู่ใน repo สำหรับ transition period แต่ไม่แนะนำสำหรับ setup ใหม่

@@ -1,12 +1,13 @@
 import { Resend } from "resend";
-import { env } from "../env";
+import { getRuntimeConfig } from "../env";
 import { createLogger } from "./logger";
 
 const logger = createLogger("email");
 
 function getResendClient(): Resend | null {
-  if (!env.resend.apiKey) return null;
-  return new Resend(env.resend.apiKey);
+  const { apiKey } = getRuntimeConfig().resend;
+  if (!apiKey) return null;
+  return new Resend(apiKey);
 }
 
 async function sendEmail(options: {
@@ -17,8 +18,9 @@ async function sendEmail(options: {
   devLogLink?: string;
 }) {
   const { to, subject, html, devLogLabel, devLogLink } = options;
+  const resendConfig = getRuntimeConfig().resend;
 
-  if (!env.resend.apiKey || !env.resend.from) {
+  if (!resendConfig.apiKey || !resendConfig.from) {
     logger.debug(`${devLogLabel} (dev) to=${to}${devLogLink ? ` link=${devLogLink}` : ""}`);
     return;
   }
@@ -27,7 +29,7 @@ async function sendEmail(options: {
   if (!resend) return;
 
   const { error } = await resend.emails.send({
-    from: env.resend.from,
+    from: resendConfig.from,
     to,
     subject,
     html,

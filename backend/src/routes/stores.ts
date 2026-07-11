@@ -8,7 +8,7 @@ import {
   stores,
   users,
 } from "../db/schema";
-import { env } from "../env";
+import { getRuntimeConfig } from "../env";
 import { sendInviteEmail } from "../lib/email";
 import { buildChanges, logAuditEvent } from "../lib/audit";
 import { generateId, generateToken } from "../lib/id";
@@ -394,7 +394,7 @@ storeRoutes.post(
       updated: now,
     });
 
-    const inviteLink = `${env.appUrl}/invite/${token}`;
+    const inviteLink = `${getRuntimeConfig().appUrl}/invite/${token}`;
     await sendInviteEmail(email, inviteLink);
 
     const rows = await db

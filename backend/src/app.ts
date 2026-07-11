@@ -1,7 +1,6 @@
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
-import { join } from "node:path";
-import { env } from "./env";
+import { getRuntimeConfig } from "./env";
 import { authRoutes } from "./routes/auth";
 import { catalogRoutes } from "./routes/catalog";
 import { customerRoutes } from "./routes/customers";
@@ -16,9 +15,21 @@ import { orderRoutes } from "./routes/orders";
 import { syncRoutes } from "./routes/sync";
 import { auditRoutes } from "./routes/audit";
 import { reportRoutes } from "./routes/reports";
+import { getUpload } from "./lib/uploads";
 import { log } from "./lib/logger";
 
 const SKIP_REQUEST_LOG = ["/api/health"];
+
+function getAllowedOrigin(): string {
+  return getRuntimeConfig().allowedOrigin.replace(/\/$/, "");
+}
+
+function applyCorsHeaders(c: Parameters<Parameters<Hono["use"]>[1]>[0], origin: string) {
+  c.header("Access-Control-Allow-Origin", origin);
+  c.header("Access-Control-Allow-Methods", "GET, POST, PATCH, DELETE, OPTIONS");
+  c.header("Access-Control-Allow-Headers", "Authorization, Content-Type");
+  c.header("Vary", "Origin");
+}
 
 export function createApp() {
   const app = new Hono();
@@ -29,15 +40,20 @@ export function createApp() {
   });
 
   app.use("*", async (c, next) => {
+    const allowedOrigin = getAllowedOrigin();
+    const requestOrigin = c.req.header("Origin");
+    const corsOrigin =
+      requestOrigin && requestOrigin === allowedOrigin
+        ? requestOrigin
+        : allowedOrigin;
+
     if (c.req.method === "OPTIONS") {
-      return c.body(null, 204, {
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "GET, POST, PATCH, DELETE, OPTIONS",
-        "Access-Control-Allow-Headers": "Authorization, Content-Type",
-      });
+      applyCorsHeaders(c, corsOrigin);
+      return c.body(null, 204);
     }
+
     await next();
-    c.header("Access-Control-Allow-Origin", "*");
+    applyCorsHeaders(c, corsOrigin);
   });
 
   app.use("*", async (c, next) => {
@@ -83,9 +99,9 @@ export function createApp() {
 
   app.get("/uploads/*", async (c) => {
     const relative = c.req.path.replace(/^\/uploads\//, "");
-    const file = Bun.file(join(env.uploadsDir, relative));
-    if (!(await file.exists())) return c.notFound();
-    return new Response(file);
+    const response = await getUpload(relative);
+    if (!response) return c.notFound();
+    return response;
   });
 
   app.route("/api/auth", authRoutes);

@@ -1,0 +1,24 @@
+name = "zkcnt-pos-api"
+main = "src/worker.ts"
+compatibility_date = "2025-01-01"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "zkcnt-pos"
+database_id = "4251f227-c365-48fb-b6fe-42ef2b785379"
+migrations_dir = "migrations"
+
+[[r2_buckets]]
+binding = "UPLOADS"
+bucket_name = "zkcnt-pos-uploads"
+
+[vars]
+APP_URL = "https://pos.zkcnt.com"
+LOG_LEVEL = "info"
+ALLOWED_ORIGIN = "https://pos.zkcnt.com"
+
+[triggers]
+crons = ["0 1 * * *", "45 1 * * *"]
+
+[observability]
+enabled = true

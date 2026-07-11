@@ -176,3 +176,61 @@ tasks:
     desc: "Restore from backup archive (usage: task restore -- backups/zkcnt-....tar.gz)"
     cmds:
       - bash scripts/restore.sh {{.CLI_ARGS}}
+
+  # ─── Cloudflare (production) ───
+
+  cf:dev:
+    desc: Run Workers API locally with D1/R2 emulation (wrangler dev)
+    dir: backend
+    deps: [backend:install]
+    cmds:
+      - bun run cf:dev
+
+  cf:deploy:
+    desc: Deploy Workers API to Cloudflare
+    dir: backend
+    deps: [backend:install]
+    cmds:
+      - bun run cf:deploy
+
+  cf:db:migrate:
+    desc: Apply D1 migrations to remote database
+    dir: backend
+    deps: [backend:install]
+    cmds:
+      - bun run cf:db:migrate
+
+  cf:db:migrate:local:
+    desc: Apply D1 migrations to local D1 database
+    dir: backend
+    deps: [backend:install]
+    cmds:
+      - bun run cf:db:migrate:local
+
+  cf:export-d1:
+    desc: Export pos.db to SQL for D1 import
+    dir: backend
+    deps: [backend:install]
+    cmds:
+      - bun run migrate:d1
+
+  cf:sync-uploads:
+    desc: Sync local uploads directory to R2 bucket
+    dir: backend
+    deps: [backend:install]
+    cmds:
+      - bun run scripts/sync-uploads-to-r2.ts
+
+  pages:deploy:
+    desc: Build and deploy frontend to Cloudflare Pages
+    deps: [build]
+    dir: frontend
+    cmds:
+      - bunx wrangler pages deploy .output/public --project-name=zkcnt-pos
+
+  deploy:cloudflare:
+    desc: Deploy API + Pages + D1 migrations to Cloudflare
+    cmds:
+      - task: cf:db:migrate
+      - task: cf:deploy
+      - task: pages:deploy

@@ -152,6 +152,7 @@ export default defineNuxtConfig({
   runtimeConfig: {
     public: {
       apiUrl: process.env.NUXT_PUBLIC_API_URL || "",
+      uploadsUrl: process.env.NUXT_PUBLIC_UPLOADS_URL || "",
       appUrl: process.env.NUXT_PUBLIC_APP_URL || "http://localhost:4000",
       logLevel: process.env.NUXT_PUBLIC_LOG_LEVEL || "",
     },
