@@ -2,6 +2,13 @@ name = "zkcnt-pos-api"
 main = "src/worker.ts"
 compatibility_date = "2025-01-01"
 
+[[routes]]
+pattern = "pos.zkcnt.com/api/*"
+zone_name = "zkcnt.com"
+[[routes]]
+pattern = "pos.zkcnt.com/uploads/*"
+zone_name = "zkcnt.com"
+
 [[d1_databases]]
 binding = "DB"
 database_name = "zkcnt-pos"
@@ -21,4 +28,8 @@ ALLOWED_ORIGIN = "https://pos.zkcnt.com"
 crons = ["0 1 * * *", "45 1 * * *"]
 
 [observability]
+enabled = true
+invocation_logs = true
+
+[observability.traces]
 enabled = true
