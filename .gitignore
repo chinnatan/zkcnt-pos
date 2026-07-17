@@ -35,3 +35,4 @@ backend/d1-import.sql
 backend/data/.backup-staging/
 backend/data/.restore-staging/
 backend/data/.pre-restore-staging/
+.DS_Store
