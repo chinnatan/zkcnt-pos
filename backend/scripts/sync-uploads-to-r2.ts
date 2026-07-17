@@ -24,6 +24,7 @@ function walkFiles(dir: string, base = dir): string[] {
   const entries = readdirSync(dir);
   const files: string[] = [];
   for (const entry of entries) {
+    if (entry === ".DS_Store") continue;
     const fullPath = join(dir, entry);
     const stat = statSync(fullPath);
     if (stat.isDirectory()) {
@@ -42,6 +43,7 @@ function main() {
   for (const file of files) {
     const key = file.replace(/\\/g, "/");
     const localPath = join(uploadsDir, file);
+    // --remote is required; without it wrangler writes to local Miniflare R2 only.
     const command = [
       "wrangler",
       "r2",
@@ -49,6 +51,7 @@ function main() {
       "put",
       `${bucket}/${key}`,
       `--file=${localPath}`,
+      "--remote",
     ];
 
     if (dryRun) {
