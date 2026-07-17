@@ -1,5 +1,6 @@
 import { drizzle as drizzleD1 } from "drizzle-orm/d1";
 import * as schema from "./schema";
+import { setDbRuntime, type DbRuntime } from "./executor";
 
 export type AppDb = ReturnType<typeof drizzleD1<typeof schema>>;
 
@@ -9,8 +10,9 @@ export function createDbFromD1(d1: D1Database): AppDb {
   return drizzleD1(d1, { schema });
 }
 
-export function initDb(db: AppDb): AppDb {
+export function initDb(db: AppDb, runtime: DbRuntime = "bun"): AppDb {
   activeDb = db;
+  setDbRuntime(runtime);
   return db;
 }
 

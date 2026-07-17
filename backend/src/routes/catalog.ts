@@ -2,6 +2,7 @@ import { and, asc, eq } from "drizzle-orm";
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
 import { db } from "../db/client";
+import { withTransaction } from "../db/executor";
 import { categories, products } from "../db/schema";
 import { buildChanges, logAuditEvent } from "../lib/audit";
 import { generateId } from "../lib/id";
@@ -283,7 +284,7 @@ catalogRoutes.post(
     const skipped: { index: number; sku: string; reason: string }[] = [];
     const errors: { index: number; message: string }[] = [];
 
-    await db.transaction(async (tx) => {
+    await withTransaction(db, async (tx) => {
       for (let index = 0; index < items.length; index++) {
         const item = items[index]!;
         const name = String(item.name ?? "").trim();

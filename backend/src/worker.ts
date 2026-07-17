@@ -14,7 +14,7 @@ export default {
     ctx: ExecutionContext,
   ): Promise<Response> {
     initRuntimeConfigFromWorker(bindings);
-    initDb(createDbFromD1(bindings.DB));
+    initDb(createDbFromD1(bindings.DB), "d1");
     initR2Uploads(bindings.UPLOADS);
     return app.fetch(request, bindings, ctx);
   },
@@ -25,7 +25,7 @@ export default {
     ctx: ExecutionContext,
   ): Promise<void> {
     initRuntimeConfigFromWorker(bindings);
-    initDb(createDbFromD1(bindings.DB));
+    initDb(createDbFromD1(bindings.DB), "d1");
     initR2Uploads(bindings.UPLOADS);
     ctx.waitUntil(handleScheduled(event, bindings));
   },
