@@ -273,6 +273,12 @@
     "savingBulk": "Saving...",
     "formatCsv": "CSV",
     "formatXlsx": "Excel (.xlsx)",
+    "initialStock": "Initial stock quantity",
+    "addStock": "Add stock",
+    "currentStock": "Current stock: {count}",
+    "initialStockHint": "If left empty, the product will show as out of stock on POS until stock is added",
+    "initialStockNote": "Initial stock from product form",
+    "stockAdjustFailed": "Product saved, but stock could not be updated. Please add stock from the Inventory page.",
     "rowStatus": "Status",
     "errors": {
       "missingName": "Product name is required",

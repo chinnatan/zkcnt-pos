@@ -10,6 +10,7 @@ const { t } = useI18n();
 const { formatCurrency } = useFormat();
 const { alert } = useDialog();
 const { products, categories, fetchProducts, fetchCategories, createProduct, updateProduct, deleteProduct, createCategory, updateCategory, deleteCategory, isLoading } = useProducts();
+const { inventoryItems, fetchInventory, adjustStock } = useInventory();
 const { activeStoreId } = useStore();
 const { isOnline } = useOnlineStatus();
 const { getFileUrl } = useFileUrl();
@@ -55,6 +56,19 @@ const imagePreview = ref<string | null>(null);
 const removeImage = ref(false);
 const imageError = ref<string | null>(null);
 const isSavingProduct = ref(false);
+const initialQuantity = ref<number | null>(null);
+const addStockQuantity = ref<number | null>(null);
+
+const currentStockQty = computed(() => {
+  if (!editingProduct.value) return 0;
+  const inv = inventoryItems.value.find((i) => i.product === editingProduct.value!.id);
+  return inv?.quantity ?? 0;
+});
+
+function resetStockFields() {
+  initialQuantity.value = null;
+  addStockQuantity.value = null;
+}
 
 function clearImageState() {
   if (imagePreview.value) URL.revokeObjectURL(imagePreview.value);
@@ -125,6 +139,7 @@ function categoryDeleteBlockedMessage(category: Category, count: number): string
 function openAddProduct() {
   editingProduct.value = null;
   clearImageState();
+  resetStockFields();
   productForm.value = {
     name: "",
     sku: "",
@@ -140,9 +155,13 @@ function openAddProduct() {
   showProductModal.value = true;
 }
 
-function openEditProduct(product: Product) {
+async function openEditProduct(product: Product) {
   editingProduct.value = product;
   clearImageState();
+  resetStockFields();
+  if (product.track_inventory) {
+    await fetchInventory();
+  }
   productForm.value = {
     name: product.name,
     sku: product.sku ?? "",
@@ -162,6 +181,7 @@ async function handleSaveProduct() {
   if (imageError.value || !activeStoreId.value) return;
 
   isSavingProduct.value = true;
+  let stockAdjustFailed = false;
   try {
     const storeId = activeStoreId.value;
     const payload = {
@@ -171,13 +191,34 @@ async function handleSaveProduct() {
       removeImage: removeImage.value,
     };
 
+    let productId: string;
     if (editingProduct.value) {
-      await updateProduct(editingProduct.value.id, payload);
+      productId = editingProduct.value.id;
+      await updateProduct(productId, payload);
     } else {
-      await createProduct(payload);
+      const created = await createProduct(payload);
+      productId = created.id;
     }
+
+    const qty = editingProduct.value
+      ? (addStockQuantity.value && addStockQuantity.value > 0 ? addStockQuantity.value : 0)
+      : (initialQuantity.value && initialQuantity.value > 0 ? initialQuantity.value : 0);
+
+    if (productForm.value.track_inventory && qty > 0) {
+      try {
+        await adjustStock(productId, "stock_in", qty, t("productsPage.initialStockNote"));
+      } catch {
+        stockAdjustFailed = true;
+      }
+    }
+
     showProductModal.value = false;
     clearImageState();
+    resetStockFields();
+
+    if (stockAdjustFailed) {
+      await alert(t("productsPage.stockAdjustFailed"));
+    }
   } finally {
     isSavingProduct.value = false;
   }
@@ -743,6 +784,36 @@ onUnmounted(() => {
                     </button>
                     <span class="text-sm text-ink">{{ t('common.enabled') }}</span>
                   </label>
+                </div>
+                <div v-if="productForm.track_inventory" class="rounded-lg border border-border-warm bg-surface/50 p-4 space-y-3">
+                  <template v-if="editingProduct">
+                    <p class="text-sm font-medium text-ink">
+                      {{ t('productsPage.currentStock', { count: currentStockQty }) }}
+                    </p>
+                    <div>
+                      <label class="mb-1 block text-sm font-medium text-ink">{{ t('productsPage.addStock') }}</label>
+                      <input
+                        v-model.number="addStockQuantity"
+                        type="number"
+                        min="0"
+                        step="1"
+                        class="w-full rounded-lg border border-border-warm px-3 py-2 text-sm transition focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+                      />
+                    </div>
+                  </template>
+                  <template v-else>
+                    <div>
+                      <label class="mb-1 block text-sm font-medium text-ink">{{ t('productsPage.initialStock') }}</label>
+                      <input
+                        v-model.number="initialQuantity"
+                        type="number"
+                        min="0"
+                        step="1"
+                        class="w-full rounded-lg border border-border-warm px-3 py-2 text-sm transition focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+                      />
+                      <p class="mt-1 text-xs text-ink-muted">{{ t('productsPage.initialStockHint') }}</p>
+                    </div>
+                  </template>
                 </div>
                 <div class="flex items-center justify-end gap-3 pt-2">
                   <button type="button" class="rounded-lg px-4 py-2 text-sm font-medium text-ink transition hover:bg-surface" @click="showProductModal = false">{{ t('common.cancel') }}</button>

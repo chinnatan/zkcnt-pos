@@ -1,7 +1,8 @@
 import { createApp } from "./app";
 import { initBunDb } from "./db/client.bun";
 import { runMigrate } from "./db/migrate";
-import { bunEnv, env, initRuntimeConfig } from "./env.bun";
+import { initRuntimeConfig } from "./env";
+import { bunEnv, env } from "./env.bun";
 import { initFilesystemUploads } from "./lib/uploads.bun";
 import { log } from "./lib/logger";
 

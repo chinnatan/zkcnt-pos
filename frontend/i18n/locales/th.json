@@ -273,6 +273,12 @@
     "savingBulk": "กำลังบันทึก...",
     "formatCsv": "CSV",
     "formatXlsx": "Excel (.xlsx)",
+    "initialStock": "จำนวนสต็อกเริ่มต้น",
+    "addStock": "เพิ่มสต็อก",
+    "currentStock": "สต็อกปัจจุบัน: {count}",
+    "initialStockHint": "ถ้าไม่กรอก สินค้าจะแสดงเป็นหมดสต็อกบน POS จนกว่าจะเพิ่มสต็อก",
+    "initialStockNote": "สต็อกเริ่มต้นจากฟอร์มสินค้า",
+    "stockAdjustFailed": "บันทึกสินค้าแล้ว แต่ไม่สามารถอัปเดตสต็อกได้ กรุณาเพิ่มสต็อกจากหน้าสต็อก",
     "rowStatus": "สถานะ",
     "errors": {
       "missingName": "ต้องระบุชื่อสินค้า",
