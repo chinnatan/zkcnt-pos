@@ -152,7 +152,9 @@ const emit = defineEmits<{
 }>();
 
 const { t } = useI18n();
+const { alert } = useDialog();
 const { bulkCreateProducts } = useProducts();
+const { adjustStock } = useInventory();
 const { activeStoreId } = useStore();
 
 const fileInput = ref<HTMLInputElement | null>(null);
@@ -176,17 +178,42 @@ async function handleImport() {
     (r) => r.status === "valid" || r.status === "warning",
   );
   const items = validRows.map((r) => toProductInput(r, activeStoreId.value!));
+  const stockByKey = new Map<string, number>();
+  for (const row of validRows) {
+    const qty = row.row.initial_quantity > 0 ? row.row.initial_quantity : 0;
+    if (row.row.track_inventory && qty > 0) {
+      const key = (row.row.sku.trim() || row.row.name.trim()).toLowerCase();
+      stockByKey.set(key, qty);
+    }
+  }
 
   isSaving.value = true;
   resultSummary.value = "";
+  let stockAdjustFailed = 0;
   try {
     const result = await bulkCreateProducts(items);
+
+    for (const product of result.created) {
+      if (!product.track_inventory) continue;
+      const key = (product.sku?.trim() || product.name.trim()).toLowerCase();
+      const qty = stockByKey.get(key);
+      if (!qty || qty <= 0) continue;
+      try {
+        await adjustStock(product.id, "stock_in", qty, t("productsPage.initialStockNote"));
+      } catch {
+        stockAdjustFailed++;
+      }
+    }
+
     resultSummary.value = t("productsPage.importSummary", {
       created: result.created.length,
       skipped: result.skipped.length + validation.value.skippedCount,
       failed: result.failed.length,
     });
     emit("saved", result);
+    if (stockAdjustFailed > 0) {
+      await alert(t("productsPage.stockAdjustFailed"));
+    }
     if (result.created.length > 0) {
       setTimeout(() => close(), 1500);
     }

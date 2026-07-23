@@ -3,7 +3,7 @@ import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
 import { db } from "../db/client";
 import { withTransaction } from "../db/executor";
-import { categories, products } from "../db/schema";
+import { categories, inventory, inventoryTransactions, products } from "../db/schema";
 import { buildChanges, logAuditEvent } from "../lib/audit";
 import { generateId } from "../lib/id";
 import { mapCategory, mapProduct } from "../lib/mappers";
@@ -526,10 +526,59 @@ catalogRoutes.delete(
     if (!existing[0]) throw new HTTPException(404, { message: "Not found" });
 
     const now = nowIso();
+
+    const invRows = await db
+      .select()
+      .from(inventory)
+      .where(and(eq(inventory.store, storeId), eq(inventory.product, id)));
+
     await db
       .update(products)
       .set({ deletedAt: now, updated: now, isActive: false })
       .where(and(eq(products.id, id), eq(products.store, storeId)));
+
+    for (const inv of invRows) {
+      if (inv.quantity > 0) {
+        const txId = generateId();
+        await db.insert(inventoryTransactions).values({
+          id: txId,
+          store: storeId,
+          product: id,
+          type: "stock_out",
+          quantity: inv.quantity,
+          beforeQty: inv.quantity,
+          afterQty: 0,
+          reference: "",
+          note: "ลบสินค้า",
+          createdBy: userId,
+          created: now,
+          updated: now,
+        });
+
+        logAuditEvent(c, {
+          store: storeId,
+          actor: userId,
+          action: "inventory_transaction.create",
+          entityType: "inventory_transaction",
+          entityId: txId,
+          summary: `บันทึกการเคลื่อนไหวสต็อก (stock_out) product: ${id}`,
+          metadata: {
+            type: "stock_out",
+            product_id: id,
+            quantity: inv.quantity,
+            before_qty: inv.quantity,
+            after_qty: 0,
+            reference: "",
+          },
+        });
+      }
+    }
+
+    if (invRows.length > 0) {
+      await db
+        .delete(inventory)
+        .where(and(eq(inventory.store, storeId), eq(inventory.product, id)));
+    }
 
     if (existing[0]) {
       logAuditEvent(c, {

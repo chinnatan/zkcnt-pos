@@ -269,6 +269,7 @@ export function runMigrate() {
   migrateDiscountsToPromotions(db);
   dropLegacyDiscountsTable(db);
   migrateSoftDeleteColumns(db);
+  cleanupOrphanInventory(db);
   backfillOrderAuditEvents(db);
 }
 
@@ -290,6 +291,16 @@ function migrateSoftDeleteColumns(db: Database) {
       db.exec(`ALTER TABLE ${table} ADD COLUMN deleted_at TEXT`);
     }
   }
+}
+
+function cleanupOrphanInventory(db: Database) {
+  db.exec(`
+    DELETE FROM inventory
+    WHERE product IN (
+      SELECT id FROM products
+      WHERE deleted_at IS NOT NULL AND deleted_at != ''
+    )
+  `);
 }
 
 function dropLegacyDiscountsTable(db: Database) {

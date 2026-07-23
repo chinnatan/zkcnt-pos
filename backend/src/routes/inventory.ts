@@ -10,6 +10,7 @@ import {
 import { buildChanges, logAuditEvent } from "../lib/audit";
 import { generateId } from "../lib/id";
 import { mapInventory, mapInventoryTransaction, mapProduct } from "../lib/mappers";
+import { notDeleted } from "../lib/soft-delete";
 import { nowIso } from "../lib/timestamps";
 import {
   authMiddleware,
@@ -35,27 +36,23 @@ inventoryRoutes.get(
     const rows = await db
       .select()
       .from(inventory)
-      .where(eq(inventory.store, storeId));
+      .innerJoin(products, eq(inventory.product, products.id))
+      .where(
+        and(eq(inventory.store, storeId), notDeleted(products.deletedAt)),
+      );
 
     if (expand === "product") {
-      const result = [];
-      for (const row of rows) {
-        const productRows = await db
-          .select()
-          .from(products)
-          .where(eq(products.id, row.product))
-          .limit(1);
-        result.push({
-          ...mapInventory(row),
+      return c.json(
+        rows.map((row) => ({
+          ...mapInventory(row.inventory),
           expand: {
-            product: productRows[0] ? mapProduct(productRows[0]) : null,
+            product: mapProduct(row.products),
           },
-        });
-      }
-      return c.json(result);
+        })),
+      );
     }
 
-    return c.json(rows.map(mapInventory));
+    return c.json(rows.map((row) => mapInventory(row.inventory)));
   },
 );
 

@@ -53,6 +53,7 @@
                   <th class="px-2 py-2 text-left text-xs font-semibold text-ink-muted">{{ t('common.category') }}</th>
                   <th class="px-2 py-2 text-left text-xs font-semibold text-ink-muted">{{ t('common.unit') }}</th>
                   <th class="px-2 py-2 text-center text-xs font-semibold text-ink-muted">{{ t('common.trackStock') }}</th>
+                  <th class="px-2 py-2 text-left text-xs font-semibold text-ink-muted">{{ t('productsPage.initialStock') }}</th>
                   <th class="px-2 py-2 text-center text-xs font-semibold text-ink-muted">{{ t('common.enabled') }}</th>
                   <th class="px-2 py-2 text-center text-xs font-semibold text-ink-muted">{{ t('productsPage.rowStatus') }}</th>
                   <th class="px-2 py-2" />
@@ -96,6 +97,17 @@
                         :class="row.track_inventory ? 'translate-x-4' : 'translate-x-0'"
                       />
                     </button>
+                  </td>
+                  <td class="px-2 py-1">
+                    <input
+                      v-model.number="row.initial_quantity"
+                      type="number"
+                      min="0"
+                      step="1"
+                      :disabled="!row.track_inventory"
+                      class="w-20 rounded border border-border-warm px-2 py-1 text-sm disabled:cursor-not-allowed disabled:bg-surface disabled:text-ink-muted"
+                      @input="revalidate"
+                    />
                   </td>
                   <td class="px-2 py-1 text-center">
                     <button
@@ -187,7 +199,9 @@ const emit = defineEmits<{
 }>();
 
 const { t } = useI18n();
+const { alert } = useDialog();
 const { bulkCreateProducts } = useProducts();
+const { adjustStock } = useInventory();
 const { activeStoreId } = useStore();
 
 const rows = ref<ProductImportRow[]>(createDefaultImportRows());
@@ -223,6 +237,9 @@ function toggleTrackInventory(index: number) {
   const row = rows.value[index];
   if (!row) return;
   row.track_inventory = !row.track_inventory;
+  if (!row.track_inventory) {
+    row.initial_quantity = 0;
+  }
   revalidate();
 }
 
@@ -253,17 +270,42 @@ async function handleSave() {
     (r) => r.status === "valid" || r.status === "warning",
   );
   const items = validRows.map((r) => toProductInput(r, activeStoreId.value!));
+  const stockByKey = new Map<string, number>();
+  for (const row of validRows) {
+    const qty = row.row.initial_quantity > 0 ? row.row.initial_quantity : 0;
+    if (row.row.track_inventory && qty > 0) {
+      const key = (row.row.sku.trim() || row.row.name.trim()).toLowerCase();
+      stockByKey.set(key, qty);
+    }
+  }
 
   isSaving.value = true;
   resultSummary.value = "";
+  let stockAdjustFailed = 0;
   try {
     const result = await bulkCreateProducts(items);
+
+    for (const product of result.created) {
+      if (!product.track_inventory) continue;
+      const key = (product.sku?.trim() || product.name.trim()).toLowerCase();
+      const qty = stockByKey.get(key);
+      if (!qty || qty <= 0) continue;
+      try {
+        await adjustStock(product.id, "stock_in", qty, t("productsPage.initialStockNote"));
+      } catch {
+        stockAdjustFailed++;
+      }
+    }
+
     resultSummary.value = t("productsPage.importSummary", {
       created: result.created.length,
       skipped: result.skipped.length + (validation.value?.skippedCount ?? 0),
       failed: result.failed.length,
     });
     emit("saved", result);
+    if (stockAdjustFailed > 0) {
+      await alert(t("productsPage.stockAdjustFailed"));
+    }
     if (result.created.length > 0) {
       setTimeout(() => close(), 1500);
     }
