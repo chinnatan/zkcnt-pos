@@ -283,6 +283,7 @@
     "errors": {
       "missingName": "ต้องระบุชื่อสินค้า",
       "invalidPrice": "ราคาไม่ถูกต้อง",
+      "invalidInitialStock": "จำนวนสต็อกเริ่มต้นต้องไม่ติดลบ",
       "duplicateSkuExisting": "SKU ซ้ำกับสินค้าที่มีอยู่",
       "duplicateSkuFile": "SKU ซ้ำในไฟล์",
       "categoryNotFound": "ไม่พบหมวดหมู่ — จะบันทึกโดยไม่มีหมวดหมู่"

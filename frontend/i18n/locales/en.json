@@ -283,6 +283,7 @@
     "errors": {
       "missingName": "Product name is required",
       "invalidPrice": "Invalid price",
+      "invalidInitialStock": "Initial stock cannot be negative",
       "duplicateSkuExisting": "SKU already exists",
       "duplicateSkuFile": "Duplicate SKU in file",
       "categoryNotFound": "Category not found — will save without category"

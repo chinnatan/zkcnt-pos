@@ -14,6 +14,7 @@ export interface ProductImportRow {
   unit: string;
   track_inventory: boolean;
   is_active: boolean;
+  initial_quantity: number;
 }
 
 export type ImportRowStatus = "valid" | "skipped" | "error" | "warning";
@@ -44,6 +45,7 @@ export const PRODUCT_IMPORT_HEADERS_TH = [
   "หน่วย",
   "ติดตามสต็อก",
   "เปิดใช้งาน",
+  "จำนวนสต็อกเริ่มต้น",
 ] as const;
 
 const COLUMN_ALIASES: Record<keyof ProductImportRow, string[]> = {
@@ -57,6 +59,7 @@ const COLUMN_ALIASES: Record<keyof ProductImportRow, string[]> = {
   unit: ["unit", "หน่วย"],
   track_inventory: ["track_inventory", "ติดตามสต็อก", "track stock", "track_inventory"],
   is_active: ["is_active", "เปิดใช้งาน", "active", "status"],
+  initial_quantity: ["initial_quantity", "จำนวนสต็อกเริ่มต้น", "initial stock", "stock", "quantity", "จำนวน"],
 };
 
 const EXAMPLE_ROW: ProductImportRow = {
@@ -70,6 +73,7 @@ const EXAMPLE_ROW: ProductImportRow = {
   unit: "แก้ว",
   track_inventory: true,
   is_active: true,
+  initial_quantity: 50,
 };
 
 function normalizeHeader(value: string): string {
@@ -128,6 +132,7 @@ function rawRowsToImportRows(rawRows: unknown[][]): ProductImportRow[] {
 
       const price = parseNumber(get("price"));
       const cost = parseNumber(get("cost"));
+      const initialQty = parseNumber(get("initial_quantity"));
 
       return {
         name: get("name"),
@@ -140,6 +145,7 @@ function rawRowsToImportRows(rawRows: unknown[][]): ProductImportRow[] {
         unit: get("unit"),
         track_inventory: parseBoolean(get("track_inventory"), false),
         is_active: parseBoolean(get("is_active"), true),
+        initial_quantity: initialQty !== null && initialQty >= 0 ? initialQty : 0,
       };
     })
     .filter((row) => Object.values(row).some((v) => v !== "" && v !== 0 && v !== false));
@@ -157,6 +163,7 @@ export function createEmptyImportRow(): ProductImportRow {
     unit: "",
     track_inventory: false,
     is_active: true,
+    initial_quantity: 0,
   };
 }
 
@@ -197,6 +204,7 @@ export function parseClipboardTsv(text: string): ProductImportRow[] {
     unit: cells[7]?.trim() ?? "",
     track_inventory: parseBoolean(cells[8], false),
     is_active: parseBoolean(cells[9], true),
+    initial_quantity: Math.max(0, parseNumber(cells[10]) ?? 0),
   }));
 }
 
@@ -238,6 +246,16 @@ export function validateImportRows(
     if (price === null || price < 0) {
       status = "error";
       messages.push("invalidPrice");
+    }
+
+    const initialQty = parseNumber(row.initial_quantity);
+    if (initialQty !== null && initialQty < 0) {
+      status = "error";
+      messages.push("invalidInitialStock");
+    }
+
+    if (!row.track_inventory && (initialQty ?? row.initial_quantity) > 0) {
+      row.initial_quantity = 0;
     }
 
     const skuKey = row.sku.trim().toLowerCase();
@@ -298,6 +316,7 @@ function productToExportRow(product: Product, categories: readonly Category[]): 
     [PRODUCT_IMPORT_HEADERS_TH[7]]: product.unit ?? "",
     [PRODUCT_IMPORT_HEADERS_TH[8]]: product.track_inventory ? "ใช่" : "ไม่",
     [PRODUCT_IMPORT_HEADERS_TH[9]]: product.is_active ? "ใช่" : "ไม่",
+    [PRODUCT_IMPORT_HEADERS_TH[10]]: "",
   };
 }
 
@@ -337,6 +356,7 @@ export function downloadProductTemplate(format: SpreadsheetFormat) {
     [{ id: "", store: "", name: EXAMPLE_ROW.category, created: "", updated: "", description: "", image: "", sort_order: 0, is_active: true }],
   );
   example[PRODUCT_IMPORT_HEADERS_TH[6]] = EXAMPLE_ROW.category;
+  example[PRODUCT_IMPORT_HEADERS_TH[10]] = EXAMPLE_ROW.initial_quantity;
 
   const workbook = buildWorkbook([example]);
   const ext = format === "csv" ? "csv" : "xlsx";
