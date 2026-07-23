@@ -2,12 +2,13 @@
 import { validateProductImage } from "~/lib/files/constants";
 import type { Product, Category } from "~/lib/types";
 import { CategoryHasProductsError } from "~/composables/useProducts";
-import { activeBadge } from "~/lib/ui/statusColors";
+import { activeBadge, stockQuantityBadge } from "~/lib/ui/statusColors";
 
 definePageMeta({ middleware: "auth" });
 
 const { t } = useI18n();
 const { formatCurrency } = useFormat();
+const { stockStatusLabel } = useLabels();
 const { alert } = useDialog();
 const { products, categories, fetchProducts, fetchCategories, createProduct, updateProduct, deleteProduct, createCategory, updateCategory, deleteCategory, isLoading } = useProducts();
 const { inventoryItems, fetchInventory, adjustStock } = useInventory();
@@ -64,6 +65,18 @@ const currentStockQty = computed(() => {
   const inv = inventoryItems.value.find((i) => i.product === editingProduct.value!.id);
   return inv?.quantity ?? 0;
 });
+
+const inventoryByProductId = computed(() => {
+  const map = new Map<string, (typeof inventoryItems.value)[number]>();
+  for (const item of inventoryItems.value) {
+    map.set(item.product, item);
+  }
+  return map;
+});
+
+async function refreshProductsAndInventory() {
+  await Promise.all([fetchProducts(), fetchInventory()]);
+}
 
 function resetStockFields() {
   initialQuantity.value = null;
@@ -122,6 +135,18 @@ const filteredProducts = computed(() => {
   }
   return result;
 });
+
+const filteredProductsWithStock = computed(() =>
+  filteredProducts.value.map((product) => ({
+    product,
+    stock: product.track_inventory
+      ? {
+          quantity: inventoryByProductId.value.get(product.id)?.quantity ?? 0,
+          threshold: inventoryByProductId.value.get(product.id)?.low_stock_threshold ?? 10,
+        }
+      : null,
+  })),
+);
 
 function getCategoryName(categoryId: string): string {
   const cat = (categories.value ?? []).find((c) => c.id === categoryId);
@@ -302,6 +327,7 @@ watch(
     if (id) {
       fetchProducts();
       fetchCategories();
+      fetchInventory();
     }
   },
   { immediate: true },
@@ -416,12 +442,13 @@ onUnmounted(() => {
                 <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-ink-muted">{{ t('common.category') }}</th>
                 <th class="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-ink-muted">{{ t('common.price') }}</th>
                 <th class="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-ink-muted">{{ t('common.cost') }}</th>
+                <th class="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-ink-muted">{{ t('productsPage.stockRemaining') }}</th>
                 <th class="px-6 py-3 text-center text-xs font-semibold uppercase tracking-wider text-ink-muted">{{ t('common.status') }}</th>
                 <th class="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-ink-muted">{{ t('productsPage.manage') }}</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-border-warm">
-              <tr v-for="product in filteredProducts" :key="product.id" class="transition hover:bg-surface/80">
+              <tr v-for="{ product, stock } in filteredProductsWithStock" :key="product.id" class="transition hover:bg-surface/80">
                 <td class="whitespace-nowrap px-6 py-4">
                   <div class="flex items-center gap-3">
                     <ProductImage :product="product" size="sm" />
@@ -435,6 +462,21 @@ onUnmounted(() => {
                 <td class="whitespace-nowrap px-6 py-4 text-sm text-ink-muted">{{ getCategoryName(product.category) }}</td>
                 <td class="whitespace-nowrap px-6 py-4 text-right text-sm font-medium text-ink">{{ formatCurrency(product.price) }}</td>
                 <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-ink-muted">{{ formatCurrency(product.cost ?? 0) }}</td>
+                <td class="whitespace-nowrap px-6 py-4 text-right text-sm">
+                  <template v-if="stock">
+                    <span
+                      class="font-semibold"
+                      :class="stock.quantity <= stock.threshold ? 'text-danger-500' : 'text-ink'"
+                    >
+                      {{ stock.quantity }}
+                    </span>
+                    <span
+                      v-if="product.unit"
+                      class="ml-1 text-xs text-ink-muted"
+                    >{{ product.unit }}</span>
+                  </template>
+                  <span v-else class="text-ink-muted">—</span>
+                </td>
                 <td class="whitespace-nowrap px-6 py-4 text-center">
                   <span
                     class="inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium"
@@ -463,7 +505,7 @@ onUnmounted(() => {
                 </td>
               </tr>
               <tr v-if="filteredProducts.length === 0">
-                <td colspan="7" class="px-6 py-16 text-center">
+                <td colspan="8" class="px-6 py-16 text-center">
                   <svg class="mx-auto h-12 w-12 text-border-warm" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
                   <p class="mt-3 text-sm font-medium text-ink-muted">{{ t('productsPage.noProducts') }}</p>
                   <p class="mt-1 text-xs text-ink-muted">{{ t('productsPage.noProductsHint') }}</p>
@@ -479,7 +521,7 @@ onUnmounted(() => {
             <svg class="mx-auto h-12 w-12 text-border-warm" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
             <p class="mt-3 text-sm font-medium text-ink-muted">{{ t('productsPage.noProducts') }}</p>
           </div>
-          <div v-for="product in filteredProducts" :key="product.id" class="rounded-xl border border-border-warm bg-paper p-4 shadow-sm">
+          <div v-for="{ product, stock } in filteredProductsWithStock" :key="product.id" class="rounded-xl border border-border-warm bg-paper p-4 shadow-sm">
             <div class="flex items-start justify-between">
               <div class="flex items-center gap-3">
                 <ProductImage :product="product" size="sm" />
@@ -511,6 +553,24 @@ onUnmounted(() => {
               <div>
                 <span class="text-ink-muted">{{ t('common.unit') }}</span>
                 <p class="text-ink-muted">{{ product.unit || "-" }}</p>
+              </div>
+              <div v-if="stock" class="col-span-2">
+                <span class="text-ink-muted">{{ t('productsPage.stockRemaining') }}</span>
+                <div class="mt-0.5 flex items-center gap-2">
+                  <p
+                    class="font-semibold"
+                    :class="stock.quantity <= stock.threshold ? 'text-danger-500' : 'text-ink'"
+                  >
+                    {{ stock.quantity }}
+                    <span v-if="product.unit" class="text-xs font-normal text-ink-muted">{{ product.unit }}</span>
+                  </p>
+                  <span
+                    class="rounded-full px-2 py-0.5 text-xs font-medium"
+                    :class="stockQuantityBadge(stock.quantity, stock.threshold)"
+                  >
+                    {{ stockStatusLabel(stock.quantity, stock.threshold) }}
+                  </span>
+                </div>
               </div>
             </div>
             <div class="mt-3 flex items-center justify-end gap-2 border-t border-border-warm pt-3">
@@ -953,14 +1013,14 @@ onUnmounted(() => {
       v-model="showBulkAddModal"
       :products="products ?? []"
       :categories="categories ?? []"
-      @saved="fetchProducts"
+      @saved="refreshProductsAndInventory"
     />
 
     <ProductImportExportModal
       v-model="showImportExportModal"
       :products="products ?? []"
       :categories="categories ?? []"
-      @saved="fetchProducts"
+      @saved="refreshProductsAndInventory"
     />
   </div>
 </template>

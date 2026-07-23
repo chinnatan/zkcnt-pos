@@ -69,7 +69,12 @@ export async function createProduct(
   token: string,
   storeId: string,
   categoryId: string,
-  overrides: Partial<{ name: string; price: number; sku: string }> = {},
+  overrides: Partial<{
+    name: string;
+    price: number;
+    sku: string;
+    track_inventory: boolean;
+  }> = {},
 ) {
   userCounter += 1;
   const { res, json } = await jsonRequest<{ id: string; name: string; price: number }>(
@@ -83,7 +88,7 @@ export async function createProduct(
         sku: overrides.sku ?? `SKU-${userCounter}`,
         category: categoryId,
         is_active: true,
-        track_inventory: false,
+        track_inventory: overrides.track_inventory ?? false,
       }),
     },
   );

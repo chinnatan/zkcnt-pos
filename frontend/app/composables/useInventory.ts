@@ -16,13 +16,17 @@ export function useInventory() {
     isLoading.value = true;
     try {
       if (isOnline.value) {
+        const storeId = activeStoreId.value;
         const records = await $api.send<Inventory[]>(
-          `/stores/${activeStoreId.value}/inventory?expand=product`,
+          `/stores/${storeId}/inventory?expand=product`,
         );
         inventoryItems.value = records;
-        await db.inventory.bulkPut(
-          records.map((r) => ({ ...r, expand: undefined })) as Inventory[],
-        );
+        const normalized = records.map((r) => ({
+          ...r,
+          expand: undefined,
+        })) as Inventory[];
+        await db.inventory.where("store").equals(storeId).delete();
+        await db.inventory.bulkPut(normalized);
       } else {
         const local = await db.inventory
           .where("store")

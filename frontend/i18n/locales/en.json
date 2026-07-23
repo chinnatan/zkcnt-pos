@@ -221,6 +221,7 @@
     "searchPlaceholder": "Search products (name, SKU)...",
     "allCategories": "All categories",
     "productCol": "Product",
+    "stockRemaining": "Stock on hand",
     "manage": "Manage",
     "noProducts": "No products found",
     "noProductsHint": "Try changing search or filter",

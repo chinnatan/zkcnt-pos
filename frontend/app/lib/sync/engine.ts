@@ -149,7 +149,13 @@ export class SyncEngine {
       await applySyncedRecords(db.categories, delta.categories as SyncRecord[]);
     }
     if (delta.products?.length) {
+      const deletedProductIds = (delta.products as SyncRecord[])
+        .filter((record) => record.deleted_at)
+        .map((record) => record.id);
       await applySyncedRecords(db.products, delta.products as SyncRecord[]);
+      for (const productId of deletedProductIds) {
+        await db.inventory.where("product").equals(productId).delete();
+      }
     }
     if (delta.customers?.length) {
       await applySyncedRecords(db.customers, delta.customers as SyncRecord[]);

@@ -336,8 +336,9 @@ export function useProducts() {
   }
 
   async function deleteProduct(id: string) {
+    const storeId = activeStoreId.value;
     if (isOnline.value) {
-      await $api.send(`/stores/${activeStoreId.value}/products/${id}`, {
+      await $api.send(`/stores/${storeId}/products/${id}`, {
         method: "DELETE",
       });
       await db.products.delete(id);
@@ -348,8 +349,14 @@ export function useProducts() {
         action: "delete",
         record_id: id,
         data: {},
-        store: activeStoreId.value!,
+        store: storeId!,
       });
+    }
+    if (storeId) {
+      await db.inventory
+        .where("[store+product]")
+        .equals([storeId, id])
+        .delete();
     }
     await deleteAllBlobsForRecord("products", id);
     await fetchProducts();

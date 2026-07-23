@@ -221,6 +221,7 @@
     "searchPlaceholder": "ค้นหาสินค้า (ชื่อ, SKU)...",
     "allCategories": "หมวดหมู่ทั้งหมด",
     "productCol": "สินค้า",
+    "stockRemaining": "สต็อกคงเหลือ",
     "manage": "จัดการ",
     "noProducts": "ไม่พบสินค้า",
     "noProductsHint": "ลองเปลี่ยนคำค้นหาหรือตัวกรอง",
