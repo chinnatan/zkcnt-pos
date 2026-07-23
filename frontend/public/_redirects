@@ -1,0 +1,6 @@
+# Missing build assets must 404 — never fall through to SPA index.html (causes MIME errors).
+/_nuxt/* 404
+/_i18n/* 404
+
+# SPA fallback for app routes (static files are served before these rules apply).
+/*  /index.html  200

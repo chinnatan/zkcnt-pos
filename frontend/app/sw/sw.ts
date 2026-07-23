@@ -1,7 +1,6 @@
 /// <reference lib="webworker" />
 import {
   cleanupOutdatedCaches,
-  createHandlerBoundToURL,
   matchPrecache,
   precacheAndRoute,
 } from "workbox-precaching";
@@ -73,17 +72,41 @@ async function serveAppShell(): Promise<Response> {
   });
 }
 
+function isHtmlResponse(response: Response): boolean {
+  return (response.headers.get("content-type") ?? "").includes("text/html");
+}
+
+registerRoute(
+  ({ url }) => url.pathname.startsWith("/_nuxt/") || url.pathname.startsWith("/_i18n/"),
+  async ({ request }) => {
+    try {
+      const response = await fetch(request);
+      if (response.ok && !isHtmlResponse(response)) {
+        return response;
+      }
+    } catch {
+      // Fall through to error so the browser can surface a real load failure.
+    }
+    return Response.error();
+  },
+  "GET",
+);
+
 registerRoute(
   new NavigationRoute(
-    async (options) => {
+    async ({ request }) => {
       try {
-        return await createHandlerBoundToURL("/")(options);
+        const response = await fetch(request);
+        if (response.ok) {
+          return response;
+        }
       } catch {
-        return serveAppShell();
+        // Offline — serve precached app shell.
       }
+      return serveAppShell();
     },
     {
-      denylist: [/^\/api/, /^\/uploads/],
+      denylist: [/^\/api/, /^\/uploads/, /^\/_nuxt/, /^\/_i18n/],
     },
   ),
 );
