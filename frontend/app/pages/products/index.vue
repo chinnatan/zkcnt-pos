@@ -656,7 +656,7 @@ onUnmounted(() => {
         leave-from-class="opacity-100"
         leave-to-class="opacity-0"
       >
-        <div v-if="showProductModal" class="craft-modal-backdrop craft-modal-backdrop--top z-50" @click.self="showProductModal = false">
+        <div v-if="showProductModal" class="craft-modal-backdrop craft-modal-backdrop--top z-50">
           <Transition
             enter-active-class="transition duration-200 ease-out"
             enter-from-class="scale-95 opacity-0"
@@ -838,7 +838,7 @@ onUnmounted(() => {
         leave-from-class="opacity-100"
         leave-to-class="opacity-0"
       >
-        <div v-if="showCategoryModal" class="craft-modal-backdrop craft-modal-backdrop--top z-50" @click.self="showCategoryModal = false">
+        <div v-if="showCategoryModal" class="craft-modal-backdrop craft-modal-backdrop--top z-50">
           <Transition
             enter-active-class="transition duration-200 ease-out"
             enter-from-class="scale-95 opacity-0"
@@ -903,7 +903,7 @@ onUnmounted(() => {
         leave-from-class="opacity-100"
         leave-to-class="opacity-0"
       >
-        <div v-if="showDeleteConfirm" class="craft-modal-backdrop craft-modal-backdrop--center z-50" @click.self="showDeleteConfirm = false">
+        <div v-if="showDeleteConfirm" class="craft-modal-backdrop craft-modal-backdrop--center z-50">
           <div class="craft-modal-panel craft-modal--label max-w-sm text-center">
             <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-danger-100">
               <svg class="h-6 w-6 text-danger-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" /></svg>
@@ -931,7 +931,7 @@ onUnmounted(() => {
         leave-from-class="opacity-100"
         leave-to-class="opacity-0"
       >
-        <div v-if="showDeleteCategoryConfirm" class="craft-modal-backdrop craft-modal-backdrop--center z-50" @click.self="showDeleteCategoryConfirm = false">
+        <div v-if="showDeleteCategoryConfirm" class="craft-modal-backdrop craft-modal-backdrop--center z-50">
           <div class="craft-modal-panel craft-modal--label max-w-sm text-center">
             <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-danger-100">
               <svg class="h-6 w-6 text-danger-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" /></svg>

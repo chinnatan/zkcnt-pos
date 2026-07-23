@@ -38,7 +38,8 @@ globs: "frontend/app/**/*.vue"
 - Use `<Teleport to="body">` for modals
 - Backdrop: `craft-modal-backdrop craft-modal-backdrop--center` (or `--top`)
 - Panel: `craft-modal-panel craft-modal--{stitched|paper|tag|ticket|label|canvas}` or `<UiCraftModal>`
-- Close on backdrop click: `@click.self="showModal = false"`
+- Do not close form or confirm modals on backdrop click — dismiss only via explicit buttons (Cancel / Save / X)
+- Optional read-only modals may use `<UiCraftModal :close-on-backdrop="true">` or `@click.self`
 
 ## Data Loading
 - Fetch data in `onMounted()` hook

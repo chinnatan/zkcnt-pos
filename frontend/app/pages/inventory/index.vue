@@ -114,7 +114,7 @@
     </div>
 
     <Teleport to="body">
-      <div v-if="showAdjustModal" class="craft-modal-backdrop craft-modal-backdrop--center z-50" @click.self="showAdjustModal = false">
+      <div v-if="showAdjustModal" class="craft-modal-backdrop craft-modal-backdrop--center z-50">
         <div class="craft-modal-panel craft-modal--stitched max-w-md">
           <h3 class="mb-4 text-lg font-semibold">{{ t('stock.adjustStock') }}</h3>
 

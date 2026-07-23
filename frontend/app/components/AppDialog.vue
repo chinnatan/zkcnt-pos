@@ -11,8 +11,6 @@
       <div
         v-if="state.visible"
         class="craft-modal-backdrop craft-modal-backdrop--center z-[100]"
-        @click.self="onCancel"
-        @keydown.escape="onCancel"
       >
         <Transition
           enter-active-class="transition duration-200 ease-out"

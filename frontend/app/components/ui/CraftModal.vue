@@ -15,7 +15,7 @@
           align === 'top' ? 'craft-modal-backdrop--top' : 'craft-modal-backdrop--center',
           zClass,
         ]"
-        @click.self="emit('close')"
+        @click.self="closeOnBackdrop && emit('close')"
       >
         <Transition
           enter-active-class="transition duration-200 ease-out"
@@ -55,12 +55,14 @@ const props = withDefaults(
     size?: "sm" | "md" | "lg" | "xl";
     align?: "center" | "top";
     zClass?: string;
+    closeOnBackdrop?: boolean;
   }>(),
   {
     variant: "stitched",
     size: "md",
     align: "center",
     zClass: "z-50",
+    closeOnBackdrop: false,
   },
 );
 

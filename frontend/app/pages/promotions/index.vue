@@ -71,7 +71,6 @@
       <div
         v-if="showModal"
         class="craft-modal-backdrop craft-modal-backdrop--center z-50"
-        @click.self="showModal = false"
       >
         <div class="craft-modal-panel craft-modal--paper max-w-lg">
           <h3 class="mb-4 text-lg font-semibold">

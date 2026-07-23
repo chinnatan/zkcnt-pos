@@ -4,7 +4,6 @@
         v-if="show"
         data-testid="qr-payment-modal"
         class="craft-modal-backdrop craft-modal-backdrop--center z-[110]"
-      @click.self="$emit('cancel')"
     >
       <div
         class="craft-modal-panel craft-modal--paper max-w-sm animate-[scaleIn_0.2s_ease-out] text-center"

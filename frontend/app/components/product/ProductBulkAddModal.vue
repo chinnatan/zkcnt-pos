@@ -11,7 +11,6 @@
       <div
         v-if="modelValue"
         class="craft-modal-backdrop craft-modal-backdrop--top z-50"
-        @click.self="close"
       >
         <div class="craft-modal-panel craft-modal--canvas max-w-6xl">
           <div class="mb-4 flex items-center justify-between">

@@ -214,7 +214,7 @@
     </div>
 
     <Teleport to="body">
-      <div v-if="showMemberModal" class="craft-modal-backdrop craft-modal-backdrop--center z-50" @click.self="showMemberModal = false">
+      <div v-if="showMemberModal" class="craft-modal-backdrop craft-modal-backdrop--center z-50">
         <div class="craft-modal-panel craft-modal--stitched max-w-md">
           <h3 class="mb-4 text-lg font-semibold">
             {{ memberInviteMode === 'email' ? t('settingsPage.inviteTitle') : t('settingsPage.addMemberTitle') }}

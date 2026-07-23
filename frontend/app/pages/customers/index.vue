@@ -106,7 +106,7 @@
     </div>
 
     <Teleport to="body">
-      <div v-if="showModal" class="craft-modal-backdrop craft-modal-backdrop--center z-50" @click.self="showModal = false">
+      <div v-if="showModal" class="craft-modal-backdrop craft-modal-backdrop--center z-50">
         <div class="craft-modal-panel craft-modal--stitched max-w-md">
           <h3 class="mb-4 text-lg font-semibold">{{ editingId ? t('customersPage.editCustomer') : t('customersPage.addCustomerModal') }}</h3>
 
