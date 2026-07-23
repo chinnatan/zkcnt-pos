@@ -94,6 +94,10 @@ export default defineNuxtConfig({
     strategies: "injectManifest",
     srcDir: "sw",
     filename: "sw.ts",
+    client: {
+      installPrompt: true,
+      periodicSyncForUpdates: 3600,
+    },
     injectManifest: {
       globPatterns: [
         "**/*.{js,css,html,png,svg,ico,woff2,json,webmanifest}",
@@ -136,9 +140,6 @@ export default defineNuxtConfig({
           icons: [{ src: "/pwa-192x192.png", sizes: "192x192" }],
         },
       ],
-    },
-    client: {
-      installPrompt: true,
     },
     devOptions: {
       enabled: false,
