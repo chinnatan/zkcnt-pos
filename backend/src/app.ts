@@ -15,6 +15,7 @@ import { orderRoutes } from "./routes/orders";
 import { syncRoutes } from "./routes/sync";
 import { auditRoutes } from "./routes/audit";
 import { reportRoutes } from "./routes/reports";
+import { storeActionRoutes } from "./routes/store-actions";
 import { getUpload } from "./lib/uploads";
 import { log } from "./lib/logger";
 
@@ -116,6 +117,7 @@ export function createApp() {
   app.route("/api/stores", syncRoutes);
   app.route("/api/stores", auditRoutes);
   app.route("/api/stores", reportRoutes);
+  app.route("/api/stores", storeActionRoutes);
 
   return app;
 }

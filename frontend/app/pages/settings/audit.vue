@@ -184,6 +184,7 @@ const actionOptions = [
   "product.update",
   "inventory.update",
   "inventory_transaction.create",
+  "store.transaction_history_clear",
   "auth.login",
   "member.add",
   "member.remove",

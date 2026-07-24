@@ -1,4 +1,5 @@
 import { SyncEngine } from "~/lib/sync/engine";
+import { applyTransactionHistoryClearForStoreId } from "~/lib/sync/purge-transactional";
 import { getPendingCount } from "~/lib/sync/queue";
 import { createLogger } from "~/lib/logger";
 
@@ -36,6 +37,9 @@ export function useSync() {
       await syncEngine.drainFileQueue();
       await syncEngine.pullAll(since);
       await syncEngine.prefetchProductImages();
+      if (activeStoreId.value) {
+        await applyTransactionHistoryClearForStoreId(activeStoreId.value);
+      }
       lastSyncAt.value = new Date().toISOString();
       logger.info(`sync complete storeId=${activeStoreId.value ?? "none"}`);
     } finally {

@@ -235,6 +235,26 @@ export class ApiClient {
     );
   }
 
+  async clearTransactionHistory(
+    storeId: string,
+    body: { confirm_slug: string; delete_customers?: boolean },
+  ) {
+    return this.send<{
+      success: boolean;
+      orders: number;
+      order_items: number;
+      promotion_usages: number;
+      inventory_transactions: number;
+      audit_events: number;
+      customers_reset: number;
+      customers_deleted: number;
+      transaction_history_cleared_at: string;
+    }>(`/stores/${storeId}/actions/clear-transaction-history`, {
+      method: "POST",
+      body,
+    });
+  }
+
   // Collection helpers for sync engine
   async collectionCreate(
     storeId: string,

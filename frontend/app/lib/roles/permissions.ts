@@ -49,6 +49,7 @@ export const ROLE_PERMISSIONS = [
   { id: "reports.view", tier: "member", group: "reports" },
   { id: "store.edit", tier: "member", group: "store" },
   { id: "store.paymentSettings", tier: "manager", group: "store" },
+  { id: "store.clearHistory", tier: "owner", group: "store" },
   { id: "team.view", tier: "member", group: "team" },
   { id: "team.addInvite", tier: "manager", group: "team" },
   { id: "team.remove", tier: "owner", group: "team" },

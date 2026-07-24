@@ -391,7 +391,17 @@
     "paymentSettings": "Payment",
     "promptpayId": "PromptPay ID",
     "promptpayIdPlaceholder": "0812345678 or 13-digit national ID",
-    "promptpayIdHint": "Used to generate payment QR codes. If empty, the store phone or tax ID will be used instead"
+    "promptpayIdHint": "Used to generate payment QR codes. If empty, the store phone or tax ID will be used instead",
+    "dangerZone": "Danger zone",
+    "clearHistoryTitle": "Clear sales history",
+    "clearHistoryDescription": "Removes all orders, reports data, inventory movement logs, and audit entries for this store. Products, current stock levels, promotions, and team are kept.",
+    "clearHistoryKeepsStock": "Current stock quantities stay unchanged (test sales are not reversed).",
+    "clearHistoryDeleteCustomers": "Delete all customers for this store (if unchecked, only spending and visit stats are reset).",
+    "clearHistoryButton": "Clear sales history",
+    "clearHistoryConfirm": "This permanently deletes sales history and cannot be undone. Continue?",
+    "clearHistorySlugPrompt": "Type the store slug \"{slug}\" to confirm",
+    "clearHistorySuccess": "History cleared — removed {orders} order(s)",
+    "clearHistorySyncHint": "Finish syncing pending items first, then try again."
   },
   "invitePage": {
     "title": "Team Invitation",
@@ -549,7 +559,8 @@
       },
       "store": {
         "edit": "Edit store information",
-        "paymentSettings": "Configure PromptPay"
+        "paymentSettings": "Configure PromptPay",
+        "clearHistory": "Clear sales history"
       },
       "team": {
         "view": "View team members",
@@ -573,6 +584,8 @@
     "loadStoresFailed": "Failed to load stores",
     "loadMembersFailed": "Failed to load team members",
     "updateFailed": "Update failed",
-    "deleteFailed": "Delete failed"
+    "deleteFailed": "Delete failed",
+    "syncPendingBeforePurge": "Pending sync items must finish before clearing history",
+    "purgeFailed": "Failed to clear sales history"
   }
 }

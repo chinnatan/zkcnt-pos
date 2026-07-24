@@ -391,7 +391,17 @@
     "paymentSettings": "การชำระเงิน",
     "promptpayId": "PromptPay ID",
     "promptpayIdPlaceholder": "0812345678 หรือ เลขบัตรประชาชน 13 หลัก",
-    "promptpayIdHint": "ใช้สร้าง QR Code รับชำระเงิน หากไม่กรอกจะใช้เบอร์โทรหรือเลขประจำตัวผู้เสียภาษีจากข้อมูลร้านแทน"
+    "promptpayIdHint": "ใช้สร้าง QR Code รับชำระเงิน หากไม่กรอกจะใช้เบอร์โทรหรือเลขประจำตัวผู้เสียภาษีจากข้อมูลร้านแทน",
+    "dangerZone": "โซนอันตราย",
+    "clearHistoryTitle": "เคลียร์ประวัติการขาย",
+    "clearHistoryDescription": "ลบบิล รายงาน ประวัติเคลื่อนไหวสต็อก และบันทึก audit ทั้งหมดของร้าน — สินค้า สต็อกปัจจุบัน โปรโมชัน และทีมจะไม่ถูกลบ",
+    "clearHistoryKeepsStock": "จำนวนสต็อกปัจจุบันจะคงเดิม (ไม่ย้อนรายการขายทดสอบ)",
+    "clearHistoryDeleteCustomers": "ลบลูกค้าทั้งหมดของร้าน (ถ้าไม่เลือก จะรีเซ็ตเฉพาะยอดใช้จ่ายและจำนวนครั้งที่มา)",
+    "clearHistoryButton": "เคลียร์ประวัติการขาย",
+    "clearHistoryConfirm": "การนี้ลบประวัติการขายถาวรและไม่สามารถกู้คืนได้ ต้องการดำเนินการต่อหรือไม่?",
+    "clearHistorySlugPrompt": "พิมพ์ slug ร้าน \"{slug}\" เพื่อยืนยัน",
+    "clearHistorySuccess": "เคลียร์ประวัติแล้ว — ลบบิล {orders} รายการ",
+    "clearHistorySyncHint": "ให้ซิงก์ข้อมูลให้เสร็จก่อน (มีรายการรอส่ง) แล้วลองใหม่"
   },
   "invitePage": {
     "title": "คำเชิญเข้าร่วมทีม",
@@ -549,7 +559,8 @@
       },
       "store": {
         "edit": "แก้ไขข้อมูลร้าน",
-        "paymentSettings": "ตั้งค่า PromptPay"
+        "paymentSettings": "ตั้งค่า PromptPay",
+        "clearHistory": "เคลียร์ประวัติการขาย"
       },
       "team": {
         "view": "ดูรายชื่อสมาชิก",
@@ -573,6 +584,8 @@
     "loadStoresFailed": "โหลดรายการร้านไม่สำเร็จ",
     "loadMembersFailed": "โหลดสมาชิกทีมไม่สำเร็จ",
     "updateFailed": "อัปเดตไม่สำเร็จ",
-    "deleteFailed": "ลบไม่สำเร็จ"
+    "deleteFailed": "ลบไม่สำเร็จ",
+    "syncPendingBeforePurge": "มีรายการรอซิงก์อยู่ กรุณารอให้ซิงก์เสร็จก่อนเคลียร์ประวัติ",
+    "purgeFailed": "เคลียร์ประวัติไม่สำเร็จ"
   }
 }

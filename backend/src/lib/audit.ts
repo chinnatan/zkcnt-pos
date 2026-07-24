@@ -31,6 +31,7 @@ export type AuditAction =
   | "store.create"
   | "store.update"
   | "store.logo_update"
+  | "store.transaction_history_clear"
   | "member.add"
   | "member.remove"
   | "member.role_change"
