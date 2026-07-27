@@ -8,26 +8,50 @@
       >
         <!-- Search + Category Filters -->
         <div class="pos-toolbar">
-          <div class="relative">
-            <svg
-              class="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-primary-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+          <div class="flex flex-col gap-3 sm:flex-row sm:items-stretch">
+            <div class="relative min-w-0 flex-1">
+              <svg
+                class="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-primary-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                />
+              </svg>
+              <input
+                v-model="searchQuery"
+                type="text"
+                :placeholder="t('pos.searchPlaceholder')"
+                class="pos-search"
               />
-            </svg>
-            <input
-              v-model="searchQuery"
-              type="text"
-              :placeholder="t('pos.searchPlaceholder')"
-              class="pos-search"
-            />
+            </div>
+            <div class="flex shrink-0 flex-col gap-2 sm:w-56">
+              <label class="sr-only" for="pos-product-sort">{{ t('pos.sortLabel') }}</label>
+              <select
+                id="pos-product-sort"
+                v-model="productSort"
+                class="pos-sort"
+              >
+                <option value="default">{{ t('pos.sortDefault') }}</option>
+                <option value="nameAsc">{{ t('pos.sortNameAsc') }}</option>
+                <option value="nameDesc">{{ t('pos.sortNameDesc') }}</option>
+                <option value="priceAsc">{{ t('pos.sortPriceAsc') }}</option>
+                <option value="priceDesc">{{ t('pos.sortPriceDesc') }}</option>
+              </select>
+              <label class="touch-pos flex cursor-pointer items-center gap-2 text-sm text-ink-muted">
+                <input
+                  v-model="stockFirst"
+                  type="checkbox"
+                  class="h-4 w-4 rounded border-border-warm text-primary-600 focus:ring-primary-500/30"
+                />
+                {{ t('pos.stockFirst') }}
+              </label>
+            </div>
           </div>
 
           <div class="flex gap-2 overflow-x-auto pb-1">
@@ -241,13 +265,14 @@
 <script setup lang="ts">
 import type { Product } from "~/lib/types";
 import { createLogger } from "~/lib/logger";
+import { sortPosProducts } from "~/lib/pos/productSort";
 import { InsufficientStockError } from "~/composables/useOrders";
 
 const logger = createLogger("pos");
 
 definePageMeta({ layout: "pos", middleware: "auth" });
 
-const { t } = useI18n();
+const { t, locale } = useI18n();
 const { formatCurrency } = useFormat();
 const { products, categories, fetchProducts, fetchCategories, isLoading } =
   useProducts();
@@ -281,6 +306,7 @@ const { fetchPromotions, getPromotionInputs, activePromotions } = usePromotions(
 const { alert } = useDialog();
 const { activeStore, activeStoreId } = useStore();
 const { generateQrDataUrl, resolvePromptPayId } = usePromptPayQr();
+const { productSort, stockFirst } = usePosProductListPrefs();
 
 const showMobileCart = ref(false);
 const searchQuery = ref("");
@@ -316,7 +342,12 @@ const filteredProducts = computed(() => {
     );
   }
 
-  return result;
+  return sortPosProducts(result, {
+    sort: productSort.value,
+    stockFirst: stockFirst.value,
+    locale: locale.value,
+    isOutOfStock,
+  });
 });
 
 const canCheckout = computed(() => {
