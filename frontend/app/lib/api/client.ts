@@ -237,10 +237,24 @@ export class ApiClient {
 
   async clearTransactionHistory(
     storeId: string,
-    body: { confirm_slug: string; delete_customers?: boolean },
+    body: {
+      confirm_slug: string;
+      mode?: "all" | "filtered" | "orders";
+      scopes?: Array<
+        | "orders"
+        | "inventory_transactions"
+        | "audit_events"
+        | "customers"
+      >;
+      since?: string;
+      until?: string;
+      delete_customers?: boolean;
+      order_ids?: string[];
+    },
   ) {
     return this.send<{
       success: boolean;
+      mode: "all" | "filtered" | "orders";
       orders: number;
       order_items: number;
       promotion_usages: number;

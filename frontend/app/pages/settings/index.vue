@@ -121,31 +121,26 @@
         <p class="mt-2 text-sm text-ink-muted">{{ t('settingsPage.clearHistoryDescription') }}</p>
         <p class="mt-1 text-xs text-ink-muted">{{ t('settingsPage.clearHistoryKeepsStock') }}</p>
 
-        <label class="mt-4 flex cursor-pointer items-start gap-2">
-          <input
-            v-model="purgeDeleteCustomers"
-            type="checkbox"
-            class="mt-1 rounded border-border-warm text-primary-600 focus:ring-primary-500"
-          />
-          <span class="text-sm text-ink">{{ t('settingsPage.clearHistoryDeleteCustomers') }}</span>
-        </label>
-
         <div v-if="purgeSuccess" class="mt-4 rounded-lg bg-success-50 p-3 text-sm text-accent-700">
           {{ purgeSuccess }}
-        </div>
-        <div v-if="purgeErrorMessage" class="mt-4 rounded-lg bg-danger-50 p-3 text-sm text-danger-700">
-          {{ purgeErrorMessage }}
         </div>
 
         <button
           type="button"
-          class="mt-4 rounded-lg bg-danger-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-danger-600 disabled:opacity-50"
-          :disabled="isPurging"
-          @click="handleClearHistory"
+          class="mt-4 rounded-lg bg-danger-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-danger-600"
+          @click="showClearHistoryModal = true"
         >
-          {{ isPurging ? t('common.loading') : t('settingsPage.clearHistoryButton') }}
+          {{ t('settingsPage.clearHistoryButton') }}
         </button>
       </UiCraftCard>
+
+      <SettingsClearHistoryModal
+        v-if="activeStore"
+        :show="showClearHistoryModal"
+        :store-slug="activeStore.slug"
+        @close="showClearHistoryModal = false"
+        @success="onClearHistorySuccess"
+      />
 
       <UiCraftCard variant="stitched" padding="md">
         <div class="mb-4 flex items-center justify-between">
@@ -311,8 +306,7 @@ const {
   removeMember,
   updateInviteMode,
 } = useStoreMembers();
-const { confirm, prompt } = useDialog();
-const { isPurging, clearTransactionHistory } = useStoreDataPurge();
+const { confirm } = useDialog();
 
 const isSaving = ref(false);
 const isSavingPayment = ref(false);
@@ -330,9 +324,8 @@ const inviteModeForm = ref<MemberInviteMode>("direct");
 const isUpdatingMode = ref(false);
 const modeError = ref("");
 
-const purgeDeleteCustomers = ref(false);
 const purgeSuccess = ref("");
-const purgeErrorMessage = ref("");
+const showClearHistoryModal = ref(false);
 
 const storeForm = reactive({
   name: "",
@@ -517,40 +510,7 @@ async function copyInviteLink() {
   }
 }
 
-async function handleClearHistory() {
-  if (!activeStore.value) return;
-  purgeSuccess.value = "";
-  purgeErrorMessage.value = "";
-
-  if (!(await confirm(t("settingsPage.clearHistoryConfirm"), { variant: "danger" }))) {
-    return;
-  }
-
-  const slug = activeStore.value.slug;
-  const typed = await prompt(t("settingsPage.clearHistorySlugPrompt", { slug }), {
-    title: t("settingsPage.clearHistoryTitle"),
-  });
-  if (typed === null) return;
-  if (typed.trim() !== slug) {
-    purgeErrorMessage.value = t("errors.purgeFailed");
-    return;
-  }
-
-  try {
-    const result = await clearTransactionHistory({
-      confirmSlug: slug,
-      deleteCustomers: purgeDeleteCustomers.value,
-    });
-    purgeSuccess.value = t("settingsPage.clearHistorySuccess", { orders: result.orders });
-  } catch (e: unknown) {
-    const key = getErrorMessage(e);
-    if (key === "errors.syncPendingBeforePurge") {
-      purgeErrorMessage.value = t("settingsPage.clearHistorySyncHint");
-    } else if (key.startsWith("errors.")) {
-      purgeErrorMessage.value = t(key);
-    } else {
-      purgeErrorMessage.value = key || t("errors.purgeFailed");
-    }
-  }
+function onClearHistorySuccess(result: { orders: number }) {
+  purgeSuccess.value = t("settingsPage.clearHistorySuccess", { orders: result.orders });
 }
 </script>

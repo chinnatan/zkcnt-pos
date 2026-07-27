@@ -7,8 +7,16 @@ import { getPendingItems } from "~/lib/sync/queue";
 import { db } from "~/lib/db";
 import type { Store } from "~/lib/types";
 
+export type ClearHistoryMode = "all" | "filtered" | "orders";
+export type ClearHistoryScope =
+  | "orders"
+  | "inventory_transactions"
+  | "audit_events"
+  | "customers";
+
 export interface ClearTransactionHistoryResult {
   success: boolean;
+  mode: ClearHistoryMode;
   orders: number;
   order_items: number;
   promotion_usages: number;
@@ -19,17 +27,27 @@ export interface ClearTransactionHistoryResult {
   transaction_history_cleared_at: string;
 }
 
+export interface ClearTransactionHistoryOptions {
+  confirmSlug: string;
+  mode: ClearHistoryMode;
+  scopes?: ClearHistoryScope[];
+  since?: string;
+  until?: string;
+  deleteCustomers?: boolean;
+  orderIds?: string[];
+}
+
 export function useStoreDataPurge() {
   const { $api } = useNuxtApp();
   const { activeStore, activeStoreId, setActiveStore } = useStore();
+  const { performSync, resetLastSyncAt } = useSync();
 
   const isPurging = ref(false);
   const purgeError = ref<string | null>(null);
 
-  async function clearTransactionHistory(options: {
-    confirmSlug: string;
-    deleteCustomers: boolean;
-  }): Promise<ClearTransactionHistoryResult> {
+  async function clearTransactionHistory(
+    options: ClearTransactionHistoryOptions,
+  ): Promise<ClearTransactionHistoryResult> {
     const storeId = activeStoreId.value;
     const store = activeStore.value;
     if (!storeId || !store) {
@@ -52,11 +70,17 @@ export function useStoreDataPurge() {
     try {
       const result = await $api.clearTransactionHistory(storeId, {
         confirm_slug: options.confirmSlug,
+        mode: options.mode,
+        scopes: options.scopes,
+        since: options.since,
+        until: options.until,
         delete_customers: options.deleteCustomers,
+        order_ids: options.orderIds,
       });
 
       await purgeLocalTransactionalData(storeId, {
-        deleteCustomers: options.deleteCustomers,
+        deleteCustomers: result.customers_deleted > 0,
+        resetCustomerStats: result.customers_reset > 0,
       });
       setTxnClearAck(storeId, result.transaction_history_cleared_at);
 
@@ -70,6 +94,9 @@ export function useStoreDataPurge() {
       };
       await db.stores.put(nextStore);
       await setActiveStore(nextStore);
+
+      resetLastSyncAt();
+      await performSync({ forceFullPull: true });
 
       return result;
     } catch (e: unknown) {

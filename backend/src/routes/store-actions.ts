@@ -12,9 +12,21 @@ import {
   requireStoreOwner,
   type StoreAccessVariables,
 } from "../middleware/store-access";
-import { purgeStoreTransactionHistory } from "../services/store-transaction-purge.service";
+import {
+  purgeStoreTransactionHistory,
+  type PurgeMode,
+  type PurgeScope,
+} from "../services/store-transaction-purge.service";
 
 type Vars = AuthVariables & StoreAccessVariables;
+
+const VALID_MODES: PurgeMode[] = ["all", "filtered", "orders"];
+const VALID_SCOPES: PurgeScope[] = [
+  "orders",
+  "inventory_transactions",
+  "audit_events",
+  "customers",
+];
 
 export const storeActionRoutes = new Hono<{ Variables: Vars }>();
 
@@ -27,12 +39,45 @@ storeActionRoutes.post(
     const userId = c.get("userId");
     const body = await c.req.json<{
       confirm_slug?: string;
+      mode?: string;
+      scopes?: string[];
+      since?: string;
+      until?: string;
       delete_customers?: boolean;
+      order_ids?: string[];
     }>();
 
     const confirmSlug = body.confirm_slug?.trim();
     if (!confirmSlug) {
       throw new HTTPException(400, { message: "confirm_slug required" });
+    }
+
+    const mode = (body.mode ?? "all") as PurgeMode;
+    if (!VALID_MODES.includes(mode)) {
+      throw new HTTPException(400, {
+        message: "mode must be all, filtered, or orders",
+      });
+    }
+
+    if (mode === "filtered") {
+      const scopes = body.scopes ?? [];
+      if (scopes.length === 0) {
+        throw new HTTPException(400, {
+          message: "scopes required for filtered mode",
+        });
+      }
+      if (scopes.some((s) => !VALID_SCOPES.includes(s as PurgeScope))) {
+        throw new HTTPException(400, { message: "invalid scope" });
+      }
+    }
+
+    if (mode === "orders") {
+      const orderIds = body.order_ids ?? [];
+      if (orderIds.length === 0) {
+        throw new HTTPException(400, {
+          message: "order_ids required for orders mode",
+        });
+      }
     }
 
     const storeRows = await db
@@ -46,13 +91,31 @@ storeActionRoutes.post(
     }
 
     if (confirmSlug !== store.slug) {
-      throw new HTTPException(400, { message: "Store slug confirmation does not match" });
+      throw new HTTPException(400, {
+        message: "Store slug confirmation does not match",
+      });
     }
 
     const deleteCustomers = body.delete_customers === true;
-    const result = await purgeStoreTransactionHistory(storeId, {
-      deleteCustomers,
-    });
+    const scopes = (body.scopes ?? []) as PurgeScope[];
+
+    let result;
+    try {
+      result = await purgeStoreTransactionHistory(storeId, {
+        mode,
+        scopes,
+        since: body.since?.trim() || undefined,
+        until: body.until?.trim() || undefined,
+        deleteCustomers,
+        orderIds: body.order_ids,
+      });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Purge failed";
+      if (message.startsWith("Order ids not found")) {
+        throw new HTTPException(400, { message });
+      }
+      throw err;
+    }
 
     logAuditEvent(c, {
       store: storeId,
@@ -60,9 +123,13 @@ storeActionRoutes.post(
       action: "store.transaction_history_clear",
       entityType: "store",
       entityId: storeId,
-      summary: `เคลียร์ประวัติการขาย (บิล ${result.orders} รายการ)`,
+      summary: `เคลียร์ประวัติการขาย (โหมด ${mode}, บิล ${result.orders} รายการ)`,
       metadata: {
         ...result,
+        scopes,
+        since: body.since ?? null,
+        until: body.until ?? null,
+        order_ids_count: body.order_ids?.length ?? 0,
         delete_customers: deleteCustomers,
       },
     });

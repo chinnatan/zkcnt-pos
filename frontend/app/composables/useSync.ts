@@ -5,6 +5,8 @@ import { createLogger } from "~/lib/logger";
 
 const logger = createLogger("use-sync");
 
+const EPOCH = "1970-01-01T00:00:00.000Z";
+
 let syncEngine: SyncEngine | null = null;
 let syncWatchesInitialized = false;
 const pendingSyncCount = ref(0);
@@ -27,18 +29,29 @@ export function useSync() {
     }
   }
 
-  async function performSync() {
+  async function performSync(options?: { forceFullPull?: boolean }) {
     if (!syncEngine || !isOnline.value) return;
     isSyncing.value = true;
     logger.info(`sync start storeId=${activeStoreId.value ?? "none"}`);
     try {
-      const since = lastSyncAt.value ?? "1970-01-01T00:00:00.000Z";
+      const since = options?.forceFullPull
+        ? EPOCH
+        : (lastSyncAt.value ?? EPOCH);
       await syncEngine.drainSyncQueue();
       await syncEngine.drainFileQueue();
       await syncEngine.pullAll(since);
       await syncEngine.prefetchProductImages();
       if (activeStoreId.value) {
-        await applyTransactionHistoryClearForStoreId(activeStoreId.value);
+        const didClear = await applyTransactionHistoryClearForStoreId(
+          activeStoreId.value,
+        );
+        if (didClear) {
+          logger.info(
+            `transaction history clear detected — full pull storeId=${activeStoreId.value}`,
+          );
+          await syncEngine.pullAll(EPOCH);
+          await syncEngine.prefetchProductImages();
+        }
       }
       lastSyncAt.value = new Date().toISOString();
       logger.info(`sync complete storeId=${activeStoreId.value ?? "none"}`);
@@ -50,6 +63,10 @@ export function useSync() {
 
   async function updatePendingCount() {
     pendingSyncCount.value = await getPendingCount(activeStoreId.value ?? undefined);
+  }
+
+  function resetLastSyncAt() {
+    lastSyncAt.value = null;
   }
 
   if (import.meta.client && !syncWatchesInitialized) {
@@ -81,6 +98,7 @@ export function useSync() {
     lastSyncAt: readonly(lastSyncAt),
     initSync,
     performSync,
+    resetLastSyncAt,
     updatePendingCount,
     cleanup,
   };

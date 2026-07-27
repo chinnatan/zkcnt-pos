@@ -29,7 +29,10 @@ export function setTxnClearAck(storeId: string, clearedAt: string): void {
 
 export async function purgeLocalTransactionalData(
   storeId: string,
-  options: { deleteCustomers?: boolean } = {},
+  options: {
+    deleteCustomers?: boolean;
+    resetCustomerStats?: boolean;
+  } = {},
 ): Promise<void> {
   const orderRows = await db.orders.where("store").equals(storeId).toArray();
   const orderIds = orderRows.map((row) => row.id);
@@ -53,10 +56,10 @@ export async function purgeLocalTransactionalData(
 
   if (options.deleteCustomers) {
     await db.customers.where("store").equals(storeId).delete();
-  } else {
-    const customers = await db.customers.where("store").equals(storeId).toArray();
+  } else if (options.resetCustomerStats) {
+    const customerRows = await db.customers.where("store").equals(storeId).toArray();
     const now = new Date().toISOString();
-    for (const customer of customers) {
+    for (const customer of customerRows) {
       if (customer.deleted_at) continue;
       await db.customers.update(customer.id, {
         total_spent: 0,
@@ -69,6 +72,7 @@ export async function purgeLocalTransactionalData(
   logger.info(`purged local transactional data storeId=${storeId}`);
 }
 
+/** Returns true when local data was purged and a full pullAll from epoch is required. */
 export async function applyTransactionHistoryClearFromStore(
   store: Store,
 ): Promise<boolean> {
@@ -78,7 +82,8 @@ export async function applyTransactionHistoryClearFromStore(
   const ack = getTxnClearAck(store.id);
   if (ack && ack >= clearedAt) return false;
 
-  await purgeLocalTransactionalData(store.id, { deleteCustomers: false });
+  // Do not touch customers here — full pull restores server state.
+  await purgeLocalTransactionalData(store.id);
   setTxnClearAck(store.id, clearedAt);
   return true;
 }
