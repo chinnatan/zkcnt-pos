@@ -8,8 +8,8 @@
       >
         <!-- Search + Category Filters -->
         <div class="pos-toolbar">
-          <div class="flex flex-col gap-3 sm:flex-row sm:items-stretch">
-            <div class="relative min-w-0 flex-1">
+          <div class="flex flex-col gap-3 sm:flex-row sm:items-start">
+            <div class="relative min-w-0 w-full flex-1">
               <svg
                 class="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-primary-400"
                 fill="none"
