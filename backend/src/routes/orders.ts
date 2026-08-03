@@ -1,4 +1,4 @@
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, inArray } from "drizzle-orm";
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
 import { db } from "../db/client";
@@ -118,7 +118,30 @@ orderRoutes.get(
       .orderBy(desc(orders.created))
       .limit(limit);
 
-    return c.json({ items: rows.map(mapOrder), totalItems: rows.length });
+    const orderIds = rows.map((row) => row.id);
+    const itemRows =
+      orderIds.length > 0
+        ? await db
+            .select()
+            .from(orderItems)
+            .where(inArray(orderItems.order, orderIds))
+        : [];
+
+    const itemsByOrder = new Map<string, ReturnType<typeof mapOrderItem>[]>();
+    for (const item of itemRows) {
+      const mapped = mapOrderItem(item);
+      const list = itemsByOrder.get(item.order) ?? [];
+      list.push(mapped);
+      itemsByOrder.set(item.order, list);
+    }
+
+    return c.json({
+      items: rows.map((row) => ({
+        ...mapOrder(row),
+        items: itemsByOrder.get(row.id) ?? [],
+      })),
+      totalItems: rows.length,
+    });
   },
 );
 

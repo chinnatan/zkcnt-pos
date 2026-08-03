@@ -302,6 +302,7 @@
     "noOrders": "ไม่พบออเดอร์",
     "orderDetail": "ออเดอร์ {number}",
     "loadingItems": "กำลังโหลดรายการ...",
+    "moreItems": "+{count}",
     "voidOrder": "ยกเลิกบิล",
     "refundOrder": "คืนเงิน",
     "reasonPrompt": "เหตุผลสำหรับ{action} (ไม่บังคับ)"

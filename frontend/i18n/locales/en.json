@@ -302,6 +302,7 @@
     "noOrders": "No orders found",
     "orderDetail": "Order {number}",
     "loadingItems": "Loading items...",
+    "moreItems": "+{count}",
     "voidOrder": "Void order",
     "refundOrder": "Refund order",
     "reasonPrompt": "Reason for {action} (optional)"

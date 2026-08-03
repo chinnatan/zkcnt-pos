@@ -62,6 +62,33 @@ async function deductLocalInventory(
   }
 }
 
+type OrderListItem = Order & { items?: OrderItem[] };
+
+function stripOrderItems(order: OrderListItem): Order {
+  const { items: _items, ...rest } = order;
+  return rest;
+}
+
+async function loadLocalOrderItems(orderIds: string[]) {
+  const byId: Record<string, OrderItem[]> = {};
+  for (const id of orderIds) {
+    byId[id] = [];
+  }
+  if (orderIds.length === 0) return byId;
+
+  const allItems = await db.orderItems
+    .where("order")
+    .anyOf(orderIds)
+    .toArray();
+
+  for (const item of allItems as OrderItem[]) {
+    const list = byId[item.order];
+    if (list) list.push(item);
+    else byId[item.order] = [item];
+  }
+  return byId;
+}
+
 export function useOrders() {
   const { $api } = useNuxtApp();
   const { activeStoreId } = useStore();
@@ -69,6 +96,7 @@ export function useOrders() {
   const { authUser } = useAuth();
 
   const orders = ref<Order[]>([]);
+  const orderItemsById = ref<Record<string, OrderItem[]>>({});
   const isLoading = ref(false);
 
   async function fetchOrders(limit = 50) {
@@ -76,18 +104,36 @@ export function useOrders() {
     isLoading.value = true;
     try {
       if (isOnline.value) {
-        const result = await $api.send<{ items: Order[] }>(
+        const result = await $api.send<{ items: OrderListItem[] }>(
           `/stores/${activeStoreId.value}/orders?limit=${limit}`,
         );
-        orders.value = result.items;
-        await db.orders.bulkPut(result.items);
+        const cleaned = result.items.map(stripOrderItems);
+        const itemsMap: Record<string, OrderItem[]> = {};
+        const allLineItems: OrderItem[] = [];
+
+        for (const row of result.items) {
+          const lineItems = (row.items ?? []) as OrderItem[];
+          itemsMap[row.id] = lineItems;
+          allLineItems.push(...lineItems);
+        }
+
+        orders.value = cleaned;
+        orderItemsById.value = itemsMap;
+        await db.orders.bulkPut(cleaned);
+        if (allLineItems.length > 0) {
+          await db.orderItems.bulkPut(allLineItems);
+        }
       } else {
         const local = await db.orders
           .where("store")
           .equals(activeStoreId.value)
           .reverse()
           .sortBy("created");
-        orders.value = local.slice(0, limit) as Order[];
+        const sliced = local.slice(0, limit) as Order[];
+        orders.value = sliced;
+        orderItemsById.value = await loadLocalOrderItems(
+          sliced.map((o) => o.id),
+        );
       }
     } catch {
       const local = await db.orders
@@ -95,7 +141,11 @@ export function useOrders() {
         .equals(activeStoreId.value)
         .reverse()
         .sortBy("created");
-      orders.value = local.slice(0, limit) as Order[];
+      const sliced = local.slice(0, limit) as Order[];
+      orders.value = sliced;
+      orderItemsById.value = await loadLocalOrderItems(
+        sliced.map((o) => o.id),
+      );
     } finally {
       isLoading.value = false;
     }
@@ -295,18 +345,35 @@ export function useOrders() {
   }
 
   async function getOrderItems(orderId: string): Promise<OrderItem[]> {
+    const cached = orderItemsById.value[orderId];
+    if (cached !== undefined) {
+      return cached;
+    }
+
     try {
       if (isOnline.value && activeStoreId.value && !orderId.startsWith("temp_")) {
         const records = await $api.send<OrderItem[]>(
           `/stores/${activeStoreId.value}/orders/${orderId}/items`,
         );
+        orderItemsById.value = {
+          ...orderItemsById.value,
+          [orderId]: records,
+        };
+        if (records.length > 0) {
+          await db.orderItems.bulkPut(records);
+        }
         return records;
       }
     } catch {
       // fallback
     }
     const local = await db.orderItems.where("order").equals(orderId).toArray();
-    return local as OrderItem[];
+    const items = local as OrderItem[];
+    orderItemsById.value = {
+      ...orderItemsById.value,
+      [orderId]: items,
+    };
+    return items;
   }
 
   async function updateOrderStatus(
@@ -339,6 +406,7 @@ export function useOrders() {
 
   return {
     orders: readonly(orders),
+    orderItemsById: readonly(orderItemsById),
     isLoading: readonly(isLoading),
     fetchOrders,
     createOrder,

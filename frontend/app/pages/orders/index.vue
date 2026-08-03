@@ -43,7 +43,15 @@
                 </thead>
                 <tbody class="divide-y divide-border-warm">
                   <tr v-for="order in filteredOrders" :key="order.id" class="hover:bg-surface">
-                    <td class="px-4 py-3 font-medium text-ink">{{ order.order_number }}</td>
+                    <td class="px-4 py-3">
+                      <div class="font-medium text-ink">{{ order.order_number }}</div>
+                      <div
+                        v-if="itemsSummaries[order.id]"
+                        class="mt-0.5 line-clamp-2 text-xs text-ink-muted"
+                      >
+                        {{ itemsSummaries[order.id] }}
+                      </div>
+                    </td>
                     <td class="px-4 py-3 text-ink-muted">{{ formatDate(order.created) }}</td>
                     <td class="px-4 py-3">{{ formatCurrency(order.subtotal) }}</td>
                     <td class="px-4 py-3 text-danger-500">
@@ -92,6 +100,12 @@
                 </div>
               </template>
               <template #fields>
+                <div
+                  v-if="itemsSummaries[order.id]"
+                  class="col-span-2 line-clamp-2 text-xs text-ink-muted"
+                >
+                  {{ itemsSummaries[order.id] }}
+                </div>
                 <div>
                   <span class="text-ink-muted">{{ t('common.total') }}</span>
                   <p class="font-semibold text-ink">{{ formatCurrency(order.total) }}</p>
@@ -209,7 +223,7 @@ definePageMeta({ middleware: "auth" });
 const { t } = useI18n();
 const { formatCurrency, formatDate } = useFormat();
 const { statusLabel, paymentLabel } = useLabels();
-const { orders, isLoading, fetchOrders, getOrderItems, updateOrderStatus } = useOrders();
+const { orders, orderItemsById, isLoading, fetchOrders, getOrderItems, updateOrderStatus } = useOrders();
 const { isManager } = useStore();
 const { alert, prompt } = useDialog();
 
@@ -222,6 +236,30 @@ const isUpdatingStatus = ref(false);
 const filteredOrders = computed(() => {
   if (!statusFilter.value) return orders.value;
   return orders.value.filter((o) => o.status === statusFilter.value);
+});
+
+const MAX_SUMMARY_ITEMS = 3;
+
+function formatItemsSummary(orderId: string): string {
+  const items = orderItemsById.value[orderId];
+  if (!items?.length) return "";
+
+  const visible = items.slice(0, MAX_SUMMARY_ITEMS);
+  const summary = visible
+    .map((item) => `${item.product_name} ×${item.quantity}`)
+    .join(" · ");
+  const remaining = items.length - visible.length;
+  if (remaining <= 0) return summary;
+  return `${summary} ${t("ordersPage.moreItems", { count: remaining })}`;
+}
+
+const itemsSummaries = computed(() => {
+  const map: Record<string, string> = {};
+  for (const order of filteredOrders.value) {
+    const summary = formatItemsSummary(order.id);
+    if (summary) map[order.id] = summary;
+  }
+  return map;
 });
 
 function statusBadge(status: string) {
