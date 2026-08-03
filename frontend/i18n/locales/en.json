@@ -303,6 +303,8 @@
     "orderDetail": "Order {number}",
     "loadingItems": "Loading items...",
     "moreItems": "+{count}",
+    "expandItems": "Show all (+{count})",
+    "collapseItems": "Show less",
     "voidOrder": "Void order",
     "refundOrder": "Refund order",
     "reasonPrompt": "Reason for {action} (optional)"

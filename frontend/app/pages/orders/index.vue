@@ -45,12 +45,31 @@
                   <tr v-for="order in filteredOrders" :key="order.id" class="hover:bg-surface">
                     <td class="px-4 py-3">
                       <div class="font-medium text-ink">{{ order.order_number }}</div>
-                      <div
-                        v-if="itemsSummaries[order.id]"
-                        class="mt-0.5 line-clamp-2 text-xs text-ink-muted"
+                      <ul
+                        v-if="itemsForOrder(order.id).length"
+                        class="mt-1 space-y-0.5 text-xs"
                       >
-                        {{ itemsSummaries[order.id] }}
-                      </div>
+                        <li
+                          v-for="item in visibleItems(order.id)"
+                          :key="item.id"
+                          class="truncate text-ink-muted"
+                        >
+                          <span class="text-ink">{{ item.product_name }}</span>
+                          <span class="ml-1">×{{ item.quantity }}</span>
+                        </li>
+                      </ul>
+                      <button
+                        v-if="canToggleItems(order.id)"
+                        type="button"
+                        class="mt-1 text-xs font-medium text-primary-600 hover:text-primary-700"
+                        @click="toggleItems(order.id)"
+                      >
+                        {{
+                          isExpanded(order.id)
+                            ? t('ordersPage.collapseItems')
+                            : t('ordersPage.expandItems', { count: remainingItemCount(order.id) })
+                        }}
+                      </button>
                     </td>
                     <td class="px-4 py-3 text-ink-muted">{{ formatDate(order.created) }}</td>
                     <td class="px-4 py-3">{{ formatCurrency(order.subtotal) }}</td>
@@ -100,21 +119,48 @@
                 </div>
               </template>
               <template #fields>
-                <div
-                  v-if="itemsSummaries[order.id]"
-                  class="col-span-2 line-clamp-2 text-xs text-ink-muted"
-                >
-                  {{ itemsSummaries[order.id] }}
-                </div>
-                <div>
-                  <span class="text-ink-muted">{{ t('common.total') }}</span>
-                  <p class="font-semibold text-ink">{{ formatCurrency(order.total) }}</p>
-                </div>
-                <div>
-                  <span class="text-ink-muted">{{ t('common.discount') }}</span>
-                  <p class="text-ink-muted">
-                    {{ order.discount_amount > 0 ? `-${formatCurrency(order.discount_amount)}` : '-' }}
-                  </p>
+                <div class="col-span-2 space-y-3">
+                  <div
+                    v-if="itemsForOrder(order.id).length"
+                    class="rounded-lg bg-surface px-3 py-2.5"
+                  >
+                    <ul class="space-y-1.5">
+                      <li
+                        v-for="item in visibleItems(order.id)"
+                        :key="item.id"
+                        class="truncate text-sm text-ink"
+                      >
+                        {{ item.product_name }}
+                        <span class="ml-1 text-ink-muted">×{{ item.quantity }}</span>
+                      </li>
+                    </ul>
+                    <button
+                      v-if="canToggleItems(order.id)"
+                      type="button"
+                      class="mt-2 text-xs font-medium text-primary-600 hover:text-primary-700"
+                      @click="toggleItems(order.id)"
+                    >
+                      {{
+                        isExpanded(order.id)
+                          ? t('ordersPage.collapseItems')
+                          : t('ordersPage.expandItems', { count: remainingItemCount(order.id) })
+                      }}
+                    </button>
+                  </div>
+
+                  <div class="flex items-end justify-between gap-3">
+                    <div>
+                      <p class="text-xs text-ink-muted">{{ t('common.total') }}</p>
+                      <p class="text-base font-semibold text-ink">{{ formatCurrency(order.total) }}</p>
+                    </div>
+                    <p
+                      v-if="order.discount_amount > 0"
+                      class="text-sm text-danger-500"
+                    >
+                      {{ t('common.discount') }}
+                      -{{ formatCurrency(order.discount_amount) }}
+                    </p>
+                  </div>
                 </div>
               </template>
               <template #actions>
@@ -238,29 +284,39 @@ const filteredOrders = computed(() => {
   return orders.value.filter((o) => o.status === statusFilter.value);
 });
 
-const MAX_SUMMARY_ITEMS = 3;
+const COLLAPSED_ITEM_COUNT = 2;
+const expandedOrderIds = ref(new Set<string>());
 
-function formatItemsSummary(orderId: string): string {
-  const items = orderItemsById.value[orderId];
-  if (!items?.length) return "";
-
-  const visible = items.slice(0, MAX_SUMMARY_ITEMS);
-  const summary = visible
-    .map((item) => `${item.product_name} ×${item.quantity}`)
-    .join(" · ");
-  const remaining = items.length - visible.length;
-  if (remaining <= 0) return summary;
-  return `${summary} ${t("ordersPage.moreItems", { count: remaining })}`;
+function itemsForOrder(orderId: string) {
+  return orderItemsById.value[orderId] ?? [];
 }
 
-const itemsSummaries = computed(() => {
-  const map: Record<string, string> = {};
-  for (const order of filteredOrders.value) {
-    const summary = formatItemsSummary(order.id);
-    if (summary) map[order.id] = summary;
+function isExpanded(orderId: string) {
+  return expandedOrderIds.value.has(orderId);
+}
+
+function visibleItems(orderId: string) {
+  const items = itemsForOrder(orderId);
+  if (isExpanded(orderId) || items.length <= COLLAPSED_ITEM_COUNT) {
+    return items;
   }
-  return map;
-});
+  return items.slice(0, COLLAPSED_ITEM_COUNT);
+}
+
+function remainingItemCount(orderId: string) {
+  return Math.max(0, itemsForOrder(orderId).length - COLLAPSED_ITEM_COUNT);
+}
+
+function canToggleItems(orderId: string) {
+  return itemsForOrder(orderId).length > COLLAPSED_ITEM_COUNT;
+}
+
+function toggleItems(orderId: string) {
+  const next = new Set(expandedOrderIds.value);
+  if (next.has(orderId)) next.delete(orderId);
+  else next.add(orderId);
+  expandedOrderIds.value = next;
+}
 
 function statusBadge(status: string) {
   return orderStatusBadge(status);

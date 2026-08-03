@@ -303,6 +303,8 @@
     "orderDetail": "ออเดอร์ {number}",
     "loadingItems": "กำลังโหลดรายการ...",
     "moreItems": "+{count}",
+    "expandItems": "ดูทั้งหมด (+{count})",
+    "collapseItems": "ย่อรายการ",
     "voidOrder": "ยกเลิกบิล",
     "refundOrder": "คืนเงิน",
     "reasonPrompt": "เหตุผลสำหรับ{action} (ไม่บังคับ)"

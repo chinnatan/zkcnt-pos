@@ -99,19 +99,6 @@ function mergeItemsMaps(
   return merged;
 }
 
-function mergeItemsMaps(
-  primary: Record<string, OrderItem[]>,
-  fallback: Record<string, OrderItem[]>,
-) {
-  const merged: Record<string, OrderItem[]> = { ...primary };
-  for (const [orderId, items] of Object.entries(fallback)) {
-    if (!merged[orderId]?.length && items.length > 0) {
-      merged[orderId] = items;
-    }
-  }
-  return merged;
-}
-
 export function useOrders() {
   const { $api } = useNuxtApp();
   const { activeStoreId } = useStore();
