@@ -8,9 +8,20 @@ import {
 } from "~/lib/reports/aggregate";
 import type {
   ReportPeriod,
+  ReportProductRow,
   ReportsData,
 } from "~/lib/types/reports";
 import type { InventoryTransaction } from "~/lib/types";
+
+export type ReportTab =
+  | "products"
+  | "deadStock"
+  | "categories"
+  | "customers"
+  | "cashiers"
+  | "promotions";
+
+export type ProductSortKey = "revenue" | "qty" | "margin";
 
 export function useReports() {
   const { $api } = useNuxtApp();
@@ -26,8 +37,11 @@ export function useReports() {
   const data = ref<ReportsData | null>(null);
   const isLoading = ref(false);
   const error = ref("");
-  const activeTab = ref<"products" | "categories" | "customers" | "cashiers">("products");
-  const productSort = ref<"revenue" | "qty">("revenue");
+  const activeTab = ref<ReportTab>("products");
+  const productSort = ref<ProductSortKey>("revenue");
+  const productSearch = ref("");
+  const deadStockSearch = ref("");
+  const expandedCategoryId = ref<string | null>(null);
 
   const range = computed(() => {
     const sinceIso =
@@ -54,6 +68,8 @@ export function useReports() {
       customers,
       inventory,
       storeMembers,
+      promotions,
+      promotionUsages,
     ] = await Promise.all([
       db.orders.where("store").equals(storeId).toArray(),
       db.orderItems.toArray(),
@@ -62,6 +78,8 @@ export function useReports() {
       db.customers.where("store").equals(storeId).toArray(),
       db.inventory.where("store").equals(storeId).toArray(),
       db.storeMembers.where("store").equals(storeId).toArray(),
+      db.promotions.where("store").equals(storeId).toArray(),
+      db.promotionUsages.where("store").equals(storeId).toArray(),
     ]);
 
     const orderIds = new Set(orders.map((o) => o.id));
@@ -112,10 +130,59 @@ export function useReports() {
       customers: customers as never[],
       inventory: inventory as never[],
       inventoryTransactions,
+      promotions: promotions as never[],
+      promotionUsages: promotionUsages as never[],
       cashierNames,
       locale: locale.value,
       uncategorizedLabel: t("reportsPage.uncategorized"),
     });
+  }
+
+  function normalizeCategoryLabels(result: ReportsData): ReportsData {
+    const label = t("reportsPage.uncategorized");
+    return {
+      ...result,
+      previousSummary: result.previousSummary ?? {
+        totalSales: 0,
+        totalOrders: 0,
+        averageOrder: 0,
+        grossProfit: 0,
+      },
+      allProducts: result.allProducts ?? result.topProductsByRevenue ?? [],
+      deadStock: (result.deadStock ?? []).map((row) =>
+        row.categoryId === "__uncategorized__" || row.categoryName === "Uncategorized"
+          ? { ...row, categoryName: label }
+          : row,
+      ),
+      dayOfWeekBreakdown: result.dayOfWeekBreakdown ?? [],
+      hourlyHeatmap: result.hourlyHeatmap ?? [],
+      lapsedCustomers: result.lapsedCustomers ?? [],
+      promotions: result.promotions ?? [],
+      lowStockFastMovers: result.lowStockFastMovers ?? [],
+      stockValueRetail: result.stockValueRetail ?? 0,
+      categoryBreakdown: (result.categoryBreakdown ?? []).map((row) => {
+        const named =
+          row.categoryId === "__uncategorized__" || row.name === "Uncategorized"
+            ? { ...row, name: label }
+            : row;
+        return {
+          ...named,
+          cost: named.cost ?? 0,
+          margin: named.margin ?? 0,
+          products: named.products ?? [],
+        };
+      }),
+      summary: {
+        ...result.summary,
+        grossProfit: result.summary.grossProfit ?? 0,
+        grossMarginPct: result.summary.grossMarginPct ?? null,
+        grossProfitChangePct: result.summary.grossProfitChangePct ?? null,
+        cashSales: result.summary.cashSales ?? 0,
+        cashReceived: result.summary.cashReceived ?? 0,
+        newCustomerCount: result.summary.newCustomerCount ?? 0,
+        returningCustomerCount: result.summary.returningCustomerCount ?? 0,
+      },
+    };
   }
 
   async function loadReports() {
@@ -123,6 +190,7 @@ export function useReports() {
 
     isLoading.value = true;
     error.value = "";
+    expandedCategoryId.value = null;
 
     try {
       if (isOnline.value) {
@@ -136,21 +204,13 @@ export function useReports() {
           `/stores/${activeStoreId.value}/reports?${params.toString()}`,
         );
 
-        if (result.categoryBreakdown) {
-          result.categoryBreakdown = result.categoryBreakdown.map((row) =>
-            row.categoryId === "__uncategorized__" || row.name === "Uncategorized"
-              ? { ...row, name: t("reportsPage.uncategorized") }
-              : row,
-          );
-        }
-
-        data.value = result;
+        data.value = normalizeCategoryLabels(result);
       } else {
-        data.value = await loadLocalReports();
+        data.value = normalizeCategoryLabels(await loadLocalReports());
       }
-    } catch (e) {
+    } catch {
       try {
-        data.value = await loadLocalReports();
+        data.value = normalizeCategoryLabels(await loadLocalReports());
       } catch (localErr) {
         error.value =
           localErr instanceof Error ? localErr.message : t("reportsPage.loadError");
@@ -204,12 +264,54 @@ export function useReports() {
     URL.revokeObjectURL(link.href);
   }
 
-  const topProducts = computed(() => {
+  function sortProductRows(rows: ReportProductRow[], sortBy: ProductSortKey): ReportProductRow[] {
+    return [...rows].sort((a, b) => {
+      if (sortBy === "qty") return b.qty - a.qty;
+      if (sortBy === "margin") return b.margin - a.margin;
+      return b.revenue - a.revenue;
+    });
+  }
+
+  const filteredProducts = computed(() => {
     if (!data.value) return [];
-    return productSort.value === "revenue"
-      ? data.value.topProductsByRevenue
-      : data.value.topProductsByQty;
+    const q = productSearch.value.trim().toLowerCase();
+    let rows = data.value.allProducts ?? data.value.topProductsByRevenue ?? [];
+    if (q) {
+      rows = rows.filter(
+        (p) =>
+          p.name.toLowerCase().includes(q) ||
+          (p.sku ?? "").toLowerCase().includes(q) ||
+          (p.barcode ?? "").toLowerCase().includes(q),
+      );
+    }
+    return sortProductRows(rows, productSort.value);
   });
+
+  const filteredDeadStock = computed(() => {
+    if (!data.value) return [];
+    const q = deadStockSearch.value.trim().toLowerCase();
+    const rows = data.value.deadStock ?? [];
+    if (!q) return rows;
+    return rows.filter(
+      (p) =>
+        p.name.toLowerCase().includes(q) ||
+        (p.sku ?? "").toLowerCase().includes(q) ||
+        p.categoryName.toLowerCase().includes(q),
+    );
+  });
+
+  const expandedCategory = computed(() => {
+    if (!data.value || !expandedCategoryId.value) return null;
+    return (
+      data.value.categoryBreakdown.find((c) => c.categoryId === expandedCategoryId.value) ??
+      null
+    );
+  });
+
+  function toggleCategory(categoryId: string) {
+    expandedCategoryId.value =
+      expandedCategoryId.value === categoryId ? null : categoryId;
+  }
 
   function formatChangePct(pct: number | null): string {
     if (pct === null) return "—";
@@ -230,10 +332,16 @@ export function useReports() {
     error,
     activeTab,
     productSort,
-    topProducts,
+    productSearch,
+    deadStockSearch,
+    expandedCategoryId,
+    expandedCategory,
+    filteredProducts,
+    filteredDeadStock,
     range,
     loadReports,
     exportCsv,
     formatChangePct,
+    toggleCategory,
   };
 }
