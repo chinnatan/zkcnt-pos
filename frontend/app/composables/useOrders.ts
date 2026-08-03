@@ -71,9 +71,6 @@ function stripOrderItems(order: OrderListItem): Order {
 
 async function loadLocalOrderItems(orderIds: string[]) {
   const byId: Record<string, OrderItem[]> = {};
-  for (const id of orderIds) {
-    byId[id] = [];
-  }
   if (orderIds.length === 0) return byId;
 
   const allItems = await db.orderItems
@@ -89,6 +86,32 @@ async function loadLocalOrderItems(orderIds: string[]) {
   return byId;
 }
 
+function mergeItemsMaps(
+  primary: Record<string, OrderItem[]>,
+  fallback: Record<string, OrderItem[]>,
+) {
+  const merged: Record<string, OrderItem[]> = { ...primary };
+  for (const [orderId, items] of Object.entries(fallback)) {
+    if (!merged[orderId]?.length && items.length > 0) {
+      merged[orderId] = items;
+    }
+  }
+  return merged;
+}
+
+function mergeItemsMaps(
+  primary: Record<string, OrderItem[]>,
+  fallback: Record<string, OrderItem[]>,
+) {
+  const merged: Record<string, OrderItem[]> = { ...primary };
+  for (const [orderId, items] of Object.entries(fallback)) {
+    if (!merged[orderId]?.length && items.length > 0) {
+      merged[orderId] = items;
+    }
+  }
+  return merged;
+}
+
 export function useOrders() {
   const { $api } = useNuxtApp();
   const { activeStoreId } = useStore();
@@ -98,6 +121,37 @@ export function useOrders() {
   const orders = ref<Order[]>([]);
   const orderItemsById = ref<Record<string, OrderItem[]>>({});
   const isLoading = ref(false);
+
+  async function hydrateMissingOrderItems(orderIds: string[]) {
+    if (!isOnline.value || !activeStoreId.value) return;
+    const missing = orderIds.filter((id) => !orderItemsById.value[id]?.length);
+    if (missing.length === 0) return;
+
+    const results = await Promise.all(
+      missing.map(async (orderId) => {
+        try {
+          const records = await $api.send<OrderItem[]>(
+            `/stores/${activeStoreId.value}/orders/${orderId}/items`,
+          );
+          return [orderId, records] as const;
+        } catch {
+          return [orderId, [] as OrderItem[]] as const;
+        }
+      }),
+    );
+
+    const next = { ...orderItemsById.value };
+    const toPut: OrderItem[] = [];
+    for (const [orderId, records] of results) {
+      if (records.length === 0) continue;
+      next[orderId] = records;
+      toPut.push(...records);
+    }
+    orderItemsById.value = next;
+    if (toPut.length > 0) {
+      await db.orderItems.bulkPut(toPut);
+    }
+  }
 
   async function fetchOrders(limit = 50) {
     if (!activeStoreId.value) return;
@@ -110,18 +164,31 @@ export function useOrders() {
         const cleaned = result.items.map(stripOrderItems);
         const itemsMap: Record<string, OrderItem[]> = {};
         const allLineItems: OrderItem[] = [];
+        let apiReturnedLineItems = false;
 
         for (const row of result.items) {
-          const lineItems = (row.items ?? []) as OrderItem[];
-          itemsMap[row.id] = lineItems;
-          allLineItems.push(...lineItems);
+          // Only cache when API actually returned line items (avoid empty []
+          // short-circuiting getOrderItems against an older backend).
+          if (Array.isArray(row.items) && row.items.length > 0) {
+            apiReturnedLineItems = true;
+            itemsMap[row.id] = row.items as OrderItem[];
+            allLineItems.push(...(row.items as OrderItem[]));
+          }
         }
 
+        const localItems = await loadLocalOrderItems(cleaned.map((o) => o.id));
+        const merged = mergeItemsMaps(itemsMap, localItems);
+
         orders.value = cleaned;
-        orderItemsById.value = itemsMap;
+        orderItemsById.value = merged;
         await db.orders.bulkPut(cleaned);
         if (allLineItems.length > 0) {
           await db.orderItems.bulkPut(allLineItems);
+        }
+
+        // Older API (no nested items) or empty Dexie — fill summaries via /items.
+        if (!apiReturnedLineItems && cleaned.length > 0) {
+          await hydrateMissingOrderItems(cleaned.map((o) => o.id));
         }
       } else {
         const local = await db.orders
@@ -346,7 +413,7 @@ export function useOrders() {
 
   async function getOrderItems(orderId: string): Promise<OrderItem[]> {
     const cached = orderItemsById.value[orderId];
-    if (cached !== undefined) {
+    if (cached && cached.length > 0) {
       return cached;
     }
 
