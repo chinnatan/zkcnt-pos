@@ -84,7 +84,11 @@
   "pwa": {
     "installTitle": "Install zKCNT POS",
     "installDescription": "Tap Share, then choose \"Add to Home Screen\" to use it like an app",
-    "dismiss": "Dismiss"
+    "dismiss": "Dismiss",
+    "updateTitle": "Update available",
+    "updateDescription": "Version {version} is ready — update to get the latest features",
+    "updateNow": "Update now",
+    "updateLater": "Later"
   },
   "nav": {
     "dashboard": "Dashboard",
@@ -479,7 +483,14 @@
     "clearHistoryPreviewOrders": "About {count} order(s) will be removed (from local data)",
     "clearHistorySelectedOrders": "{count} selected · {total} total",
     "clearHistorySelectAll": "Select all visible",
-    "clearHistoryDeselectAll": "Deselect visible"
+    "clearHistoryDeselectAll": "Deselect visible",
+    "about": "About",
+    "appVersion": "App version",
+    "buildId": "Build",
+    "apiVersion": "API version",
+    "versionMatch": "In sync",
+    "versionMismatch": "Out of sync",
+    "versionUnknown": "Unknown"
   },
   "invitePage": {
     "title": "Team Invitation",

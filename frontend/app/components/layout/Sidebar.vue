@@ -51,6 +51,9 @@
           <span class="h-1.5 w-1.5 rounded-full" :class="isOnline ? 'bg-success-500' : 'bg-danger-500'" />
           {{ isOnline ? t('common.online') : t('common.offline') }}
         </div>
+        <p class="px-3 py-0.5 text-xs text-ink-muted">
+          {{ displayVersion }}
+        </p>
       </div>
     </div>
   </aside>
@@ -68,6 +71,7 @@ const { t } = useI18n();
 const { isOpen, close } = useSidebar();
 const { activeStore } = useStore();
 const { isOnline } = useOnlineStatus();
+const { displayVersion } = useAppVersion();
 
 watch(() => route.path, close);
 

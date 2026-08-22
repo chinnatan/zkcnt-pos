@@ -84,7 +84,11 @@
   "pwa": {
     "installTitle": "ติดตั้งแอป zKCNT POS",
     "installDescription": "กด Share (ไอคอนลูกศรขึ้น) แล้วเลือก \"เพิ่มที่หน้าจอโฮม\" เพื่อใช้งานแบบแอป",
-    "dismiss": "ปิด"
+    "dismiss": "ปิด",
+    "updateTitle": "มีเวอร์ชันใหม่",
+    "updateDescription": "มีการอัปเดต {version} — กดอัปเดตเพื่อใช้ฟีเจอร์ล่าสุด",
+    "updateNow": "อัปเดตตอนนี้",
+    "updateLater": "ภายหลัง"
   },
   "nav": {
     "dashboard": "แดชบอร์ด",
@@ -479,7 +483,14 @@
     "clearHistoryPreviewOrders": "ประมาณ {count} บิลจะถูกลบ (จากข้อมูลในเครื่อง)",
     "clearHistorySelectedOrders": "เลือกแล้ว {count} บิล · รวม {total}",
     "clearHistorySelectAll": "เลือกทั้งหมดที่แสดง",
-    "clearHistoryDeselectAll": "ยกเลิกที่แสดง"
+    "clearHistoryDeselectAll": "ยกเลิกที่แสดง",
+    "about": "เกี่ยวกับระบบ",
+    "appVersion": "เวอร์ชันแอป",
+    "buildId": "Build",
+    "apiVersion": "เวอร์ชัน API",
+    "versionMatch": "ตรงกัน",
+    "versionMismatch": "ไม่ตรงกัน",
+    "versionUnknown": "ไม่ทราบ"
   },
   "invitePage": {
     "title": "คำเชิญเข้าร่วมทีม",

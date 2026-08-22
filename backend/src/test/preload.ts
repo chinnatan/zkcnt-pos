@@ -14,18 +14,11 @@ process.env.ALLOWED_ORIGIN = "http://localhost:4000";
 
 const { initBunDb } = await import("../db/client.bun");
 const { initRuntimeConfig } = await import("../env");
-const { bunEnv } = await import("../env.bun");
+const { bunEnv, createBunRuntimeConfig } = await import("../env.bun");
 const { initFilesystemUploads } = await import("../lib/uploads.bun");
 const { runMigrate } = await import("../db/migrate");
 
-initRuntimeConfig({
-  jwtSecret: "test-secret",
-  appUrl: "http://localhost:4000",
-  logLevel: "silent",
-  allowedOrigin: "http://localhost:4000",
-  resend: { apiKey: "", from: "" },
-  uploadsDir: bunEnv.uploadsDir,
-});
+initRuntimeConfig(createBunRuntimeConfig());
 
 initBunDb(bunEnv.dbPath);
 initFilesystemUploads(bunEnv.uploadsDir);

@@ -238,6 +238,46 @@
           </div>
         </div>
       </UiCraftCard>
+
+      <UiCraftCard variant="paper" padding="md">
+        <h3 class="mb-4 text-base font-semibold text-ink">{{ t('settingsPage.about') }}</h3>
+        <dl class="grid gap-3 text-sm sm:grid-cols-2">
+          <div>
+            <dt class="text-ink-muted">{{ t('settingsPage.appVersion') }}</dt>
+            <dd class="font-medium text-ink">{{ displayVersion }}</dd>
+          </div>
+          <div>
+            <dt class="text-ink-muted">{{ t('settingsPage.buildId') }}</dt>
+            <dd class="font-mono text-xs text-ink">{{ shortBuildId }}</dd>
+          </div>
+          <div>
+            <dt class="text-ink-muted">{{ t('settingsPage.apiVersion') }}</dt>
+            <dd class="font-medium text-ink">
+              <span v-if="apiLoading">{{ t('common.loading') }}</span>
+              <span v-else-if="apiVersion">v{{ apiVersion }}</span>
+              <span v-else class="text-ink-muted">{{ t('settingsPage.versionUnknown') }}</span>
+            </dd>
+          </div>
+          <div>
+            <dt class="text-ink-muted">{{ t('common.status') }}</dt>
+            <dd>
+              <span
+                v-if="versionMatches === true"
+                class="inline-flex rounded-full bg-success-50 px-2 py-0.5 text-xs font-medium text-success-700"
+              >
+                {{ t('settingsPage.versionMatch') }}
+              </span>
+              <span
+                v-else-if="versionMatches === false"
+                class="inline-flex rounded-full bg-warning-50 px-2 py-0.5 text-xs font-medium text-warning-700"
+              >
+                {{ t('settingsPage.versionMismatch') }}
+              </span>
+              <span v-else class="text-ink-muted">—</span>
+            </dd>
+          </div>
+        </dl>
+      </UiCraftCard>
     </div>
 
     <Teleport to="body">
@@ -307,6 +347,14 @@ const {
   updateInviteMode,
 } = useStoreMembers();
 const { confirm } = useDialog();
+const {
+  displayVersion,
+  shortBuildId,
+  apiVersion,
+  apiLoading,
+  versionMatches,
+  fetchApiVersion,
+} = useAppVersion();
 
 const isSaving = ref(false);
 const isSavingPayment = ref(false);
@@ -513,4 +561,8 @@ async function copyInviteLink() {
 function onClearHistorySuccess(result: { orders: number }) {
   purgeSuccess.value = t("settingsPage.clearHistorySuccess", { orders: result.orders });
 }
+
+onMounted(() => {
+  void fetchApiVersion();
+});
 </script>

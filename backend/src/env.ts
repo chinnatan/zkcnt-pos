@@ -1,4 +1,5 @@
 import type { WorkerBindings } from "./types/bindings";
+import { readAppVersion, readBuildId } from "./lib/version";
 
 export type LogLevel = "debug" | "info" | "warn" | "error" | "silent";
 
@@ -7,6 +8,8 @@ export interface RuntimeConfig {
   appUrl: string;
   logLevel: LogLevel;
   allowedOrigin: string;
+  appVersion: string;
+  buildId: string;
   resend: {
     apiKey: string;
     from: string;
@@ -41,6 +44,8 @@ export function initRuntimeConfigFromWorker(bindings: WorkerBindings): RuntimeCo
     appUrl: bindings.APP_URL.replace(/\/$/, ""),
     logLevel: parseLogLevel(bindings.LOG_LEVEL),
     allowedOrigin: bindings.ALLOWED_ORIGIN ?? bindings.APP_URL,
+    appVersion: bindings.APP_VERSION ?? readAppVersion(),
+    buildId: bindings.BUILD_ID ?? readBuildId(),
     resend: {
       apiKey: bindings.RESEND_API_KEY ?? "",
       from: bindings.RESEND_FROM ?? "",

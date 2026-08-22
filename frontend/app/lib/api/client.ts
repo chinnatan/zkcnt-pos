@@ -45,6 +45,8 @@ export class ApiClient {
   private baseUrl: string;
   private uploadsBase: string;
   private authState: AuthState | null = null;
+  private clientVersion = "0.0.0";
+  private clientBuild = "dev";
 
   constructor(baseUrl?: string, uploadsUrl?: string) {
     this.baseUrl = resolveApiBaseUrl(baseUrl);
@@ -64,6 +66,11 @@ export class ApiClient {
 
   get token(): string | null {
     return this.authState?.token ?? null;
+  }
+
+  setClientInfo(version: string, buildId: string) {
+    this.clientVersion = version;
+    this.clientBuild = buildId;
   }
 
   restoreAuth() {
@@ -88,6 +95,9 @@ export class ApiClient {
   async send<T = unknown>(path: string, options: SendOptions = {}): Promise<T> {
     const { method = "GET", body, headers = {}, auth = true } = options;
     const reqHeaders: Record<string, string> = { ...headers };
+
+    reqHeaders["X-Client-Version"] = this.clientVersion;
+    reqHeaders["X-Client-Build"] = this.clientBuild;
 
     if (auth && this.authState?.token) {
       reqHeaders.Authorization = `Bearer ${this.authState.token}`;

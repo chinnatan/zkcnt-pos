@@ -9,5 +9,6 @@
     </div>
     <LayoutMobileBottomNav />
     <LayoutPwaInstallBanner />
+    <LayoutPwaUpdateBanner />
   </div>
 </template>

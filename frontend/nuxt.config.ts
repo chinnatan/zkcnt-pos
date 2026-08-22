@@ -1,4 +1,8 @@
 import tailwindcss from "@tailwindcss/vite";
+import { readVersionFromRoot } from "../scripts/read-version";
+
+const appVersion = process.env.NUXT_PUBLIC_APP_VERSION || readVersionFromRoot();
+const buildId = process.env.NUXT_PUBLIC_BUILD_ID || "dev";
 
 export default defineNuxtConfig({
   compatibilityDate: "2025-05-01",
@@ -156,6 +160,8 @@ export default defineNuxtConfig({
       uploadsUrl: process.env.NUXT_PUBLIC_UPLOADS_URL || "",
       appUrl: process.env.NUXT_PUBLIC_APP_URL || "http://localhost:4000",
       logLevel: process.env.NUXT_PUBLIC_LOG_LEVEL || "",
+      appVersion,
+      buildId,
     },
   },
 

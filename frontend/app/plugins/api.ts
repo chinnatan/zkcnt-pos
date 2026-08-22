@@ -6,6 +6,10 @@ export default defineNuxtPlugin(() => {
     config.public.apiUrl as string,
     config.public.uploadsUrl as string,
   );
+  api.setClientInfo(
+    String(config.public.appVersion || "0.0.0"),
+    String(config.public.buildId || "dev"),
+  );
 
   return {
     provide: {

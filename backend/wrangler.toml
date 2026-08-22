@@ -21,6 +21,8 @@ bucket_name = "zkcnt-pos-uploads"
 
 [vars]
 APP_URL = "https://pos.zkcnt.com"
+APP_VERSION = "0.1.0"
+BUILD_ID = "production"
 LOG_LEVEL = "info"
 ALLOWED_ORIGIN = "https://pos.zkcnt.com"
 

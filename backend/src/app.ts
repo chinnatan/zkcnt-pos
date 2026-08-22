@@ -28,7 +28,7 @@ function getAllowedOrigin(): string {
 function applyCorsHeaders(c: Parameters<Parameters<Hono["use"]>[1]>[0], origin: string) {
   c.header("Access-Control-Allow-Origin", origin);
   c.header("Access-Control-Allow-Methods", "GET, POST, PATCH, DELETE, OPTIONS");
-  c.header("Access-Control-Allow-Headers", "Authorization, Content-Type");
+  c.header("Access-Control-Allow-Headers", "Authorization, Content-Type, X-Client-Version, X-Client-Build");
   c.header("Vary", "Origin");
 }
 
@@ -96,7 +96,10 @@ export function createApp() {
     return c.json({ message: "Internal server error" }, 500);
   });
 
-  app.get("/api/health", (c) => c.json({ status: "ok" }));
+  app.get("/api/health", (c) => {
+    const { appVersion, buildId } = getRuntimeConfig();
+    return c.json({ status: "ok", version: appVersion, build: buildId });
+  });
 
   app.get("/uploads/*", async (c) => {
     const relative = c.req.path.replace(/^\/uploads\//, "");

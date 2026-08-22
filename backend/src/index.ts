@@ -2,24 +2,11 @@ import { createApp } from "./app";
 import { initBunDb } from "./db/client.bun";
 import { runMigrate } from "./db/migrate";
 import { initRuntimeConfig } from "./env";
-import { bunEnv, env } from "./env.bun";
+import { bunEnv, createBunRuntimeConfig, env } from "./env.bun";
 import { initFilesystemUploads } from "./lib/uploads.bun";
 import { log } from "./lib/logger";
 
-initRuntimeConfig({
-  jwtSecret: process.env.JWT_SECRET ?? "dev-secret-change-in-production",
-  appUrl: (process.env.APP_URL ?? "http://localhost:4000").replace(/\/$/, ""),
-  logLevel: env.logLevel,
-  allowedOrigin:
-    process.env.ALLOWED_ORIGIN ??
-    process.env.APP_URL ??
-    "http://localhost:4000",
-  resend: {
-    apiKey: process.env.RESEND_API_KEY ?? "",
-    from: process.env.RESEND_FROM ?? "",
-  },
-  uploadsDir: bunEnv.uploadsDir,
-});
+initRuntimeConfig(createBunRuntimeConfig());
 
 initBunDb(bunEnv.dbPath);
 initFilesystemUploads(bunEnv.uploadsDir);

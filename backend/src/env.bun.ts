@@ -6,6 +6,7 @@ import {
   parseLogLevel,
   type RuntimeConfig,
 } from "./env";
+import { readAppVersion, readBuildId } from "./lib/version";
 
 const dataDir = process.env.DATA_DIR ?? join(import.meta.dir, "..", "data");
 const uploadsDir = join(dataDir, "uploads");
@@ -28,6 +29,8 @@ export function createBunRuntimeConfig(): RuntimeConfig {
       process.env.ALLOWED_ORIGIN ??
       process.env.APP_URL ??
       "http://localhost:4000",
+    appVersion: readAppVersion(),
+    buildId: readBuildId(),
     resend: {
       apiKey: process.env.RESEND_API_KEY ?? "",
       from: process.env.RESEND_FROM ?? "",
