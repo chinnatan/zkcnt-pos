@@ -28,6 +28,7 @@ const showDeleteConfirm = ref(false);
 const deletingProduct = ref<Product | null>(null);
 
 const showCategoryModal = ref(false);
+const categoryModalFromProduct = ref(false);
 const editingCategory = ref<Category | null>(null);
 const showDeleteCategoryConfirm = ref(false);
 const deletingCategory = ref<Category | null>(null);
@@ -262,10 +263,20 @@ async function handleDeleteProduct() {
   deletingProduct.value = null;
 }
 
-function openAddCategory() {
+function openAddCategory(fromProduct = false) {
+  categoryModalFromProduct.value = fromProduct;
   editingCategory.value = null;
   categoryForm.value = { name: "", description: "", sort_order: 0, is_active: true };
   showCategoryModal.value = true;
+}
+
+function openAddCategoryFromProduct() {
+  openAddCategory(true);
+}
+
+function closeCategoryModal() {
+  showCategoryModal.value = false;
+  categoryModalFromProduct.value = false;
 }
 
 function openEditCategory(category: Category) {
@@ -282,12 +293,21 @@ function openEditCategory(category: Category) {
 async function handleSaveCategory() {
   if (!activeStoreId.value) return;
   const storeId = activeStoreId.value;
+  const fromProduct = categoryModalFromProduct.value;
+  let createdCategoryId: string | undefined;
+
   if (editingCategory.value) {
     await updateCategory(editingCategory.value.id, { ...categoryForm.value, store: storeId });
   } else {
-    await createCategory({ ...categoryForm.value, store: storeId });
+    const created = await createCategory({ ...categoryForm.value, store: storeId });
+    createdCategoryId = created.id;
   }
-  showCategoryModal.value = false;
+
+  closeCategoryModal();
+
+  if (fromProduct && createdCategoryId) {
+    productForm.value.category = createdCategoryId;
+  }
 }
 
 async function confirmDeleteCategory(category: Category) {
@@ -373,9 +393,11 @@ onUnmounted(() => {
             {{ t('productsPage.importExport') }}
           </button>
           <button
-            v-else
-            class="inline-flex items-center gap-2 rounded-lg bg-primary-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
-            @click="openAddCategory"
+            class="inline-flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold shadow-sm transition focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+            :class="activeTab === 'categories'
+              ? 'bg-primary-600 text-white hover:bg-primary-700'
+              : 'border border-border-warm bg-paper text-ink hover:bg-surface'"
+            @click="openAddCategory()"
           >
             <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
             {{ t('productsPage.addCategory') }}
@@ -413,23 +435,38 @@ onUnmounted(() => {
       <!-- Products Tab -->
       <template v-else-if="activeTab === 'products'">
         <!-- Search & Filter -->
-        <div class="mb-4 flex flex-col gap-3 sm:flex-row">
-          <div class="relative flex-1">
+        <div class="mb-4 grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+          <div class="relative min-w-0">
             <svg class="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-ink-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
             <input
               v-model="searchQuery"
               type="text"
               :placeholder="t('productsPage.searchPlaceholder')"
-              class="w-full rounded-lg border border-border-warm bg-paper py-2.5 pl-10 pr-4 text-sm shadow-sm transition focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+              class="h-10 w-full rounded-lg border border-border-warm bg-paper py-0 pl-10 pr-4 text-sm shadow-sm transition focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
             />
           </div>
-          <select
-            v-model="selectedCategoryId"
-            class="rounded-lg border border-border-warm bg-paper px-4 py-2.5 text-sm shadow-sm transition focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 sm:w-56"
-          >
-            <option :value="null">{{ t('productsPage.allCategories') }}</option>
-            <option v-for="cat in categories" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
-          </select>
+          <div class="flex h-10 overflow-hidden rounded-lg border border-border-warm bg-paper shadow-sm transition focus-within:border-primary-500 focus-within:ring-2 focus-within:ring-primary-500/20 sm:min-w-[14rem]">
+            <div class="relative min-w-0 flex-1 sm:w-44 lg:w-52">
+              <select
+                v-model="selectedCategoryId"
+                class="h-full w-full appearance-none border-0 bg-transparent py-0 pl-3 pr-9 text-sm focus:outline-none focus:ring-0"
+              >
+                <option :value="null">{{ t('productsPage.allCategories') }}</option>
+                <option v-for="cat in categories" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
+              </select>
+              <svg class="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+            </div>
+            <div class="w-px self-stretch bg-border-warm" aria-hidden="true" />
+            <button
+              type="button"
+              class="inline-flex h-full shrink-0 items-center justify-center gap-1.5 px-3 text-sm font-medium text-primary-600 transition hover:bg-surface focus:outline-none"
+              :title="t('productsPage.addCategory')"
+              @click="openAddCategory()"
+            >
+              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+              <span class="hidden lg:inline">{{ t('productsPage.addCategory') }}</span>
+            </button>
+          </div>
         </div>
 
         <!-- Desktop Table -->
@@ -647,7 +684,7 @@ onUnmounted(() => {
                     <td colspan="6" class="px-6 py-16 text-center">
                       <svg class="mx-auto h-12 w-12 text-border-warm" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z" /></svg>
                       <p class="mt-3 text-sm font-medium text-ink-muted">{{ t('productsPage.noCategories') }}</p>
-                      <button class="mt-2 text-sm font-medium text-primary-600 hover:text-primary-700" @click="openAddCategory">{{ t('productsPage.addFirstCategory') }}</button>
+                      <button class="mt-2 text-sm font-medium text-primary-600 hover:text-primary-700" @click="openAddCategory()">{{ t('productsPage.addFirstCategory') }}</button>
                     </td>
                   </tr>
                 </tbody>
@@ -658,7 +695,7 @@ onUnmounted(() => {
             <div v-if="(categories ?? []).length === 0" class="rounded-xl bg-paper p-8 text-center shadow-sm">
               <svg class="mx-auto h-12 w-12 text-border-warm" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z" /></svg>
               <p class="mt-3 text-sm font-medium text-ink-muted">{{ t('productsPage.noCategories') }}</p>
-              <button class="mt-2 text-sm font-medium text-primary-600 hover:text-primary-700" @click="openAddCategory">{{ t('productsPage.addFirstCategory') }}</button>
+              <button class="mt-2 text-sm font-medium text-primary-600 hover:text-primary-700" @click="openAddCategory()">{{ t('productsPage.addFirstCategory') }}</button>
             </div>
             <UiMobileDataCard
               v-for="cat in categories"
@@ -802,11 +839,23 @@ onUnmounted(() => {
                 </div>
                 <div class="grid grid-cols-2 gap-4">
                   <div>
-                    <label class="mb-1 block text-sm font-medium text-ink">{{ t('common.category') }}</label>
+                    <div class="mb-1 flex items-center justify-between gap-2">
+                      <label class="text-sm font-medium text-ink">{{ t('common.category') }}</label>
+                      <button
+                        type="button"
+                        class="text-xs font-medium text-primary-600 hover:text-primary-700"
+                        @click="openAddCategoryFromProduct"
+                      >
+                        + {{ t('productsPage.addCategory') }}
+                      </button>
+                    </div>
                     <select v-model="productForm.category" class="w-full rounded-lg border border-border-warm px-3 py-2 text-sm transition focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20">
                       <option value="">{{ t('common.unspecified') }}</option>
                       <option v-for="cat in categories" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
                     </select>
+                    <p v-if="(categories ?? []).length === 0" class="mt-1 text-xs text-ink-muted">
+                      {{ t('productsPage.noCategoriesHint') }}
+                    </p>
                   </div>
                   <div>
                     <label class="mb-1 block text-sm font-medium text-ink">{{ t('common.unit') }}</label>
@@ -910,10 +959,13 @@ onUnmounted(() => {
             <div v-if="showCategoryModal" class="craft-modal-panel craft-modal--stitched max-w-md">
               <div class="mb-5 flex items-center justify-between">
                 <h2 class="text-lg font-semibold text-ink">{{ editingCategory ? t('productsPage.editCategory') : t('productsPage.addNewCategory') }}</h2>
-                <button class="rounded-lg p-1 text-ink-muted hover:bg-surface hover:text-ink-muted" @click="showCategoryModal = false">
+                <button class="rounded-lg p-1 text-ink-muted hover:bg-surface hover:text-ink-muted" @click="closeCategoryModal">
                   <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
                 </button>
               </div>
+              <p v-if="categoryModalFromProduct" class="mb-4 rounded-lg bg-primary-50 px-3 py-2 text-xs text-primary-700">
+                {{ t('productsPage.addCategoryFromProductHint') }}
+              </p>
               <form class="space-y-4" @submit.prevent="handleSaveCategory">
                 <div>
                   <label class="mb-1 block text-sm font-medium text-ink">{{ t('productsPage.categoryName') }} <span class="text-danger-500">*</span></label>
@@ -941,7 +993,7 @@ onUnmounted(() => {
                   <span class="text-sm text-ink">{{ t('common.enabled') }}</span>
                 </label>
                 <div class="flex items-center justify-end gap-3 pt-2">
-                  <button type="button" class="rounded-lg px-4 py-2 text-sm font-medium text-ink transition hover:bg-surface" @click="showCategoryModal = false">{{ t('common.cancel') }}</button>
+                  <button type="button" class="rounded-lg px-4 py-2 text-sm font-medium text-ink transition hover:bg-surface" @click="closeCategoryModal">{{ t('common.cancel') }}</button>
                   <button type="submit" class="rounded-lg bg-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2">
                     {{ editingCategory ? t('common.save') : t('productsPage.addCategory') }}
                   </button>

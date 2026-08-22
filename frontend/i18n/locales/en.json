@@ -237,6 +237,8 @@
     "noProducts": "No products found",
     "noProductsHint": "Try changing search or filter",
     "noCategories": "No categories yet",
+    "noCategoriesHint": "No categories yet — tap + Add Category above",
+    "addCategoryFromProductHint": "After saving, this category will be selected for the product automatically",
     "addFirstCategory": "Add first category",
     "categoryName": "Category name",
     "editProduct": "Edit Product",
