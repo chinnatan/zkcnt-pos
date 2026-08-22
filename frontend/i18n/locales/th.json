@@ -217,7 +217,11 @@
     "lowStockAlert": "สินค้าใกล้หมด {count} รายการ",
     "stockIn": "รับเข้า",
     "stockOut": "จ่ายออก",
-    "adjustment": "ปรับยอด"
+    "adjustment": "ปรับยอดรวม",
+    "currentQuantity": "ยอดปัจจุบัน",
+    "targetQuantity": "ยอดที่ต้องการ",
+    "adjustmentPreview": "ปรับจาก {current} → {target} ({delta})",
+    "adjustmentNoChange": "ยอดไม่เปลี่ยนแปลง"
   },
   "productsPage": {
     "title": "จัดการสินค้า",
@@ -406,7 +410,7 @@
     "invTx": {
       "stock_in": "รับเข้า",
       "stock_out": "จ่ายออก",
-      "adjustment": "ปรับปรุง",
+      "adjustment": "ปรับยอดรวม",
       "sale": "ขาย"
     }
   },

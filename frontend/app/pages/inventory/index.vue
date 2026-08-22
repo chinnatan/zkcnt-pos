@@ -144,15 +144,24 @@
               </select>
             </div>
 
+            <div v-if="adjustForm.type === 'adjustment' && adjustForm.productId" class="rounded-lg bg-surface px-3 py-2 text-sm text-ink-muted">
+              {{ t('stock.currentQuantity') }}: <span class="font-semibold text-ink">{{ selectedProductStock }}</span>
+            </div>
+
             <div>
-              <label class="mb-1 block text-sm font-medium text-ink">{{ t('common.quantity') }}</label>
+              <label class="mb-1 block text-sm font-medium text-ink">
+                {{ adjustForm.type === 'adjustment' ? t('stock.targetQuantity') : t('common.quantity') }}
+              </label>
               <input
                 v-model.number="adjustForm.quantity"
                 type="number"
-                min="1"
+                :min="adjustForm.type === 'adjustment' ? 0 : 1"
                 required
                 class="w-full rounded-lg border border-border-warm px-3 py-2.5 text-sm focus:border-primary-500 focus:outline-none"
               />
+              <p v-if="adjustForm.type === 'adjustment' && adjustForm.productId" class="mt-1 text-xs text-ink-muted">
+                {{ adjustmentPreview }}
+              </p>
             </div>
 
             <div>
@@ -216,10 +225,25 @@ const inventoryWithProducts = computed(() => {
   });
 });
 
+const selectedProductStock = computed(() => {
+  const item = inventoryItems.value.find((i) => i.product === adjustForm.productId);
+  return item?.quantity ?? 0;
+});
+
+const adjustmentPreview = computed(() => {
+  const current = selectedProductStock.value;
+  const target = adjustForm.quantity;
+  if (Number.isNaN(target)) return "";
+  const delta = target - current;
+  if (delta === 0) return t("stock.adjustmentNoChange");
+  const sign = delta > 0 ? "+" : "";
+  return t("stock.adjustmentPreview", { current, target, delta: `${sign}${delta}` });
+});
+
 function openAdjust(item: any) {
   adjustForm.productId = item.product;
-  adjustForm.type = "stock_in";
-  adjustForm.quantity = 1;
+  adjustForm.type = "adjustment";
+  adjustForm.quantity = item.quantity;
   adjustForm.note = "";
   showAdjustModal.value = true;
 }
@@ -228,6 +252,26 @@ async function handleAdjust() {
   await adjustStock(adjustForm.productId, adjustForm.type, adjustForm.quantity, adjustForm.note);
   showAdjustModal.value = false;
 }
+
+watch(
+  () => adjustForm.type,
+  (type) => {
+    if (type === "adjustment" && adjustForm.productId) {
+      adjustForm.quantity = selectedProductStock.value;
+    } else if (type !== "adjustment") {
+      adjustForm.quantity = 1;
+    }
+  },
+);
+
+watch(
+  () => adjustForm.productId,
+  (productId) => {
+    if (adjustForm.type === "adjustment" && productId) {
+      adjustForm.quantity = selectedProductStock.value;
+    }
+  },
+);
 
 onMounted(() => {
   fetchInventory();

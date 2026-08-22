@@ -55,14 +55,27 @@ export function useInventory() {
 
     const current = inventoryItems.value.find((i) => i.product === productId);
     const beforeQty = current?.quantity ?? 0;
-    const afterQty =
-      type === "stock_out" ? beforeQty - quantity : beforeQty + quantity;
+
+    let afterQty: number;
+    let txQuantity: number;
+
+    if (type === "adjustment") {
+      afterQty = quantity;
+      txQuantity = Math.abs(afterQty - beforeQty);
+      if (txQuantity === 0) return;
+    } else if (type === "stock_out") {
+      afterQty = beforeQty - quantity;
+      txQuantity = quantity;
+    } else {
+      afterQty = beforeQty + quantity;
+      txQuantity = quantity;
+    }
 
     const txData: Partial<InventoryTransaction> = {
       store: activeStoreId.value,
       product: productId,
       type,
-      quantity,
+      quantity: txQuantity,
       before_qty: beforeQty,
       after_qty: afterQty,
       reference: "",

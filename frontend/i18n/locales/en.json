@@ -217,7 +217,11 @@
     "lowStockAlert": "{count} item(s) low on stock",
     "stockIn": "Stock In",
     "stockOut": "Stock Out",
-    "adjustment": "Adjustment"
+    "adjustment": "Set Total",
+    "currentQuantity": "Current stock",
+    "targetQuantity": "Target quantity",
+    "adjustmentPreview": "Adjust from {current} → {target} ({delta})",
+    "adjustmentNoChange": "No change"
   },
   "productsPage": {
     "title": "Product Management",
@@ -406,7 +410,7 @@
     "invTx": {
       "stock_in": "Stock In",
       "stock_out": "Stock Out",
-      "adjustment": "Adjustment",
+      "adjustment": "Set Total",
       "sale": "Sale"
     }
   },
