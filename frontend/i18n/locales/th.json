@@ -237,6 +237,8 @@
     "noProducts": "ไม่พบสินค้า",
     "noProductsHint": "ลองเปลี่ยนคำค้นหาหรือตัวกรอง",
     "noCategories": "ยังไม่มีหมวดหมู่",
+    "noCategoriesHint": "ยังไม่มีหมวดหมู่ — กด + เพิ่มหมวดหมู่ด้านบน",
+    "addCategoryFromProductHint": "บันทึกแล้วจะเลือกหมวดหมู่นี้ให้สินค้าโดยอัตโนมัติ",
     "addFirstCategory": "เพิ่มหมวดหมู่แรก",
     "categoryName": "ชื่อหมวดหมู่",
     "editProduct": "แก้ไขสินค้า",

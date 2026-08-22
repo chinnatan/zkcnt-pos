@@ -28,6 +28,7 @@ const showDeleteConfirm = ref(false);
 const deletingProduct = ref<Product | null>(null);
 
 const showCategoryModal = ref(false);
+const categoryModalFromProduct = ref(false);
 const editingCategory = ref<Category | null>(null);
 const showDeleteCategoryConfirm = ref(false);
 const deletingCategory = ref<Category | null>(null);
@@ -262,10 +263,20 @@ async function handleDeleteProduct() {
   deletingProduct.value = null;
 }
 
-function openAddCategory() {
+function openAddCategory(fromProduct = false) {
+  categoryModalFromProduct.value = fromProduct;
   editingCategory.value = null;
   categoryForm.value = { name: "", description: "", sort_order: 0, is_active: true };
   showCategoryModal.value = true;
+}
+
+function openAddCategoryFromProduct() {
+  openAddCategory(true);
+}
+
+function closeCategoryModal() {
+  showCategoryModal.value = false;
+  categoryModalFromProduct.value = false;
 }
 
 function openEditCategory(category: Category) {
@@ -282,12 +293,21 @@ function openEditCategory(category: Category) {
 async function handleSaveCategory() {
   if (!activeStoreId.value) return;
   const storeId = activeStoreId.value;
+  const fromProduct = categoryModalFromProduct.value;
+  let createdCategoryId: string | undefined;
+
   if (editingCategory.value) {
     await updateCategory(editingCategory.value.id, { ...categoryForm.value, store: storeId });
   } else {
-    await createCategory({ ...categoryForm.value, store: storeId });
+    const created = await createCategory({ ...categoryForm.value, store: storeId });
+    createdCategoryId = created.id;
   }
-  showCategoryModal.value = false;
+
+  closeCategoryModal();
+
+  if (fromProduct && createdCategoryId) {
+    productForm.value.category = createdCategoryId;
+  }
 }
 
 async function confirmDeleteCategory(category: Category) {
@@ -350,35 +370,38 @@ onUnmounted(() => {
         <div class="flex flex-wrap gap-2">
           <button
             v-if="activeTab === 'products'"
-            class="inline-flex items-center gap-2 rounded-lg bg-primary-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+            class="inline-flex items-center gap-2 rounded-lg bg-primary-600 px-3 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 sm:px-4 sm:py-2.5"
             @click="openAddProduct"
           >
-            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
-            {{ t('productsPage.addProduct') }}
+            <svg class="h-5 w-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+            <span class="sm:hidden">{{ t('common.add') }}</span>
+            <span class="hidden sm:inline">{{ t('productsPage.addProduct') }}</span>
           </button>
           <button
             v-if="activeTab === 'products'"
-            class="inline-flex items-center gap-2 rounded-lg border border-border-warm bg-paper px-4 py-2.5 text-sm font-semibold text-ink shadow-sm transition hover:bg-surface focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+            class="inline-flex items-center gap-2 rounded-lg border border-border-warm bg-paper px-3 py-2 text-sm font-semibold text-ink shadow-sm transition hover:bg-surface focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 sm:px-4 sm:py-2.5"
             @click="showBulkAddModal = true"
           >
-            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" /></svg>
-            {{ t('productsPage.bulkAdd') }}
+            <svg class="h-5 w-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" /></svg>
+            <span class="hidden lg:inline">{{ t('productsPage.bulkAdd') }}</span>
           </button>
           <button
             v-if="activeTab === 'products'"
-            class="inline-flex items-center gap-2 rounded-lg border border-border-warm bg-paper px-4 py-2.5 text-sm font-semibold text-ink shadow-sm transition hover:bg-surface focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+            class="inline-flex items-center gap-2 rounded-lg border border-border-warm bg-paper px-3 py-2 text-sm font-semibold text-ink shadow-sm transition hover:bg-surface focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 sm:px-4 sm:py-2.5"
             @click="showImportExportModal = true"
           >
-            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
-            {{ t('productsPage.importExport') }}
+            <svg class="h-5 w-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+            <span class="hidden lg:inline">{{ t('productsPage.importExport') }}</span>
           </button>
           <button
-            v-else
-            class="inline-flex items-center gap-2 rounded-lg bg-primary-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
-            @click="openAddCategory"
+            class="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold shadow-sm transition focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 sm:px-4 sm:py-2.5"
+            :class="activeTab === 'categories'
+              ? 'bg-primary-600 text-white hover:bg-primary-700'
+              : 'border border-border-warm bg-paper text-ink hover:bg-surface'"
+            @click="openAddCategory()"
           >
-            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
-            {{ t('productsPage.addCategory') }}
+            <svg class="h-5 w-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+            <span class="hidden sm:inline">{{ t('productsPage.addCategory') }}</span>
           </button>
         </div>
       </div>
@@ -413,209 +436,229 @@ onUnmounted(() => {
       <!-- Products Tab -->
       <template v-else-if="activeTab === 'products'">
         <!-- Search & Filter -->
-        <div class="mb-4 flex flex-col gap-3 sm:flex-row">
-          <div class="relative flex-1">
+        <div class="mb-4 grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+          <div class="relative min-w-0">
             <svg class="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-ink-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
             <input
               v-model="searchQuery"
               type="text"
               :placeholder="t('productsPage.searchPlaceholder')"
-              class="w-full rounded-lg border border-border-warm bg-paper py-2.5 pl-10 pr-4 text-sm shadow-sm transition focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+              class="h-10 w-full rounded-lg border border-border-warm bg-paper py-0 pl-10 pr-4 text-sm shadow-sm transition focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
             />
           </div>
-          <select
-            v-model="selectedCategoryId"
-            class="rounded-lg border border-border-warm bg-paper px-4 py-2.5 text-sm shadow-sm transition focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 sm:w-56"
-          >
-            <option :value="null">{{ t('productsPage.allCategories') }}</option>
-            <option v-for="cat in categories" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
-          </select>
+          <div class="flex h-10 overflow-hidden rounded-lg border border-border-warm bg-paper shadow-sm transition focus-within:border-primary-500 focus-within:ring-2 focus-within:ring-primary-500/20 sm:min-w-[14rem]">
+            <div class="relative min-w-0 flex-1 sm:w-44 lg:w-52">
+              <select
+                v-model="selectedCategoryId"
+                class="h-full w-full appearance-none border-0 bg-transparent py-0 pl-3 pr-9 text-sm focus:outline-none focus:ring-0"
+              >
+                <option :value="null">{{ t('productsPage.allCategories') }}</option>
+                <option v-for="cat in categories" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
+              </select>
+              <svg class="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+            </div>
+            <div class="w-px self-stretch bg-border-warm" aria-hidden="true" />
+            <button
+              type="button"
+              class="inline-flex h-full shrink-0 items-center justify-center gap-1.5 px-3 text-sm font-medium text-primary-600 transition hover:bg-surface focus:outline-none"
+              :title="t('productsPage.addCategory')"
+              @click="openAddCategory()"
+            >
+              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+              <span class="hidden lg:inline">{{ t('productsPage.addCategory') }}</span>
+            </button>
+          </div>
         </div>
 
-        <!-- Desktop Table -->
-        <div class="hidden overflow-hidden rounded-xl border border-border-warm bg-paper shadow-sm md:block">
-          <table class="min-w-full divide-y divide-border-warm">
-            <thead class="bg-surface">
-              <tr>
-                <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-ink-muted">{{ t('productsPage.productCol') }}</th>
-                <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-ink-muted">{{ t('common.sku') }}</th>
-                <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-ink-muted">{{ t('common.category') }}</th>
-                <th class="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-ink-muted">{{ t('common.price') }}</th>
-                <th class="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-ink-muted">{{ t('common.cost') }}</th>
-                <th class="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-ink-muted">{{ t('productsPage.stockRemaining') }}</th>
-                <th class="px-6 py-3 text-center text-xs font-semibold uppercase tracking-wider text-ink-muted">{{ t('common.status') }}</th>
-                <th class="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-ink-muted">{{ t('productsPage.manage') }}</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-border-warm">
-              <tr v-for="{ product, stock } in filteredProductsWithStock" :key="product.id" class="transition hover:bg-surface/80">
-                <td class="whitespace-nowrap px-6 py-4">
-                  <div class="flex items-center gap-3">
-                    <ProductImage :product="product" size="sm" />
-                    <div>
-                      <div class="text-sm font-medium text-ink">{{ product.name }}</div>
-                      <div v-if="product.barcode" class="text-xs text-ink-muted">{{ product.barcode }}</div>
-                    </div>
-                  </div>
-                </td>
-                <td class="whitespace-nowrap px-6 py-4 text-sm text-ink-muted">{{ product.sku || "-" }}</td>
-                <td class="whitespace-nowrap px-6 py-4 text-sm text-ink-muted">{{ getCategoryName(product.category) }}</td>
-                <td class="whitespace-nowrap px-6 py-4 text-right text-sm font-medium text-ink">{{ formatCurrency(product.price) }}</td>
-                <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-ink-muted">{{ formatCurrency(product.cost ?? 0) }}</td>
-                <td class="whitespace-nowrap px-6 py-4 text-right text-sm">
-                  <template v-if="stock">
-                    <span
+        <!-- Product list -->
+        <UiMobileDataList table-from="lg">
+          <template #table>
+            <div class="overflow-x-auto rounded-xl border border-border-warm bg-paper shadow-sm">
+              <table class="min-w-[640px] w-full divide-y divide-border-warm">
+                <thead class="bg-surface">
+                  <tr>
+                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-ink-muted">{{ t('productsPage.productCol') }}</th>
+                    <th class="hidden px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-ink-muted xl:table-cell">{{ t('common.sku') }}</th>
+                    <th class="hidden px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-ink-muted xl:table-cell">{{ t('common.category') }}</th>
+                    <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-ink-muted">{{ t('common.price') }}</th>
+                    <th class="hidden px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-ink-muted xl:table-cell">{{ t('common.cost') }}</th>
+                    <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-ink-muted">{{ t('productsPage.stockRemaining') }}</th>
+                    <th class="hidden px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-ink-muted lg:table-cell">{{ t('common.status') }}</th>
+                    <th class="sticky right-0 z-10 bg-surface px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-ink-muted shadow-[-4px_0_8px_-4px_rgba(0,0,0,0.08)]">{{ t('productsPage.manage') }}</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-border-warm">
+                  <tr v-for="{ product, stock } in filteredProductsWithStock" :key="product.id" class="group transition hover:bg-surface/80">
+                    <td class="max-w-[12rem] px-4 py-3 lg:max-w-[16rem]">
+                      <div class="flex items-center gap-3">
+                        <ProductImage :product="product" size="sm" />
+                        <div class="min-w-0">
+                          <div class="truncate text-sm font-medium text-ink">{{ product.name }}</div>
+                          <div v-if="product.barcode" class="truncate text-xs text-ink-muted">{{ product.barcode }}</div>
+                          <div class="truncate text-xs text-ink-muted xl:hidden">{{ product.sku || t('common.noSku') }}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="hidden whitespace-nowrap px-4 py-3 text-sm text-ink-muted xl:table-cell">{{ product.sku || "-" }}</td>
+                    <td class="hidden max-w-[8rem] truncate px-4 py-3 text-sm text-ink-muted xl:table-cell">{{ getCategoryName(product.category) }}</td>
+                    <td class="whitespace-nowrap px-4 py-3 text-right text-sm font-medium text-ink">{{ formatCurrency(product.price) }}</td>
+                    <td class="hidden whitespace-nowrap px-4 py-3 text-right text-sm text-ink-muted xl:table-cell">{{ formatCurrency(product.cost ?? 0) }}</td>
+                    <td class="whitespace-nowrap px-4 py-3 text-right text-sm">
+                      <template v-if="stock">
+                        <span
+                          class="font-semibold"
+                          :class="stock.quantity <= stock.threshold ? 'text-danger-500' : 'text-ink'"
+                        >
+                          {{ stock.quantity }}
+                        </span>
+                        <span
+                          v-if="product.unit"
+                          class="ml-1 text-xs text-ink-muted"
+                        >{{ product.unit }}</span>
+                      </template>
+                      <span v-else class="text-ink-muted">—</span>
+                    </td>
+                    <td class="hidden whitespace-nowrap px-4 py-3 text-center lg:table-cell">
+                      <span
+                        class="inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium"
+                        :class="activeBadge(product.is_active)"
+                      >
+                        {{ product.is_active ? t('common.enabledShort') : t('common.disabledShort') }}
+                      </span>
+                    </td>
+                    <td class="sticky right-0 z-10 whitespace-nowrap bg-paper px-4 py-3 text-right shadow-[-4px_0_8px_-4px_rgba(0,0,0,0.08)] group-hover:bg-surface/80">
+                      <div class="flex items-center justify-end gap-1">
+                        <button
+                          class="rounded-lg p-1.5 text-ink-muted transition hover:bg-surface hover:text-primary-600"
+                          :title="t('common.edit')"
+                          @click="openEditProduct(product)"
+                        >
+                          <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                        </button>
+                        <button
+                          class="rounded-lg p-1.5 text-ink-muted transition hover:bg-danger-50 hover:text-danger-500"
+                          :title="t('common.delete')"
+                          @click="confirmDeleteProduct(product)"
+                        >
+                          <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr v-if="filteredProducts.length === 0">
+                    <td colspan="8" class="px-4 py-16 text-center">
+                      <svg class="mx-auto h-12 w-12 text-border-warm" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
+                      <p class="mt-3 text-sm font-medium text-ink-muted">{{ t('productsPage.noProducts') }}</p>
+                      <p class="mt-1 text-xs text-ink-muted">{{ t('productsPage.noProductsHint') }}</p>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </template>
+          <template #cards>
+            <div v-if="filteredProducts.length === 0" class="rounded-xl bg-paper p-8 text-center shadow-sm">
+              <svg class="mx-auto h-12 w-12 text-border-warm" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
+              <p class="mt-3 text-sm font-medium text-ink-muted">{{ t('productsPage.noProducts') }}</p>
+              <p class="mt-1 text-xs text-ink-muted">{{ t('productsPage.noProductsHint') }}</p>
+            </div>
+            <UiMobileDataCard
+              v-for="{ product, stock } in filteredProductsWithStock"
+              :key="product.id"
+            >
+              <template #title>
+                <div class="flex items-center gap-2">
+                  <ProductImage :product="product" size="sm" />
+                  <span class="truncate">{{ product.name }}</span>
+                </div>
+              </template>
+              <template #subtitle>{{ product.sku || t('common.noSku') }}</template>
+              <template #badge>
+                <span
+                  class="inline-flex shrink-0 rounded-full px-2 py-0.5 text-xs font-medium"
+                  :class="activeBadge(product.is_active)"
+                >
+                  {{ product.is_active ? t('common.enabledShort') : t('common.disabledShort') }}
+                </span>
+              </template>
+              <template #fields>
+                <div>
+                  <span class="text-ink-muted">{{ t('common.price') }}</span>
+                  <p class="font-medium text-ink">{{ formatCurrency(product.price) }}</p>
+                </div>
+                <div>
+                  <span class="text-ink-muted">{{ t('common.cost') }}</span>
+                  <p class="text-ink-muted">{{ formatCurrency(product.cost ?? 0) }}</p>
+                </div>
+                <div>
+                  <span class="text-ink-muted">{{ t('common.category') }}</span>
+                  <p class="truncate text-ink-muted">{{ getCategoryName(product.category) }}</p>
+                </div>
+                <div>
+                  <span class="text-ink-muted">{{ t('common.unit') }}</span>
+                  <p class="text-ink-muted">{{ product.unit || "-" }}</p>
+                </div>
+                <div v-if="stock" class="col-span-2">
+                  <span class="text-ink-muted">{{ t('productsPage.stockRemaining') }}</span>
+                  <div class="mt-0.5 flex items-center gap-2">
+                    <p
                       class="font-semibold"
                       :class="stock.quantity <= stock.threshold ? 'text-danger-500' : 'text-ink'"
                     >
                       {{ stock.quantity }}
-                    </span>
+                      <span v-if="product.unit" class="text-xs font-normal text-ink-muted">{{ product.unit }}</span>
+                    </p>
                     <span
-                      v-if="product.unit"
-                      class="ml-1 text-xs text-ink-muted"
-                    >{{ product.unit }}</span>
-                  </template>
-                  <span v-else class="text-ink-muted">—</span>
-                </td>
-                <td class="whitespace-nowrap px-6 py-4 text-center">
-                  <span
-                    class="inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium"
-                    :class="activeBadge(product.is_active)"
-                  >
-                    {{ product.is_active ? t('common.enabledShort') : t('common.disabledShort') }}
-                  </span>
-                </td>
-                <td class="whitespace-nowrap px-6 py-4 text-right">
-                  <div class="flex items-center justify-end gap-2">
-                    <button
-                      class="rounded-lg p-1.5 text-ink-muted transition hover:bg-surface hover:text-primary-600"
-                      :title="t('common.edit')"
-                      @click="openEditProduct(product)"
+                      class="rounded-full px-2 py-0.5 text-xs font-medium"
+                      :class="stockQuantityBadge(stock.quantity, stock.threshold)"
                     >
-                      <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
-                    </button>
-                    <button
-                      class="rounded-lg p-1.5 text-ink-muted transition hover:bg-danger-50 hover:text-danger-500"
-                      :title="t('common.delete')"
-                      @click="confirmDeleteProduct(product)"
-                    >
-                      <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                    </button>
+                      {{ stockStatusLabel(stock.quantity, stock.threshold) }}
+                    </span>
                   </div>
-                </td>
-              </tr>
-              <tr v-if="filteredProducts.length === 0">
-                <td colspan="8" class="px-6 py-16 text-center">
-                  <svg class="mx-auto h-12 w-12 text-border-warm" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
-                  <p class="mt-3 text-sm font-medium text-ink-muted">{{ t('productsPage.noProducts') }}</p>
-                  <p class="mt-1 text-xs text-ink-muted">{{ t('productsPage.noProductsHint') }}</p>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <!-- Mobile Cards -->
-        <div class="flex flex-col gap-3 md:hidden">
-          <div v-if="filteredProducts.length === 0" class="rounded-xl bg-paper p-8 text-center shadow-sm">
-            <svg class="mx-auto h-12 w-12 text-border-warm" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
-            <p class="mt-3 text-sm font-medium text-ink-muted">{{ t('productsPage.noProducts') }}</p>
-          </div>
-          <div v-for="{ product, stock } in filteredProductsWithStock" :key="product.id" class="rounded-xl border border-border-warm bg-paper p-4 shadow-sm">
-            <div class="flex items-start justify-between">
-              <div class="flex items-center gap-3">
-                <ProductImage :product="product" size="sm" />
-                <div>
-                  <div class="text-sm font-medium text-ink">{{ product.name }}</div>
-                  <div class="text-xs text-ink-muted">{{ product.sku || t('common.noSku') }}</div>
                 </div>
-              </div>
-              <span
-                class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium"
-                :class="activeBadge(product.is_active)"
-              >
-                {{ product.is_active ? t('common.enabledShort') : t('common.disabledShort') }}
-              </span>
-            </div>
-            <div class="mt-3 grid grid-cols-2 gap-2 text-sm">
-              <div>
-                <span class="text-ink-muted">{{ t('common.price') }}</span>
-                <p class="font-medium text-ink">{{ formatCurrency(product.price) }}</p>
-              </div>
-              <div>
-                <span class="text-ink-muted">{{ t('common.cost') }}</span>
-                <p class="text-ink-muted">{{ formatCurrency(product.cost ?? 0) }}</p>
-              </div>
-              <div>
-                <span class="text-ink-muted">{{ t('common.category') }}</span>
-                <p class="text-ink-muted">{{ getCategoryName(product.category) }}</p>
-              </div>
-              <div>
-                <span class="text-ink-muted">{{ t('common.unit') }}</span>
-                <p class="text-ink-muted">{{ product.unit || "-" }}</p>
-              </div>
-              <div v-if="stock" class="col-span-2">
-                <span class="text-ink-muted">{{ t('productsPage.stockRemaining') }}</span>
-                <div class="mt-0.5 flex items-center gap-2">
-                  <p
-                    class="font-semibold"
-                    :class="stock.quantity <= stock.threshold ? 'text-danger-500' : 'text-ink'"
-                  >
-                    {{ stock.quantity }}
-                    <span v-if="product.unit" class="text-xs font-normal text-ink-muted">{{ product.unit }}</span>
-                  </p>
-                  <span
-                    class="rounded-full px-2 py-0.5 text-xs font-medium"
-                    :class="stockQuantityBadge(stock.quantity, stock.threshold)"
-                  >
-                    {{ stockStatusLabel(stock.quantity, stock.threshold) }}
-                  </span>
-                </div>
-              </div>
-            </div>
-            <div class="mt-3 flex items-center justify-end gap-2 border-t border-border-warm pt-3">
-              <button
-                class="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium text-ink-muted transition hover:bg-surface"
-                @click="openEditProduct(product)"
-              >
-                <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
-                {{ t('common.edit') }}
-              </button>
-              <button
-                class="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium text-danger-500 transition hover:bg-danger-50"
-                @click="confirmDeleteProduct(product)"
-              >
-                <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                {{ t('common.delete') }}
-              </button>
-            </div>
-          </div>
-        </div>
+              </template>
+              <template #actions>
+                <button
+                  class="rounded-lg px-3 py-2 text-xs font-medium text-primary-600 hover:bg-primary-50"
+                  @click="openEditProduct(product)"
+                >
+                  {{ t('common.edit') }}
+                </button>
+                <button
+                  class="rounded-lg px-3 py-2 text-xs font-medium text-danger-500 hover:bg-danger-50"
+                  @click="confirmDeleteProduct(product)"
+                >
+                  {{ t('common.delete') }}
+                </button>
+              </template>
+            </UiMobileDataCard>
+          </template>
+        </UiMobileDataList>
       </template>
 
       <!-- Categories Tab -->
       <template v-else>
         <UiMobileDataList>
           <template #table>
-            <div class="overflow-hidden rounded-xl border border-border-warm bg-paper shadow-sm">
-              <table class="min-w-full divide-y divide-border-warm">
+            <div class="overflow-x-auto rounded-xl border border-border-warm bg-paper shadow-sm">
+              <table class="min-w-[32rem] w-full divide-y divide-border-warm">
                 <thead class="bg-surface">
                   <tr>
-                    <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-ink-muted">{{ t('productsPage.categoryName') }}</th>
-                    <th class="hidden px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-ink-muted sm:table-cell">{{ t('common.description') }}</th>
-                    <th class="px-6 py-3 text-center text-xs font-semibold uppercase tracking-wider text-ink-muted">{{ t('common.sortOrder') }}</th>
-                    <th class="px-6 py-3 text-center text-xs font-semibold uppercase tracking-wider text-ink-muted">{{ t('productsPage.categoryProductCount') }}</th>
-                    <th class="px-6 py-3 text-center text-xs font-semibold uppercase tracking-wider text-ink-muted">{{ t('common.status') }}</th>
-                    <th class="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-ink-muted">{{ t('productsPage.manage') }}</th>
+                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-ink-muted">{{ t('productsPage.categoryName') }}</th>
+                    <th class="hidden px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-ink-muted md:table-cell">{{ t('common.description') }}</th>
+                    <th class="hidden px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-ink-muted sm:table-cell">{{ t('common.sortOrder') }}</th>
+                    <th class="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-ink-muted">{{ t('productsPage.categoryProductCount') }}</th>
+                    <th class="hidden px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-ink-muted sm:table-cell">{{ t('common.status') }}</th>
+                    <th class="sticky right-0 z-10 bg-surface px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-ink-muted shadow-[-4px_0_8px_-4px_rgba(0,0,0,0.08)]">{{ t('productsPage.manage') }}</th>
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-border-warm">
-                  <tr v-for="cat in categories" :key="cat.id" class="transition hover:bg-surface/80">
-                    <td class="whitespace-nowrap px-6 py-4 text-sm font-medium text-ink">{{ cat.name }}</td>
-                    <td class="hidden max-w-xs truncate px-6 py-4 text-sm text-ink-muted sm:table-cell">{{ cat.description || "-" }}</td>
-                    <td class="whitespace-nowrap px-6 py-4 text-center text-sm text-ink-muted">{{ cat.sort_order ?? 0 }}</td>
-                    <td class="whitespace-nowrap px-6 py-4 text-center text-sm text-ink-muted">{{ getCategoryProductCount(cat.id) }}</td>
-                    <td class="whitespace-nowrap px-6 py-4 text-center">
+                  <tr v-for="cat in categories" :key="cat.id" class="group transition hover:bg-surface/80">
+                    <td class="max-w-[10rem] truncate px-4 py-3 text-sm font-medium text-ink md:max-w-none md:whitespace-nowrap">{{ cat.name }}</td>
+                    <td class="hidden max-w-xs truncate px-4 py-3 text-sm text-ink-muted md:table-cell">{{ cat.description || "-" }}</td>
+                    <td class="hidden whitespace-nowrap px-4 py-3 text-center text-sm text-ink-muted sm:table-cell">{{ cat.sort_order ?? 0 }}</td>
+                    <td class="whitespace-nowrap px-4 py-3 text-center text-sm text-ink-muted">{{ getCategoryProductCount(cat.id) }}</td>
+                    <td class="hidden whitespace-nowrap px-4 py-3 text-center sm:table-cell">
                       <span
                         class="inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium"
                         :class="activeBadge(cat.is_active)"
@@ -623,8 +666,8 @@ onUnmounted(() => {
                         {{ cat.is_active ? t('common.active') : t('common.inactive') }}
                       </span>
                     </td>
-                    <td class="whitespace-nowrap px-6 py-4 text-right">
-                      <div class="flex items-center justify-end gap-2">
+                    <td class="sticky right-0 z-10 whitespace-nowrap bg-paper px-4 py-3 text-right shadow-[-4px_0_8px_-4px_rgba(0,0,0,0.08)] group-hover:bg-surface/80">
+                      <div class="flex items-center justify-end gap-1">
                         <button
                           class="rounded-lg p-1.5 text-ink-muted transition hover:bg-surface hover:text-primary-600"
                           :title="t('common.edit')"
@@ -644,10 +687,10 @@ onUnmounted(() => {
                     </td>
                   </tr>
                   <tr v-if="(categories ?? []).length === 0">
-                    <td colspan="6" class="px-6 py-16 text-center">
+                    <td colspan="6" class="px-4 py-16 text-center">
                       <svg class="mx-auto h-12 w-12 text-border-warm" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z" /></svg>
                       <p class="mt-3 text-sm font-medium text-ink-muted">{{ t('productsPage.noCategories') }}</p>
-                      <button class="mt-2 text-sm font-medium text-primary-600 hover:text-primary-700" @click="openAddCategory">{{ t('productsPage.addFirstCategory') }}</button>
+                      <button class="mt-2 text-sm font-medium text-primary-600 hover:text-primary-700" @click="openAddCategory()">{{ t('productsPage.addFirstCategory') }}</button>
                     </td>
                   </tr>
                 </tbody>
@@ -658,7 +701,7 @@ onUnmounted(() => {
             <div v-if="(categories ?? []).length === 0" class="rounded-xl bg-paper p-8 text-center shadow-sm">
               <svg class="mx-auto h-12 w-12 text-border-warm" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z" /></svg>
               <p class="mt-3 text-sm font-medium text-ink-muted">{{ t('productsPage.noCategories') }}</p>
-              <button class="mt-2 text-sm font-medium text-primary-600 hover:text-primary-700" @click="openAddCategory">{{ t('productsPage.addFirstCategory') }}</button>
+              <button class="mt-2 text-sm font-medium text-primary-600 hover:text-primary-700" @click="openAddCategory()">{{ t('productsPage.addFirstCategory') }}</button>
             </div>
             <UiMobileDataCard
               v-for="cat in categories"
@@ -802,11 +845,23 @@ onUnmounted(() => {
                 </div>
                 <div class="grid grid-cols-2 gap-4">
                   <div>
-                    <label class="mb-1 block text-sm font-medium text-ink">{{ t('common.category') }}</label>
+                    <div class="mb-1 flex items-center justify-between gap-2">
+                      <label class="text-sm font-medium text-ink">{{ t('common.category') }}</label>
+                      <button
+                        type="button"
+                        class="text-xs font-medium text-primary-600 hover:text-primary-700"
+                        @click="openAddCategoryFromProduct"
+                      >
+                        + {{ t('productsPage.addCategory') }}
+                      </button>
+                    </div>
                     <select v-model="productForm.category" class="w-full rounded-lg border border-border-warm px-3 py-2 text-sm transition focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20">
                       <option value="">{{ t('common.unspecified') }}</option>
                       <option v-for="cat in categories" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
                     </select>
+                    <p v-if="(categories ?? []).length === 0" class="mt-1 text-xs text-ink-muted">
+                      {{ t('productsPage.noCategoriesHint') }}
+                    </p>
                   </div>
                   <div>
                     <label class="mb-1 block text-sm font-medium text-ink">{{ t('common.unit') }}</label>
@@ -910,10 +965,13 @@ onUnmounted(() => {
             <div v-if="showCategoryModal" class="craft-modal-panel craft-modal--stitched max-w-md">
               <div class="mb-5 flex items-center justify-between">
                 <h2 class="text-lg font-semibold text-ink">{{ editingCategory ? t('productsPage.editCategory') : t('productsPage.addNewCategory') }}</h2>
-                <button class="rounded-lg p-1 text-ink-muted hover:bg-surface hover:text-ink-muted" @click="showCategoryModal = false">
+                <button class="rounded-lg p-1 text-ink-muted hover:bg-surface hover:text-ink-muted" @click="closeCategoryModal">
                   <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
                 </button>
               </div>
+              <p v-if="categoryModalFromProduct" class="mb-4 rounded-lg bg-primary-50 px-3 py-2 text-xs text-primary-700">
+                {{ t('productsPage.addCategoryFromProductHint') }}
+              </p>
               <form class="space-y-4" @submit.prevent="handleSaveCategory">
                 <div>
                   <label class="mb-1 block text-sm font-medium text-ink">{{ t('productsPage.categoryName') }} <span class="text-danger-500">*</span></label>
@@ -941,7 +999,7 @@ onUnmounted(() => {
                   <span class="text-sm text-ink">{{ t('common.enabled') }}</span>
                 </label>
                 <div class="flex items-center justify-end gap-3 pt-2">
-                  <button type="button" class="rounded-lg px-4 py-2 text-sm font-medium text-ink transition hover:bg-surface" @click="showCategoryModal = false">{{ t('common.cancel') }}</button>
+                  <button type="button" class="rounded-lg px-4 py-2 text-sm font-medium text-ink transition hover:bg-surface" @click="closeCategoryModal">{{ t('common.cancel') }}</button>
                   <button type="submit" class="rounded-lg bg-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2">
                     {{ editingCategory ? t('common.save') : t('productsPage.addCategory') }}
                   </button>
