@@ -591,6 +591,87 @@
     @apply fixed inset-x-0 bottom-0 z-40 border-t-2 border-dashed border-primary-200 bg-paper px-4 py-3 shadow-lg md:hidden;
   }
 
+  .pos-product-qty-badge {
+    @apply absolute right-1 top-1 z-10 flex h-6 min-w-6 items-center justify-center rounded-full bg-primary-600 px-1.5 text-xs font-bold text-white shadow-md;
+    transform: rotate(3deg);
+  }
+
+  .pos-product-card--in-cart {
+    @apply ring-2 ring-primary-300/80;
+  }
+
+  .pos-product-card--flash {
+    animation: posProductFlash 0.55s ease-out;
+  }
+
+  @keyframes posProductFlash {
+    0% {
+      transform: scale(0.96);
+      box-shadow: 0 0 0 0 rgba(90, 141, 168, 0.45);
+    }
+    40% {
+      transform: scale(1.02);
+      box-shadow: 0 0 0 6px rgba(90, 141, 168, 0.2);
+    }
+    100% {
+      transform: scale(1);
+      box-shadow: 0 1px 3px rgba(61, 79, 92, 0.06), 0 8px 24px rgba(61, 79, 92, 0.05);
+    }
+  }
+
+  .pos-add-toast {
+    @apply fixed left-1/2 z-50 flex max-w-sm -translate-x-1/2 items-center gap-3 rounded-xl bg-primary-700 px-4 py-3 text-white shadow-xl;
+    bottom: max(1rem, env(safe-area-inset-bottom));
+    width: calc(100% - 2rem);
+  }
+
+  .pos-add-toast--above-cart {
+    bottom: calc(5.25rem + env(safe-area-inset-bottom));
+  }
+
+  @media (min-width: 768px) {
+    .pos-add-toast {
+      @apply bottom-auto left-auto right-4 top-20 max-w-xs translate-x-0;
+    }
+
+    .pos-add-toast--above-cart {
+      @apply top-20;
+    }
+  }
+
+  .pos-add-toast__icon {
+    @apply flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-500;
+  }
+
+  .pos-add-toast__qty {
+    @apply shrink-0 rounded-md bg-primary-600 px-2 py-1 text-sm font-bold tabular-nums;
+  }
+
+  .pos-add-toast-enter-active,
+  .pos-add-toast-leave-active {
+    transition:
+      opacity 0.2s ease,
+      transform 0.2s ease;
+  }
+
+  .pos-add-toast-enter-from,
+  .pos-add-toast-leave-to {
+    opacity: 0;
+    transform: translate(-50%, 0.75rem);
+  }
+
+  @media (min-width: 768px) {
+    .pos-add-toast-enter-from,
+    .pos-add-toast-leave-to {
+      transform: translateY(-0.5rem);
+    }
+
+    .pos-add-toast-enter-active,
+    .pos-add-toast-leave-active {
+      transform: none;
+    }
+  }
+
   .pos-mobile-sheet-panel {
     @apply absolute inset-x-0 bottom-0 flex h-[90dvh] max-h-[90dvh] flex-col bg-paper shadow-2xl;
     border-radius: 10px 10px 0 0;

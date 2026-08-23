@@ -134,15 +134,23 @@
               v-for="product in filteredProducts"
               :key="product.id"
               :data-testid="`product-card-${product.id}`"
-              class="touch-pos craft-tile-polaroid group flex flex-col items-stretch active:scale-[0.98]"
-              :class="
-                isOutOfStock(product)
-                  ? 'cursor-not-allowed opacity-50'
-                  : ''
-              "
+              class="touch-pos craft-tile-polaroid group relative flex flex-col items-stretch active:scale-[0.98]"
+              :class="{
+                'cursor-not-allowed opacity-50': isOutOfStock(product),
+                'pos-product-card--in-cart': getCartQty(product.id) > 0,
+                'pos-product-card--flash': flashProductId === product.id,
+              }"
               :disabled="isOutOfStock(product)"
               @click="handleAddItem(product)"
             >
+              <span
+                v-if="getCartQty(product.id) > 0"
+                class="pos-product-qty-badge"
+                :data-testid="`product-qty-${product.id}`"
+                aria-hidden="true"
+              >
+                {{ getCartQty(product.id) }}
+              </span>
               <div class="pos-photo-frame mb-1.5 w-full">
                 <ProductImage :product="product" size="fill" thumb="200x200" square />
               </div>
@@ -188,6 +196,28 @@
 
     <!-- Mobile cart bar + bottom sheet -->
     <PosMobileCartBar @open="showMobileCart = true" />
+
+    <Transition name="pos-add-toast">
+      <div
+        v-if="addFeedback"
+        role="status"
+        aria-live="polite"
+        data-testid="pos-add-feedback"
+        class="pos-add-toast"
+        :class="itemCount > 0 ? 'pos-add-toast--above-cart' : ''"
+      >
+        <span class="pos-add-toast__icon" aria-hidden="true">
+          <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+          </svg>
+        </span>
+        <span class="min-w-0 flex-1">
+          <span class="block text-xs font-medium text-primary-100">{{ t('pos.addedToCart') }}</span>
+          <span class="block truncate text-sm font-semibold">{{ addFeedback.name }}</span>
+        </span>
+        <span class="pos-add-toast__qty">× {{ addFeedback.quantity }}</span>
+      </div>
+    </Transition>
 
     <PosMobileCartSheet v-model:show="showMobileCart">
       <PosCartPanel
@@ -319,6 +349,11 @@ const isGeneratingQr = ref(false);
 const lastOrderNumber = ref("");
 const lastOrderTotal = ref(0);
 
+const flashProductId = ref<string | null>(null);
+const addFeedback = ref<{ productId: string; name: string; quantity: number } | null>(null);
+let flashTimer: ReturnType<typeof setTimeout> | undefined;
+let feedbackTimer: ReturnType<typeof setTimeout> | undefined;
+
 const resolvedPromptPayId = computed(() =>
   resolvePromptPayId(activeStore.value),
 );
@@ -376,6 +411,25 @@ function stockErrorMessage(shortages: { name: string; available: number; request
   });
 }
 
+function showAddFeedback(product: Product) {
+  addFeedback.value = {
+    productId: product.id,
+    name: product.name,
+    quantity: getCartQty(product.id),
+  };
+
+  flashProductId.value = product.id;
+  if (flashTimer) clearTimeout(flashTimer);
+  flashTimer = setTimeout(() => {
+    flashProductId.value = null;
+  }, 600);
+
+  if (feedbackTimer) clearTimeout(feedbackTimer);
+  feedbackTimer = setTimeout(() => {
+    addFeedback.value = null;
+  }, 2200);
+}
+
 function handleAddItem(product: Product) {
   const currentQty = getCartQty(product.id);
 
@@ -393,6 +447,7 @@ function handleAddItem(product: Product) {
   }
 
   addItem(product);
+  showAddFeedback(product);
 }
 
 async function handleCheckout() {
@@ -527,6 +582,11 @@ watch(
   () => setPromotionInputs(getPromotionInputs()),
   { deep: true },
 );
+
+onUnmounted(() => {
+  if (flashTimer) clearTimeout(flashTimer);
+  if (feedbackTimer) clearTimeout(feedbackTimer);
+});
 </script>
 
 <style scoped>

@@ -170,6 +170,7 @@
     "clearAll": "Clear all",
     "emptyCart": "No items in cart",
     "tapToAdd": "Tap a product to add",
+    "addedToCart": "Added to cart",
     "subtotal": "Subtotal",
     "discountLabel": "Discount",
     "manualDiscountLabel": "Additional discount (cashier)",

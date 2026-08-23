@@ -170,6 +170,7 @@
     "clearAll": "ล้างทั้งหมด",
     "emptyCart": "ยังไม่มีสินค้าในตะกร้า",
     "tapToAdd": "แตะสินค้าเพื่อเพิ่ม",
+    "addedToCart": "เพิ่มลงตะกร้า",
     "subtotal": "ยอดรวม",
     "discountLabel": "ส่วนลด",
     "manualDiscountLabel": "ส่วนลดเพิ่มเติม (แคชเชียร์)",
