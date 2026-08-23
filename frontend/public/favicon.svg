@@ -1,7 +1,51 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <rect width="32" height="32" rx="6" fill="#5a8da8"/>
-  <path d="M8 22 L12 8 L14 8 L10 22 Z" fill="#ffffff" opacity="0.9"/>
-  <path d="M14 22 L18 10 L20 10 L16 22 Z" fill="#ffffff"/>
-  <circle cx="22" cy="12" r="3" fill="#6ba8a0"/>
-  <path d="M20 22 Q22 16 24 22" stroke="#ffffff" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none" role="img" aria-label="zKCNT POS">
+  <defs>
+    <linearGradient id="bg" x1="64" y1="48" x2="448" y2="464" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#4a7a94"/>
+      <stop offset="1" stop-color="#5a8da8"/>
+    </linearGradient>
+    <linearGradient id="paper" x1="256" y1="88" x2="256" y2="424" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#f0f7fb"/>
+    </linearGradient>
+  </defs>
+
+  <!-- App icon background -->
+  <rect width="512" height="512" rx="108" fill="url(#bg)"/>
+
+  <!-- POS receipt card (slight craft tilt) -->
+  <g transform="translate(256 256) rotate(-5) translate(-256 -256)">
+    <rect x="104" y="120" width="304" height="304" rx="28" fill="#3d6578" opacity="0.18"/>
+    <rect x="92" y="96" width="328" height="320" rx="32" fill="url(#paper)" stroke="#dceef7" stroke-width="4"/>
+
+    <!-- Tear line -->
+    <path
+      d="M132 148 H380"
+      stroke="#b8dcef"
+      stroke-width="5"
+      stroke-linecap="round"
+      stroke-dasharray="14 10"
+    />
+
+    <!-- zKCNT monogram -->
+    <path
+      fill="#3d6578"
+      d="M144 188 H368 L196 268 H352 V332 H144 L316 252 H144 V188 Z"
+    />
+
+    <!-- Receipt lines = POS -->
+    <rect x="144" y="338" width="200" height="18" rx="9" fill="#6ba8a0"/>
+    <rect x="144" y="364" width="148" height="18" rx="9" fill="#8fc8c0" opacity="0.85"/>
+    <rect x="144" y="390" width="96" height="18" rx="9" fill="#b8ded9" opacity="0.7"/>
+
+    <!-- Paid check badge -->
+    <circle cx="372" cy="372" r="52" fill="#6ba8a0"/>
+    <path
+      d="M346 372 L364 390 L400 354"
+      stroke="#ffffff"
+      stroke-width="12"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
+  </g>
 </svg>
