@@ -36,6 +36,7 @@ function toPromotionInput(promo: Promotion): PromotionInput {
     buy_quantity: promo.buy_quantity,
     get_quantity: promo.get_quantity,
     get_discount_percent: promo.get_discount_percent,
+    get_discount_type: promo.get_discount_type ?? "percent",
     pool_mode: promo.pool_mode,
     reward_mode: promo.reward_mode,
     value: promo.value,

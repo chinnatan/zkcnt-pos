@@ -85,12 +85,55 @@
             <div>
               <label class="mb-1 block text-sm font-medium text-ink">{{ t('common.type') }}</label>
               <select v-model="form.type" class="w-full rounded-lg border border-border-warm px-3 py-2.5 text-sm focus:border-primary-500 focus:outline-none">
+                <option value="qty_fixed">{{ t('promotionsPage.typeQtyFixed') }}</option>
                 <option value="bxgy">{{ t('promotionsPage.typeBxgy') }}</option>
                 <option value="order_percent">{{ t('promotionsPage.typeOrderPercent') }}</option>
                 <option value="order_fixed">{{ t('promotionsPage.typeOrderFixed') }}</option>
                 <option value="coupon">{{ t('promotionsPage.typeCoupon') }}</option>
               </select>
             </div>
+
+            <template v-if="form.type === 'qty_fixed'">
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="mb-1 block text-sm font-medium text-ink">{{ t('promotionsPage.qtyThreshold') }}</label>
+                  <input v-model.number="form.buy_quantity" type="number" min="1" required class="w-full rounded-lg border border-border-warm px-3 py-2.5 text-sm" />
+                </div>
+                <div>
+                  <label class="mb-1 block text-sm font-medium text-ink">{{ t('promotionsPage.qtyDiscountAmount') }}</label>
+                  <input v-model.number="form.value" type="number" min="0" step="0.01" required class="w-full rounded-lg border border-border-warm px-3 py-2.5 text-sm" />
+                </div>
+              </div>
+              <p class="text-xs text-ink-muted">{{ t('promotionsPage.qtyFixedHint') }}</p>
+              <div>
+                <label class="mb-1 block text-sm font-medium text-ink">{{ t('promotionsPage.poolMode') }}</label>
+                <select v-model="form.pool_mode" class="w-full rounded-lg border border-border-warm px-3 py-2.5 text-sm">
+                  <option value="same_product">{{ t('promotionsPage.poolSameProduct') }}</option>
+                  <option value="same_category">{{ t('promotionsPage.poolSameCategory') }}</option>
+                  <option value="mixed">{{ t('promotionsPage.poolMixed') }}</option>
+                </select>
+              </div>
+              <div>
+                <label class="mb-1 block text-sm font-medium text-ink">{{ t('promotionsPage.targetProducts') }}</label>
+                <UiCraftMultiSelect
+                  v-model="selectedProductIds"
+                  :options="productOptions"
+                  :search-placeholder="t('promotionsPage.searchProducts')"
+                  :empty-text="t('promotionsPage.noProducts')"
+                  list-max-height="9rem"
+                />
+              </div>
+              <div>
+                <label class="mb-1 block text-sm font-medium text-ink">{{ t('promotionsPage.targetCategories') }}</label>
+                <UiCraftMultiSelect
+                  v-model="selectedCategoryIds"
+                  :options="categoryOptions"
+                  :search-placeholder="t('promotionsPage.searchCategories')"
+                  :empty-text="t('promotionsPage.noCategories')"
+                  list-max-height="7rem"
+                />
+              </div>
+            </template>
 
             <template v-if="form.type === 'bxgy'">
               <div class="grid grid-cols-2 gap-3">
@@ -105,7 +148,8 @@
               </div>
               <div>
                 <label class="mb-1 block text-sm font-medium text-ink">{{ t('promotionsPage.getDiscountPercent') }}</label>
-                <input v-model.number="form.get_discount_percent" type="number" min="1" max="100" class="w-full rounded-lg border border-border-warm px-3 py-2.5 text-sm" />
+                <input v-model.number="form.get_discount_percent" type="number" min="1" max="100" required class="w-full rounded-lg border border-border-warm px-3 py-2.5 text-sm" />
+                <p class="mt-1 text-xs text-ink-muted">{{ t('promotionsPage.bxgyPercentHint') }}</p>
               </div>
               <div class="grid grid-cols-2 gap-3">
                 <div>
@@ -148,8 +192,10 @@
 
             <template v-if="form.type === 'order_percent' || form.type === 'order_fixed'">
               <div>
-                <label class="mb-1 block text-sm font-medium text-ink">{{ t('common.value') }}</label>
-                <input v-model.number="form.value" type="number" min="0" required class="w-full rounded-lg border border-border-warm px-3 py-2.5 text-sm" />
+                <label class="mb-1 block text-sm font-medium text-ink">
+                  {{ form.type === 'order_percent' ? t('promotionsPage.orderDiscountPercent') : t('promotionsPage.orderDiscountAmount') }}
+                </label>
+                <input v-model.number="form.value" type="number" min="0" :step="form.type === 'order_fixed' ? 0.01 : 1" required class="w-full rounded-lg border border-border-warm px-3 py-2.5 text-sm" />
               </div>
             </template>
 
@@ -167,8 +213,10 @@
                   </select>
                 </div>
                 <div>
-                  <label class="mb-1 block text-sm font-medium text-ink">{{ t('common.value') }}</label>
-                  <input v-model.number="form.value" type="number" min="0" required class="w-full rounded-lg border border-border-warm px-3 py-2.5 text-sm" />
+                  <label class="mb-1 block text-sm font-medium text-ink">
+                    {{ form.coupon_discount_type === 'fixed' ? t('promotionsPage.couponDiscountAmount') : t('promotionsPage.couponDiscountPercent') }}
+                  </label>
+                  <input v-model.number="form.value" type="number" min="0" :step="form.coupon_discount_type === 'fixed' ? 0.01 : 1" required class="w-full rounded-lg border border-border-warm px-3 py-2.5 text-sm" />
                 </div>
               </div>
               <div class="grid grid-cols-2 gap-3">
@@ -261,13 +309,14 @@ const categoryOptions = computed(() =>
 
 const form = reactive({
   name: "",
-  type: "bxgy" as PromotionType,
-  buy_quantity: 3,
+  type: "qty_fixed" as PromotionType,
+  buy_quantity: 4,
   get_quantity: 1,
   get_discount_percent: 100,
+  get_discount_type: "percent" as const,
   pool_mode: "same_product" as const,
   reward_mode: "cheapest" as const,
-  value: 0,
+  value: 10,
   min_purchase: 0,
   coupon_code: "",
   coupon_discount_type: "fixed" as const,
@@ -283,6 +332,7 @@ const form = reactive({
 function typeLabel(type: PromotionType) {
   const map: Record<PromotionType, string> = {
     bxgy: t("promotionsPage.typeBxgy"),
+    qty_fixed: t("promotionsPage.typeQtyFixed"),
     order_percent: t("promotionsPage.typeOrderPercent"),
     order_fixed: t("promotionsPage.typeOrderFixed"),
     coupon: t("promotionsPage.typeCoupon"),
@@ -294,13 +344,28 @@ function promoSummary(promo: {
   type: PromotionType;
   buy_quantity: number;
   get_quantity: number;
+  get_discount_percent: number;
+  get_discount_type?: "percent" | "fixed";
   coupon_code: string;
   value: number;
 }) {
+  if (promo.type === "qty_fixed") {
+    return t("promotionsPage.summaryQtyFixed", {
+      buy: promo.buy_quantity,
+      amount: formatCurrency(promo.value),
+    });
+  }
   if (promo.type === "bxgy") {
-    return t("promotionsPage.summaryBxgy", {
+    const base = t("promotionsPage.summaryBxgy", {
       buy: promo.buy_quantity,
       get: promo.get_quantity,
+    });
+    if (promo.get_discount_percent >= 100) {
+      return base;
+    }
+    return t("promotionsPage.summaryBxgyPercent", {
+      base,
+      percent: promo.get_discount_percent,
     });
   }
   if (promo.type === "coupon") {
@@ -339,6 +404,7 @@ function openModal(promo?: (typeof promotions.value)[number]) {
       buy_quantity: promo.buy_quantity,
       get_quantity: promo.get_quantity,
       get_discount_percent: promo.get_discount_percent,
+      get_discount_type: promo.get_discount_type ?? "percent",
       pool_mode: promo.pool_mode,
       reward_mode: promo.reward_mode,
       value: promo.value,
@@ -359,13 +425,14 @@ function openModal(promo?: (typeof promotions.value)[number]) {
     selectedCategoryIds.value = [];
     Object.assign(form, {
       name: "",
-      type: "bxgy",
-      buy_quantity: 3,
+      type: "qty_fixed",
+      buy_quantity: 4,
       get_quantity: 1,
       get_discount_percent: 100,
+      get_discount_type: "percent",
       pool_mode: "same_product",
       reward_mode: "cheapest",
-      value: 0,
+      value: 10,
       min_purchase: 0,
       coupon_code: "",
       coupon_discount_type: "fixed",
@@ -384,7 +451,7 @@ function openModal(promo?: (typeof promotions.value)[number]) {
 async function handleSave() {
   const payload = {
     ...form,
-    targets: form.type === "bxgy" ? buildTargets() : [],
+    targets: form.type === "bxgy" || form.type === "qty_fixed" ? buildTargets() : [],
     max_uses_total: form.max_uses_total || null,
     max_uses_per_customer: form.max_uses_per_customer || null,
   };

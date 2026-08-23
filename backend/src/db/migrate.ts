@@ -214,6 +214,7 @@ CREATE TABLE IF NOT EXISTS promotions (
   buy_quantity INTEGER NOT NULL DEFAULT 0,
   get_quantity INTEGER NOT NULL DEFAULT 0,
   get_discount_percent REAL NOT NULL DEFAULT 100,
+  get_discount_type TEXT NOT NULL DEFAULT 'percent',
   pool_mode TEXT NOT NULL DEFAULT 'same_product',
   reward_mode TEXT NOT NULL DEFAULT 'cheapest',
   value REAL NOT NULL DEFAULT 0,
@@ -266,6 +267,7 @@ export function runMigrate() {
   mkdirSync(bunEnv.dataDir, { recursive: true });
   db.exec(DDL);
   migrateOrderPromotionColumns(db);
+  migratePromotionDiscountTypeColumn(db);
   migrateDiscountsToPromotions(db);
   dropLegacyDiscountsTable(db);
   migrateSoftDeleteColumns(db);
@@ -311,6 +313,18 @@ function dropLegacyDiscountsTable(db: Database) {
     .all();
   if (tables.length > 0) {
     db.exec("DROP TABLE discounts");
+  }
+}
+
+function migratePromotionDiscountTypeColumn(db: Database) {
+  const cols = db
+    .query<{ name: string }, []>("PRAGMA table_info(promotions)")
+    .all()
+    .map((c) => c.name);
+  if (!cols.includes("get_discount_type")) {
+    db.exec(
+      `ALTER TABLE promotions ADD COLUMN get_discount_type TEXT NOT NULL DEFAULT 'percent'`,
+    );
   }
 }
 

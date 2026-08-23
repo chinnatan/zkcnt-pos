@@ -269,11 +269,16 @@ export const promotions = sqliteTable(
       .references(() => stores.id, { onDelete: "cascade" }),
     name: text("name").notNull(),
     type: text("type", {
-      enum: ["bxgy", "order_percent", "order_fixed", "coupon"],
+      enum: ["bxgy", "qty_fixed", "order_percent", "order_fixed", "coupon"],
     }).notNull(),
     buyQuantity: integer("buy_quantity").notNull().default(0),
     getQuantity: integer("get_quantity").notNull().default(0),
     getDiscountPercent: real("get_discount_percent").notNull().default(100),
+    getDiscountType: text("get_discount_type", {
+      enum: ["percent", "fixed"],
+    })
+      .notNull()
+      .default("percent"),
     poolMode: text("pool_mode", {
       enum: ["same_product", "same_category", "mixed"],
     })

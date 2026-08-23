@@ -66,7 +66,9 @@ function expandUnits(lines: CartLineInput[]): UnitSlot[] {
 function distributeDiscounts(
   units: UnitSlot[],
   discountedCount: number,
+  discountType: "percent" | "fixed",
   discountPercent: number,
+  discountAmount: number,
   rewardMode: "cheapest" | "same_product",
 ): Map<string, { discount: number; freeQty: number }> {
   const result = new Map<string, { discount: number; freeQty: number }>();
@@ -79,10 +81,17 @@ function distributeDiscounts(
 
   for (let i = 0; i < Math.min(discountedCount, sorted.length); i++) {
     const unit = sorted[i]!;
-    const saving = Math.round(unit.price * (discountPercent / 100));
+    const saving =
+      discountType === "fixed"
+        ? Math.min(Math.round(discountAmount), unit.price)
+        : Math.round(unit.price * (discountPercent / 100));
     const existing = result.get(unit.product_id) ?? { discount: 0, freeQty: 0 };
     existing.discount += saving;
-    if (discountPercent >= 100) existing.freeQty += 1;
+    if (discountType === "fixed") {
+      if (saving >= unit.price) existing.freeQty += 1;
+    } else if (discountPercent >= 100) {
+      existing.freeQty += 1;
+    }
     result.set(unit.product_id, existing);
   }
 
@@ -100,7 +109,9 @@ function applyBxgyPromotion(
   let totalSavings = 0;
   const buy = promo.buy_quantity;
   const get = promo.get_quantity;
+  const discountType = promo.get_discount_type ?? "percent";
   const discountPercent = promo.get_discount_percent;
+  const discountAmount = promo.value;
 
   const processPool = (poolLines: CartLineInput[]) => {
     const totalQty = poolLines.reduce((s, l) => s + l.quantity, 0);
@@ -111,7 +122,9 @@ function applyBxgyPromotion(
     const distributed = distributeDiscounts(
       units,
       freeQty,
+      discountType,
       discountPercent,
+      discountAmount,
       promo.reward_mode,
     );
 
@@ -151,6 +164,53 @@ function applyBxgyPromotion(
   }
 
   return totalSavings;
+}
+
+function calcQtyFixedDiscount(
+  promo: PromotionInput,
+  lines: CartLineInput[],
+): number {
+  if (promo.buy_quantity <= 0 || promo.value <= 0) return 0;
+
+  const qualifying = filterQualifyingLines(lines, promo.targets);
+  if (qualifying.length === 0) return 0;
+
+  let totalDiscount = 0;
+
+  const processPool = (poolLines: CartLineInput[]) => {
+    const totalQty = poolLines.reduce((s, l) => s + l.quantity, 0);
+    if (totalQty < promo.buy_quantity) return;
+    const poolSubtotal = poolLines.reduce(
+      (s, l) => s + l.price * l.quantity,
+      0,
+    );
+    if (poolSubtotal < promo.min_purchase) return;
+    const sets = Math.floor(totalQty / promo.buy_quantity);
+    totalDiscount += Math.min(sets * Math.round(promo.value), poolSubtotal);
+  };
+
+  if (promo.pool_mode === "same_product") {
+    const byProduct = new Map<string, CartLineInput[]>();
+    for (const line of qualifying) {
+      const list = byProduct.get(line.product_id) ?? [];
+      list.push(line);
+      byProduct.set(line.product_id, list);
+    }
+    for (const pool of byProduct.values()) processPool(pool);
+  } else if (promo.pool_mode === "same_category") {
+    const byCategory = new Map<string, CartLineInput[]>();
+    for (const line of qualifying) {
+      const key = line.category_id || "_none";
+      const list = byCategory.get(key) ?? [];
+      list.push(line);
+      byCategory.set(key, list);
+    }
+    for (const pool of byCategory.values()) processPool(pool);
+  } else {
+    processPool(qualifying);
+  }
+
+  return totalDiscount;
 }
 
 function calcOrderLevelDiscount(
@@ -237,9 +297,18 @@ export function calculatePromotions(
 
   for (const promo of activePromos) {
     if (blocked && !promo.stackable) continue;
-    if (promo.type !== "order_percent" && promo.type !== "order_fixed") continue;
+    if (
+      promo.type !== "order_percent" &&
+      promo.type !== "order_fixed" &&
+      promo.type !== "qty_fixed"
+    ) {
+      continue;
+    }
 
-    const amount = calcOrderLevelDiscount(promo, promoSubtotal);
+    const amount =
+      promo.type === "qty_fixed"
+        ? Math.min(calcQtyFixedDiscount(promo, input.lines), promoSubtotal)
+        : calcOrderLevelDiscount(promo, promoSubtotal);
     if (amount <= 0) continue;
 
     applied.push({

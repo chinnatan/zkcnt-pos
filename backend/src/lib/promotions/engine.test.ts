@@ -19,6 +19,7 @@ describe("calculatePromotions", () => {
     buy_quantity: 3,
     get_quantity: 1,
     get_discount_percent: 100,
+    get_discount_type: "percent",
     pool_mode: "same_product",
     reward_mode: "same_product",
     value: 0,
@@ -52,6 +53,49 @@ describe("calculatePromotions", () => {
     expect(result.line_adjustments[0]?.free_quantity).toBe(1);
     expect(result.promo_subtotal).toBe(30);
     expect(result.applied_promotions).toHaveLength(1);
+  });
+
+  test("applies qty_fixed bundle discount", () => {
+    const qtyPromo: PromotionInput = {
+      ...bxgyPromo,
+      id: "p-qty",
+      type: "qty_fixed",
+      buy_quantity: 4,
+      get_quantity: 0,
+      get_discount_type: "percent",
+      value: 10,
+    };
+
+    const result = calculatePromotions({
+      lines: [
+        { product_id: "prod-a", category_id: "", price: 50, quantity: 4 },
+      ],
+      promotions: [qtyPromo],
+    });
+
+    expect(result.order_discount).toBe(10);
+    expect(result.promo_subtotal).toBe(190);
+    expect(result.applied_promotions).toHaveLength(1);
+  });
+
+  test("qty_fixed stacks per complete set", () => {
+    const qtyPromo: PromotionInput = {
+      ...bxgyPromo,
+      id: "p-qty2",
+      type: "qty_fixed",
+      buy_quantity: 4,
+      value: 10,
+    };
+
+    const result = calculatePromotions({
+      lines: [
+        { product_id: "prod-a", category_id: "", price: 50, quantity: 8 },
+      ],
+      promotions: [qtyPromo],
+    });
+
+    expect(result.order_discount).toBe(20);
+    expect(result.promo_subtotal).toBe(380);
   });
 
   test("mixed pool uses cheapest reward", () => {

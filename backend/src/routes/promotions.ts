@@ -39,6 +39,8 @@ function parsePromotionBody(body: Record<string, unknown>) {
     buyQuantity: Number(body.buy_quantity ?? 0),
     getQuantity: Number(body.get_quantity ?? 0),
     getDiscountPercent: Number(body.get_discount_percent ?? 100),
+    getDiscountType:
+      (body.get_discount_type as "percent" | "fixed") ?? "percent",
     poolMode:
       (body.pool_mode as PromotionInput["pool_mode"]) ?? "same_product",
     rewardMode:
@@ -212,6 +214,7 @@ promotionRoutes.post(
       buyQuantity: parsed.buyQuantity,
       getQuantity: parsed.getQuantity,
       getDiscountPercent: parsed.getDiscountPercent,
+      getDiscountType: parsed.getDiscountType,
       poolMode: parsed.poolMode,
       rewardMode: parsed.rewardMode,
       value: parsed.value,
@@ -278,6 +281,9 @@ promotionRoutes.patch(
     }
     if (body.get_discount_percent !== undefined) {
       updates.getDiscountPercent = Number(body.get_discount_percent);
+    }
+    if (body.get_discount_type !== undefined) {
+      updates.getDiscountType = body.get_discount_type as "percent" | "fixed";
     }
     if (body.pool_mode !== undefined) {
       updates.poolMode = body.pool_mode as PromotionInput["pool_mode"];
@@ -432,6 +438,7 @@ export async function loadStorePromotions(
       buy_quantity: row.buyQuantity,
       get_quantity: row.getQuantity,
       get_discount_percent: row.getDiscountPercent,
+      get_discount_type: row.getDiscountType as "percent" | "fixed",
       pool_mode: row.poolMode as PromotionInput["pool_mode"],
       reward_mode: row.rewardMode as PromotionInput["reward_mode"],
       value: row.value,

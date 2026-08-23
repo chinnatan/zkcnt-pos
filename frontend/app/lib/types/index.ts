@@ -169,6 +169,7 @@ export interface InventoryTransaction extends BaseRecord {
 
 export type PromotionType =
   | 'bxgy'
+  | 'qty_fixed'
   | 'order_percent'
   | 'order_fixed'
   | 'coupon';
@@ -197,6 +198,7 @@ export interface Promotion extends BaseRecord {
   buy_quantity: number;
   get_quantity: number;
   get_discount_percent: number;
+  get_discount_type: 'percent' | 'fixed';
   pool_mode: PoolMode;
   reward_mode: RewardMode;
   value: number;

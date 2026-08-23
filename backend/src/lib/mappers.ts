@@ -354,6 +354,7 @@ export function mapPromotion(row: {
   buyQuantity: number;
   getQuantity: number;
   getDiscountPercent: number;
+  getDiscountType: string;
   poolMode: string;
   rewardMode: string;
   value: number;
@@ -387,6 +388,7 @@ export function mapPromotion(row: {
     buy_quantity: row.buyQuantity,
     get_quantity: row.getQuantity,
     get_discount_percent: row.getDiscountPercent,
+    get_discount_type: row.getDiscountType,
     pool_mode: row.poolMode,
     reward_mode: row.rewardMode,
     value: row.value,

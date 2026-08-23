@@ -183,6 +183,7 @@ CREATE TABLE IF NOT EXISTS promotions (
   buy_quantity INTEGER NOT NULL DEFAULT 0,
   get_quantity INTEGER NOT NULL DEFAULT 0,
   get_discount_percent REAL NOT NULL DEFAULT 100,
+  get_discount_type TEXT NOT NULL DEFAULT 'percent',
   pool_mode TEXT NOT NULL DEFAULT 'same_product',
   reward_mode TEXT NOT NULL DEFAULT 'cheapest',
   value REAL NOT NULL DEFAULT 0,

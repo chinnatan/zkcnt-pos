@@ -13,6 +13,7 @@
           "buy_quantity": 3,
           "get_quantity": 1,
           "get_discount_percent": 100,
+          "get_discount_type": "percent",
           "pool_mode": "same_product",
           "reward_mode": "same_product",
           "value": 0,
@@ -51,6 +52,7 @@
           "buy_quantity": 0,
           "get_quantity": 0,
           "get_discount_percent": 0,
+          "get_discount_type": "percent",
           "pool_mode": "same_product",
           "reward_mode": "same_product",
           "value": 50,
@@ -72,6 +74,44 @@
     "expected": {
       "order_discount": 0,
       "has_coupon_error": true
+    }
+  },
+  {
+    "name": "applies qty_fixed bundle discount",
+    "input": {
+      "lines": [
+        { "product_id": "prod-a", "category_id": "", "price": 50, "quantity": 4 }
+      ],
+      "promotions": [
+        {
+          "id": "p-qty",
+          "name": "ซื้อครบ 4 ลด 10",
+          "type": "qty_fixed",
+          "buy_quantity": 4,
+          "get_quantity": 0,
+          "get_discount_percent": 0,
+          "get_discount_type": "percent",
+          "pool_mode": "same_product",
+          "reward_mode": "same_product",
+          "value": 10,
+          "min_purchase": 0,
+          "coupon_code": null,
+          "coupon_discount_type": "fixed",
+          "max_uses_total": null,
+          "max_uses_per_customer": null,
+          "stackable": true,
+          "priority": 10,
+          "start_date": "",
+          "end_date": "",
+          "is_active": true,
+          "targets": [{ "target_type": "product", "target_id": "prod-a" }]
+        }
+      ]
+    },
+    "expected": {
+      "promo_subtotal": 190,
+      "applied_count": 1,
+      "order_discount": 10
     }
   }
 ]
