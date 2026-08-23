@@ -6,7 +6,7 @@ import {
   parseLogLevel,
   type RuntimeConfig,
 } from "./env";
-import { readAppVersion, readBuildId } from "./lib/version";
+import { readAppVersion, readBuildId } from "./lib/version.bun";
 
 const dataDir = process.env.DATA_DIR ?? join(import.meta.dir, "..", "data");
 const uploadsDir = join(dataDir, "uploads");
