@@ -12,9 +12,25 @@ export function useAuth() {
     if ($api.isAuthenticated && $api.user) {
       authUser.value = $api.user;
       isAuthenticated.value = true;
+      if (import.meta.client) {
+        void fetchCurrentUser();
+      }
     } else {
       authUser.value = null;
       isAuthenticated.value = false;
+    }
+  }
+
+  async function fetchCurrentUser() {
+    if (!$api.token) return null;
+    try {
+      const me = await $api.getMe();
+      authUser.value = me;
+      isAuthenticated.value = true;
+      $api.syncUser(me);
+      return me;
+    } catch {
+      return null;
     }
   }
 
@@ -68,6 +84,7 @@ export function useAuth() {
     isAuthenticated: readonly(isAuthenticated),
     isLoading: readonly(isLoading),
     initAuth,
+    fetchCurrentUser,
     login,
     register,
     logout,

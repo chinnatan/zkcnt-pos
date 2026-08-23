@@ -55,6 +55,7 @@ export function useSync() {
       }
       lastSyncAt.value = new Date().toISOString();
       logger.info(`sync complete storeId=${activeStoreId.value ?? "none"}`);
+      await sendHeartbeat();
     } finally {
       isSyncing.value = false;
       await updatePendingCount();
@@ -63,6 +64,21 @@ export function useSync() {
 
   async function updatePendingCount() {
     pendingSyncCount.value = await getPendingCount(activeStoreId.value ?? undefined);
+  }
+
+  async function sendHeartbeat() {
+    if (!activeStoreId.value || !isOnline.value) return;
+    try {
+      await $api.sendClientHeartbeat({
+        store: activeStoreId.value,
+        pending_sync_count: pendingSyncCount.value,
+        last_sync_at: lastSyncAt.value,
+        user_agent: navigator.userAgent,
+        platform: navigator.platform,
+      });
+    } catch (err) {
+      logger.debug("heartbeat failed", err);
+    }
   }
 
   function resetLastSyncAt() {

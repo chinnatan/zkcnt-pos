@@ -7,6 +7,8 @@ export interface AuthUser {
   id: string;
   email: string;
   name: string;
+  is_platform_admin?: boolean;
+  is_active?: boolean;
   created: string;
   updated: string;
 }
@@ -205,6 +207,12 @@ export class ApiClient {
     return this.send<AuthUser>("/auth/me");
   }
 
+  syncUser(user: AuthUser) {
+    if (!this.authState) return;
+    this.authState = { ...this.authState, user };
+    this.persistAuth();
+  }
+
   async requestPasswordReset(email: string) {
     return this.send<{ message: string }>("/auth/forgot-password", {
       method: "POST",
@@ -377,6 +385,21 @@ export class ApiClient {
     return this.send<Array<Record<string, unknown> & { expand?: { store?: unknown } }>>(
       "/stores/memberships",
     );
+  }
+
+  async sendClientHeartbeat(body: {
+    store: string;
+    client_version?: string;
+    client_build?: string;
+    pending_sync_count?: number;
+    last_sync_at?: string | null;
+    user_agent?: string;
+    platform?: string;
+  }) {
+    return this.send<{ ok: boolean; id: string }>("/client/heartbeat", {
+      method: "POST",
+      body,
+    });
   }
 }
 

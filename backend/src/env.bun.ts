@@ -31,6 +31,7 @@ export function createBunRuntimeConfig(): RuntimeConfig {
       "http://localhost:4000",
     appVersion: readAppVersion(),
     buildId: readBuildId(),
+    platformAdminEmail: (process.env.PLATFORM_ADMIN_EMAIL ?? "").trim().toLowerCase(),
     resend: {
       apiKey: process.env.RESEND_API_KEY ?? "",
       from: process.env.RESEND_FROM ?? "",

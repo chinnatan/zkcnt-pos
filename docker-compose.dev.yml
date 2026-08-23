@@ -3,16 +3,11 @@ services:
     build:
       context: ./backend
     ports:
-      - "4001:3001"
+      - "${API_HOST_PORT}:${PORT}"
     volumes:
       - ./backend/data:/data
-    environment:
-      - DATA_DIR=/data
-      - JWT_SECRET=${JWT_SECRET:-dev-secret-change-in-production}
-      - APP_URL=${NUXT_PUBLIC_APP_URL:-http://localhost:4000}
-      - LOG_LEVEL=${LOG_LEVEL:-debug}
-      - RESEND_API_KEY=${RESEND_API_KEY:-}
-      - RESEND_FROM=${RESEND_FROM:-}
+    env_file:
+      - .env
     networks:
       - pos-network
 
@@ -21,15 +16,12 @@ services:
     working_dir: /app
     command: sh -c "bun install && bun run dev -- --host 0.0.0.0"
     ports:
-      - "4000:3000"
+      - "${FRONTEND_HOST_PORT}:3000"
     volumes:
       - ./frontend:/app
       - frontend_node_modules:/app/node_modules
-    environment:
-      - NUXT_DEV_PORT=3000
-      - NUXT_PUBLIC_API_URL=http://localhost:4001
-      - NUXT_PUBLIC_APP_URL=${NUXT_PUBLIC_APP_URL:-http://localhost:4000}
-      - NUXT_PUBLIC_LOG_LEVEL=${NUXT_PUBLIC_LOG_LEVEL:-debug}
+    env_file:
+      - .env
     depends_on:
       - backend
     networks:
@@ -39,7 +31,7 @@ services:
     profiles: ["admin"]
     image: javimosch/adminer-node:latest
     ports:
-      - "8080:8080"
+      - "${DB_ADMIN_HOST_PORT:-8080}:8080"
     environment:
       ADMINER_HOST: 0.0.0.0
       ADMINER_PORT: 8080

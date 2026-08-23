@@ -8,6 +8,8 @@ export function mapUser(row: UserRow) {
     id: row.id,
     email: row.email,
     name: row.name,
+    is_platform_admin: row.isPlatformAdmin,
+    is_active: row.isActive,
     created: row.created,
     updated: row.updated,
   };

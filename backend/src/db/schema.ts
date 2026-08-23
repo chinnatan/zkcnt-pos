@@ -18,6 +18,10 @@ export const users = sqliteTable("users", {
   email: text("email").notNull().unique(),
   passwordHash: text("password_hash").notNull(),
   name: text("name").notNull(),
+  isPlatformAdmin: integer("is_platform_admin", { mode: "boolean" })
+    .notNull()
+    .default(false),
+  isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
   ...timestamps,
 });
 
@@ -378,6 +382,39 @@ export const auditEvents = sqliteTable(
     index("idx_audit_store_created").on(t.store, t.created),
     index("idx_audit_entity").on(t.store, t.entityType, t.entityId),
     index("idx_audit_actor").on(t.store, t.actor),
+    index("idx_audit_created").on(t.created),
+  ],
+);
+
+export const systemMeta = sqliteTable("system_meta", {
+  key: text("key").primaryKey(),
+  value: text("value").notNull(),
+  updated: text("updated").notNull(),
+});
+
+export const clientSessions = sqliteTable(
+  "client_sessions",
+  {
+    id: text("id").primaryKey(),
+    user: text("user")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    store: text("store")
+      .notNull()
+      .references(() => stores.id, { onDelete: "cascade" }),
+    clientVersion: text("client_version").notNull().default(""),
+    clientBuild: text("client_build").notNull().default(""),
+    pendingSyncCount: integer("pending_sync_count").notNull().default(0),
+    lastSyncAt: text("last_sync_at"),
+    lastSeenAt: text("last_seen_at").notNull(),
+    userAgent: text("user_agent").notNull().default(""),
+    platform: text("platform").notNull().default(""),
+    ...timestamps,
+  },
+  (t) => [
+    uniqueIndex("idx_client_sessions_user_store").on(t.user, t.store),
+    index("idx_client_sessions_last_seen").on(t.lastSeenAt),
+    index("idx_client_sessions_store").on(t.store),
   ],
 );
 
@@ -398,4 +435,6 @@ export const schema = {
   promotionTargets,
   promotionUsages,
   auditEvents,
+  systemMeta,
+  clientSessions,
 };

@@ -42,7 +42,12 @@ export type AuditAction =
   | "auth.login"
   | "auth.login_failed"
   | "auth.password_reset_requested"
-  | "auth.password_reset_completed";
+  | "auth.password_reset_completed"
+  | "admin.store_deactivate"
+  | "admin.store_activate"
+  | "admin.user_disable"
+  | "admin.user_enable"
+  | "admin.feature_flags_update";
 
 export interface AuditEventInput {
   store?: string | null;

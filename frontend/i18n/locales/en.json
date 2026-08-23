@@ -677,6 +677,83 @@
       }
     }
   },
+  "admin": {
+    "nav": {
+      "title": "Platform Admin",
+      "overview": "Overview",
+      "stores": "Stores",
+      "users": "Users",
+      "activity": "Activity",
+      "devices": "Devices",
+      "system": "System",
+      "backToApp": "Back to POS"
+    },
+    "overview": {
+      "stores": "Total stores",
+      "users": "Total users",
+      "activeCount": "{count} active",
+      "gmvToday": "GMV today",
+      "gmv7d": "GMV 7 days",
+      "orders": "orders",
+      "alerts": "Alerts",
+      "inactiveStores": "Stores with no orders 7+ days"
+    },
+    "stores": {
+      "name": "Store",
+      "owner": "Owner",
+      "members": "Members",
+      "lastOrder": "Last order",
+      "searchPlaceholder": "Search name / slug / email"
+    },
+    "users": {
+      "stores": "Stores",
+      "searchPlaceholder": "Search name / email"
+    },
+    "storeDetail": {
+      "title": "Store detail",
+      "deactivate": "Deactivate store",
+      "activate": "Activate store",
+      "orders": "Orders",
+      "members": "Team members",
+      "featureFlags": "Feature flags",
+      "recentActivity": "Recent activity"
+    },
+    "userDetail": {
+      "title": "User detail",
+      "disable": "Disable account",
+      "enable": "Enable account",
+      "memberships": "Store memberships",
+      "authEvents": "Auth history"
+    },
+    "activity": {
+      "store": "Store"
+    },
+    "devices": {
+      "user": "User",
+      "version": "Version",
+      "syncPending": "Pending sync",
+      "lastSeen": "Last seen",
+      "empty": "No device sessions yet"
+    },
+    "system": {
+      "apiStatus": "API status",
+      "dbLatency": "D1 latency",
+      "rowCounts": "Table row counts",
+      "cron": "Cron jobs",
+      "backup": "Last backup",
+      "healthWarmup": "Health warm-up",
+      "metrics24h": "24h metrics",
+      "loginFailed": "Login failed",
+      "loginSuccess": "Login success",
+      "registrations": "Registrations",
+      "external": "External observability"
+    },
+    "featureFlags": {
+      "promotions": "Promotions enabled",
+      "reports": "Reports enabled",
+      "offlineSync": "Offline sync enabled"
+    }
+  },
   "errors": {
     "invalidCredentials": "Invalid email or password",
     "registrationFailed": "Registration failed",

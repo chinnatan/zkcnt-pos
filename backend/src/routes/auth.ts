@@ -7,6 +7,7 @@ import { getRuntimeConfig } from "../env";
 import { sendPasswordResetEmail } from "../lib/email";
 import { signAccessToken, signRefreshToken, verifyToken } from "../lib/jwt";
 import { mapUser } from "../lib/mappers";
+import { maybePromotePlatformAdmin, loadUserById } from "../lib/platform-admin";
 import { hashPassword, verifyPassword } from "../lib/password";
 import { generateId, generateToken } from "../lib/id";
 import { createLogger } from "../lib/logger";
@@ -59,18 +60,19 @@ authRoutes.post("/register", async (c) => {
     email,
     passwordHash,
     name,
+    isPlatformAdmin: false,
+    isActive: true,
     created: now,
     updated: now,
   });
 
-  const user = mapUser({
-    id,
-    email,
-    passwordHash,
-    name,
-    created: now,
-    updated: now,
-  });
+  await maybePromotePlatformAdmin(id, email);
+  const row = await loadUserById(id);
+  if (!row) {
+    throw new HTTPException(500, { message: "User creation failed" });
+  }
+
+  const user = mapUser(row);
 
   const token = await signAccessToken(id);
   const refreshToken = await signRefreshToken(id);
@@ -112,7 +114,13 @@ authRoutes.post("/login", async (c) => {
     throw new HTTPException(400, { message: "Invalid email or password" });
   }
 
-  const user = mapUser(row);
+  if (!row.isActive) {
+    throw new HTTPException(403, { message: "Account disabled" });
+  }
+
+  await maybePromotePlatformAdmin(row.id, row.email);
+  const freshRow = (await loadUserById(row.id)) ?? row;
+  const user = mapUser(freshRow);
   const token = await signAccessToken(row.id);
   const refreshToken = await signRefreshToken(row.id);
 
@@ -151,7 +159,13 @@ authRoutes.post("/refresh", async (c) => {
     throw new HTTPException(401, { message: "User not found" });
   }
 
-  const user = mapUser(row);
+  if (!row.isActive) {
+    throw new HTTPException(403, { message: "Account disabled" });
+  }
+
+  await maybePromotePlatformAdmin(row.id, row.email);
+  const freshRow = (await loadUserById(row.id)) ?? row;
+  const user = mapUser(freshRow);
   const token = await signAccessToken(row.id);
   const refreshToken = await signRefreshToken(row.id);
 
@@ -160,12 +174,16 @@ authRoutes.post("/refresh", async (c) => {
 
 authRoutes.get("/me", authMiddleware, async (c) => {
   const userId = c.get("userId");
-  const rows = await db.select().from(users).where(eq(users.id, userId)).limit(1);
-  const row = rows[0];
+  const row = await loadUserById(userId);
   if (!row) {
     throw new HTTPException(404, { message: "User not found" });
   }
-  return c.json(mapUser(row));
+  if (!row.isActive) {
+    throw new HTTPException(403, { message: "Account disabled" });
+  }
+  await maybePromotePlatformAdmin(row.id, row.email);
+  const freshRow = (await loadUserById(userId)) ?? row;
+  return c.json(mapUser(freshRow));
 });
 
 authRoutes.post("/forgot-password", async (c) => {

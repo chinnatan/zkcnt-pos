@@ -10,6 +10,7 @@ export interface RuntimeConfig {
   allowedOrigin: string;
   appVersion: string;
   buildId: string;
+  platformAdminEmail: string;
   resend: {
     apiKey: string;
     from: string;
@@ -46,6 +47,7 @@ export function initRuntimeConfigFromWorker(bindings: WorkerBindings): RuntimeCo
     allowedOrigin: bindings.ALLOWED_ORIGIN ?? bindings.APP_URL,
     appVersion: bindings.APP_VERSION ?? readAppVersion(),
     buildId: bindings.BUILD_ID ?? readBuildId(),
+    platformAdminEmail: (bindings.PLATFORM_ADMIN_EMAIL ?? "").trim().toLowerCase(),
     resend: {
       apiKey: bindings.RESEND_API_KEY ?? "",
       from: bindings.RESEND_FROM ?? "",

@@ -12,6 +12,8 @@ export interface AuthUser {
   id: string;
   email: string;
   name: string;
+  is_platform_admin?: boolean;
+  is_active?: boolean;
   created: string;
   updated: string;
 }
@@ -28,6 +30,7 @@ export interface StoreSettings {
   member_invite_mode?: MemberInviteMode;
   promptpay_id?: string;
   transaction_history_cleared_at?: string;
+  feature_flags?: Record<string, boolean>;
 }
 
 export interface Store extends BaseRecord {
@@ -289,6 +292,72 @@ export interface AuditReconciliation {
   match: boolean;
   voided: { count: number; total: number };
   refunded: { count: number; total: number };
+}
+
+// ─── Platform Admin ───────────────────────────────────────────────────────────
+
+export interface AdminOverview {
+  stores: { total: number; active: number; new_7d: number };
+  users: { total: number; new_7d: number };
+  orders_today: { count: number; gmv: number };
+  orders_7d: { count: number; gmv: number };
+  inactive_stores_7d: number;
+  alerts: Array<{ type: string; message: string; severity: 'warning' | 'info' }>;
+}
+
+export interface AdminStoreListItem {
+  id: string;
+  name: string;
+  slug: string;
+  owner_email: string;
+  member_count: number;
+  last_order_at: string | null;
+  is_active: boolean;
+  created: string;
+}
+
+export interface AdminUserListItem extends AuthUser {
+  store_count: number;
+}
+
+export interface AdminClientSession {
+  id: string;
+  user: string;
+  user_name: string;
+  user_email: string;
+  store: string;
+  store_name: string;
+  client_version: string;
+  client_build: string;
+  pending_sync_count: number;
+  last_sync_at: string | null;
+  last_seen_at: string;
+  user_agent: string;
+  platform: string;
+}
+
+export interface AdminHealth {
+  status: string;
+  version: string;
+  build: string;
+  db: {
+    connected: boolean;
+    latency_ms: number;
+    row_counts: Record<string, number>;
+  };
+  r2: { available: boolean };
+  cron: {
+    backup_last_run: string | null;
+    health_warmup_last_run: string | null;
+  };
+  metrics: {
+    recorded_at: string;
+    period_hours: number;
+    login_failed: number;
+    login_success: number;
+    registrations: number;
+  } | null;
+  alerts: { login_failed_last_sent: string | null };
 }
 
 // ─── Cart (UI-only, not stored in DB) ────────────────────────────────────────

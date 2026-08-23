@@ -89,3 +89,21 @@ export async function sendPasswordResetEmail(
     devLogLink: resetLink,
   });
 }
+
+export async function sendAdminAlertEmail(
+  email: string,
+  subject: string,
+  bodyHtml: string,
+) {
+  const html = emailLayout(`
+    <h2 style="margin:0 0 16px;font-size:20px">zKCNT POS — Platform Alert</h2>
+    ${bodyHtml}
+  `);
+
+  await sendEmail({
+    to: email,
+    subject: `[zKCNT POS] ${subject}`,
+    html,
+    devLogLabel: "admin-alert",
+  });
+}

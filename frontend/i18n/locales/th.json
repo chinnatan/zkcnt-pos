@@ -677,6 +677,83 @@
       }
     }
   },
+  "admin": {
+    "nav": {
+      "title": "Platform Admin",
+      "overview": "ภาพรวม",
+      "stores": "ร้านค้า",
+      "users": "ผู้ใช้",
+      "activity": "กิจกรรม",
+      "devices": "อุปกรณ์",
+      "system": "ระบบ",
+      "backToApp": "กลับ POS"
+    },
+    "overview": {
+      "stores": "ร้านค้าทั้งหมด",
+      "users": "ผู้ใช้ทั้งหมด",
+      "activeCount": "ใช้งาน {count}",
+      "gmvToday": "ยอดขายวันนี้",
+      "gmv7d": "ยอดขาย 7 วัน",
+      "orders": "ออเดอร์",
+      "alerts": "การแจ้งเตือน",
+      "inactiveStores": "ร้านไม่มีออเดอร์ 7+ วัน"
+    },
+    "stores": {
+      "name": "ชื่อร้าน",
+      "owner": "เจ้าของ",
+      "members": "สมาชิก",
+      "lastOrder": "ออเดอร์ล่าสุด",
+      "searchPlaceholder": "ค้นหาชื่อร้าน / slug / อีเมล"
+    },
+    "users": {
+      "stores": "จำนวนร้าน",
+      "searchPlaceholder": "ค้นหาชื่อ / อีเมล"
+    },
+    "storeDetail": {
+      "title": "รายละเอียดร้าน",
+      "deactivate": "ปิดใช้งานร้าน",
+      "activate": "เปิดใช้งานร้าน",
+      "orders": "ออเดอร์",
+      "members": "สมาชิกทีม",
+      "featureFlags": "Feature flags",
+      "recentActivity": "กิจกรรมล่าสุด"
+    },
+    "userDetail": {
+      "title": "รายละเอียดผู้ใช้",
+      "disable": "ปิดใช้งานบัญชี",
+      "enable": "เปิดใช้งานบัญชี",
+      "memberships": "ร้านที่สังกัด",
+      "authEvents": "ประวัติการเข้าสู่ระบบ"
+    },
+    "activity": {
+      "store": "ร้าน"
+    },
+    "devices": {
+      "user": "ผู้ใช้",
+      "version": "เวอร์ชัน",
+      "syncPending": "รอซิงก์",
+      "lastSeen": "เห็นล่าสุด",
+      "empty": "ยังไม่มีข้อมูลอุปกรณ์"
+    },
+    "system": {
+      "apiStatus": "สถานะ API",
+      "dbLatency": "D1 latency",
+      "rowCounts": "จำนวนแถวในตาราง",
+      "cron": "Cron jobs",
+      "backup": "Backup ล่าสุด",
+      "healthWarmup": "Health warm-up",
+      "metrics24h": "เมตริก 24 ชม.",
+      "loginFailed": "Login ล้มเหลว",
+      "loginSuccess": "Login สำเร็จ",
+      "registrations": "สมัครใหม่",
+      "external": "Observability ภายนอก"
+    },
+    "featureFlags": {
+      "promotions": "เปิดใช้โปรโมชัน",
+      "reports": "เปิดใช้รายงาน",
+      "offlineSync": "เปิดใช้ offline sync"
+    }
+  },
   "errors": {
     "invalidCredentials": "อีเมลหรือรหัสผ่านไม่ถูกต้อง",
     "registrationFailed": "สมัครสมาชิกไม่สำเร็จ",

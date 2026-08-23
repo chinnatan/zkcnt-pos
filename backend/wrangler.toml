@@ -25,6 +25,7 @@ APP_VERSION = "0.1.0"
 BUILD_ID = "production"
 LOG_LEVEL = "info"
 ALLOWED_ORIGIN = "https://pos.zkcnt.com"
+# PLATFORM_ADMIN_EMAIL = "you@example.com"
 
 [triggers]
 crons = ["0 1 * * *", "45 1 * * *"]

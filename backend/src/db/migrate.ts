@@ -273,6 +273,66 @@ export function runMigrate() {
   migrateSoftDeleteColumns(db);
   cleanupOrphanInventory(db);
   backfillOrderAuditEvents(db);
+  migratePlatformAdmin(db);
+}
+
+function migratePlatformAdmin(db: Database) {
+  const userCols = db
+    .query<{ name: string }, []>("PRAGMA table_info(users)")
+    .all()
+    .map((c) => c.name);
+
+  if (!userCols.includes("is_platform_admin")) {
+    db.exec(
+      "ALTER TABLE users ADD COLUMN is_platform_admin INTEGER NOT NULL DEFAULT 0",
+    );
+  }
+  if (!userCols.includes("is_active")) {
+    db.exec("ALTER TABLE users ADD COLUMN is_active INTEGER NOT NULL DEFAULT 1");
+  }
+
+  db.exec("CREATE INDEX IF NOT EXISTS idx_audit_created ON audit_events(created)");
+
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS system_meta (
+      key TEXT PRIMARY KEY,
+      value TEXT NOT NULL,
+      updated TEXT NOT NULL
+    )
+  `);
+
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS client_sessions (
+      id TEXT PRIMARY KEY,
+      user TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      store TEXT NOT NULL REFERENCES stores(id) ON DELETE CASCADE,
+      client_version TEXT NOT NULL DEFAULT '',
+      client_build TEXT NOT NULL DEFAULT '',
+      pending_sync_count INTEGER NOT NULL DEFAULT 0,
+      last_sync_at TEXT,
+      last_seen_at TEXT NOT NULL,
+      user_agent TEXT NOT NULL DEFAULT '',
+      platform TEXT NOT NULL DEFAULT '',
+      created TEXT NOT NULL,
+      updated TEXT NOT NULL
+    )
+  `);
+  db.exec(
+    "CREATE UNIQUE INDEX IF NOT EXISTS idx_client_sessions_user_store ON client_sessions(user, store)",
+  );
+  db.exec(
+    "CREATE INDEX IF NOT EXISTS idx_client_sessions_last_seen ON client_sessions(last_seen_at)",
+  );
+  db.exec(
+    "CREATE INDEX IF NOT EXISTS idx_client_sessions_store ON client_sessions(store)",
+  );
+
+  const adminEmail = process.env.PLATFORM_ADMIN_EMAIL?.trim().toLowerCase();
+  if (adminEmail) {
+    db.prepare(
+      "UPDATE users SET is_platform_admin = 1 WHERE lower(email) = ?",
+    ).run(adminEmail);
+  }
 }
 
 function migrateSoftDeleteColumns(db: Database) {
@@ -466,12 +526,16 @@ if (import.meta.main) {
   const { initRuntimeConfig } = await import("../env");
   const { bunEnv } = await import("../env.bun");
   const { initFilesystemUploads } = await import("../lib/uploads.bun");
+  const { readAppVersion, readBuildId } = await import("../lib/version.bun");
 
   initRuntimeConfig({
     jwtSecret: process.env.JWT_SECRET ?? "dev-secret-change-in-production",
     appUrl: (process.env.APP_URL ?? "http://localhost:4000").replace(/\/$/, ""),
     logLevel: "info",
     allowedOrigin: process.env.ALLOWED_ORIGIN ?? "http://localhost:4000",
+    appVersion: readAppVersion(),
+    buildId: readBuildId(),
+    platformAdminEmail: (process.env.PLATFORM_ADMIN_EMAIL ?? "").trim().toLowerCase(),
     resend: {
       apiKey: process.env.RESEND_API_KEY ?? "",
       from: process.env.RESEND_FROM ?? "",

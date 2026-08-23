@@ -9,4 +9,5 @@ export interface WorkerBindings {
   BUILD_ID?: string;
   LOG_LEVEL?: string;
   ALLOWED_ORIGIN?: string;
+  PLATFORM_ADMIN_EMAIL?: string;
 }

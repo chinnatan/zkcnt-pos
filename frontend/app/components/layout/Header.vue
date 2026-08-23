@@ -35,8 +35,16 @@
 
         <div
           v-if="showUserMenu"
-          class="absolute right-0 top-full mt-1 w-48 rounded-lg border border-border-warm bg-paper py-1 shadow-lg"
+          class="absolute right-0 top-full z-50 mt-1 w-48 rounded-lg border border-border-warm bg-paper py-1 shadow-lg"
         >
+          <NuxtLink
+            v-if="isPlatformAdmin"
+            to="/admin"
+            class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-ink hover:bg-surface"
+            @click="showUserMenu = false"
+          >
+            {{ t('admin.nav.title') }}
+          </NuxtLink>
           <button
             class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-ink hover:bg-surface"
             @click="logout(); showUserMenu = false"
@@ -53,6 +61,7 @@
 const route = useRoute();
 const { t } = useI18n();
 const { authUser, logout } = useAuth();
+const isPlatformAdmin = useIsPlatformAdmin();
 const { isOnline } = useOnlineStatus();
 const { toggle } = useSidebar();
 const showUserMenu = ref(false);
@@ -70,6 +79,7 @@ const pageTitle = computed(() => {
     "/settings/roles": t("rolesPage.title"),
     "/stores": t("nav.stores"),
     "/promotions": t("nav.promotions"),
+    "/admin": t("admin.nav.title"),
   };
   return titles[route.path] || t("nav.appName");
 });
