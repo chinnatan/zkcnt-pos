@@ -13,6 +13,7 @@ import {
   promotions,
   users,
 } from "../db/schema";
+import { formatBangkokDateShort, getBangkokParts } from "./timezone";
 
 type OrderRow = typeof orders.$inferSelect;
 type OrderItemRow = typeof orderItems.$inferSelect;
@@ -400,7 +401,7 @@ export async function buildStoreReports(
   const itemCount = itemRows.reduce((s, i) => s + i.quantity, 0);
   const hourTotals = new Map<number, number>();
   for (const o of completed) {
-    const h = new Date(o.created).getHours();
+    const h = getBangkokParts(o.created).hour;
     hourTotals.set(h, (hourTotals.get(h) ?? 0) + o.total);
   }
   let peakHour: number | null = null;
@@ -423,9 +424,9 @@ export async function buildStoreReports(
     { day: number; hour: number; total: number; count: number }
   >();
   for (const o of completed) {
-    const d = new Date(o.created);
-    const day = d.getDay();
-    const hour = d.getHours();
+    const p = getBangkokParts(o.created);
+    const day = p.dayOfWeek;
+    const hour = p.hour;
     dayOfWeekBreakdown[day]!.total += o.total;
     dayOfWeekBreakdown[day]!.count += 1;
     const key = `${day}-${hour}`;
@@ -578,7 +579,7 @@ function buildTimeSeries(completed: OrderRow[], period: string) {
       count: 0,
     }));
     for (const o of completed) {
-      const h = new Date(o.created).getHours();
+      const h = getBangkokParts(o.created).hour;
       buckets[h]!.total += o.total;
       buckets[h]!.count += 1;
     }
@@ -587,9 +588,9 @@ function buildTimeSeries(completed: OrderRow[], period: string) {
 
   const dayMap = new Map<string, { label: string; total: number; count: number }>();
   for (const o of completed) {
-    const d = new Date(o.created);
-    const key = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
-    const label = d.toISOString().slice(0, 10);
+    const p = getBangkokParts(o.created);
+    const key = `${p.year}-${p.month}-${p.day}`;
+    const label = formatBangkokDateShort(o.created);
     const existing = dayMap.get(key) ?? { label, total: 0, count: 0 };
     existing.total += o.total;
     existing.count += 1;

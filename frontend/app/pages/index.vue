@@ -188,7 +188,7 @@ import { orderStatusBadge, paymentMethodBadge } from "~/lib/ui/statusColors";
 definePageMeta({ middleware: "auth" });
 
 const { t } = useI18n();
-const { formatCurrency, formatTime } = useFormat();
+const { formatCurrency, formatTime, getBangkokDateKey } = useFormat();
 const { statusLabel, paymentLabel } = useLabels();
 const { activeStore, activeStoreId } = useStore();
 const { isOnline } = useOnlineStatus();
@@ -212,9 +212,9 @@ async function loadDashboardData() {
 
   await fetchOrders(10);
 
-  const today = new Date().toISOString().slice(0, 10);
+  const today = getBangkokDateKey();
   const todayOrders = orders.value.filter(
-    (o) => o.created.startsWith(today) && o.status === "completed",
+    (o) => getBangkokDateKey(o.created) === today && o.status === "completed",
   );
   todaySales.value = todayOrders.reduce((sum, o) => sum + o.total, 0);
   todayOrderCount.value = todayOrders.length;

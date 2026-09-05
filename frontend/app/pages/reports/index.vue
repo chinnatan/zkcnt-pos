@@ -474,7 +474,7 @@
                 >
                   <span class="min-w-0 flex-1 text-sm font-medium">{{ c.name }}</span>
                   <span class="text-xs text-ink-muted">
-                    {{ t('reportsPage.lastOrder', { date: formatDate(c.lastOrderAt) }) }}
+                    {{ t('reportsPage.lastOrder', { date: formatDateShort(c.lastOrderAt) }) }}
                   </span>
                   <span class="text-sm text-ink-muted">{{ t('reportsPage.visitCount', { count: c.visitCount }) }}</span>
                   <span class="text-sm font-semibold">{{ formatCurrency(c.totalSpent) }}</span>
@@ -691,7 +691,7 @@
 definePageMeta({ middleware: "auth" });
 
 const { t, locale } = useI18n();
-const { formatCurrency, toDatetimeLocalValue } = useFormat();
+const { formatCurrency, formatDateShort, toDatetimeLocalValue } = useFormat();
 const { paymentLabel } = useLabels();
 const {
   period,
@@ -741,18 +741,6 @@ const maxDayTotal = computed(() =>
 function dayOfWeekPct(total: number): number {
   if (maxDayTotal.value <= 0) return 0;
   return (total / maxDayTotal.value) * 100;
-}
-
-function formatDate(iso: string): string {
-  try {
-    return new Date(iso).toLocaleDateString(locale.value === "th" ? "th-TH" : "en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
-  } catch {
-    return iso;
-  }
 }
 
 onMounted(async () => {

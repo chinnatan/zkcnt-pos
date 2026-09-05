@@ -37,8 +37,8 @@
       <UiCraftCard variant="paper" padding="md">
         <h3 class="mb-3 font-semibold">{{ t('admin.system.cron') }}</h3>
         <ul class="space-y-1 text-sm">
-          <li>{{ t('admin.system.backup') }}: {{ health.cron.backup_last_run || '—' }}</li>
-          <li>{{ t('admin.system.healthWarmup') }}: {{ health.cron.health_warmup_last_run || '—' }}</li>
+          <li>{{ t('admin.system.backup') }}: {{ health.cron.backup_last_run ? formatDate(health.cron.backup_last_run) : '—' }}</li>
+          <li>{{ t('admin.system.healthWarmup') }}: {{ health.cron.health_warmup_last_run ? formatDate(health.cron.health_warmup_last_run) : '—' }}</li>
         </ul>
       </UiCraftCard>
 
@@ -49,7 +49,7 @@
           <div><dt class="text-ink-muted">{{ t('admin.system.loginSuccess') }}</dt><dd class="font-bold">{{ health.metrics.login_success }}</dd></div>
           <div><dt class="text-ink-muted">{{ t('admin.system.registrations') }}</dt><dd class="font-bold">{{ health.metrics.registrations }}</dd></div>
         </dl>
-        <p class="mt-2 text-xs text-ink-muted">{{ health.metrics.recorded_at }}</p>
+        <p class="mt-2 text-xs text-ink-muted">{{ formatDate(health.metrics.recorded_at) }}</p>
       </UiCraftCard>
 
       <UiCraftCard variant="label" padding="md">
@@ -73,6 +73,7 @@ import type { AdminHealth } from "~/lib/types";
 definePageMeta({ middleware: ["auth", "platform-admin"], layout: "admin" });
 
 const { t } = useI18n();
+const { formatDate } = useFormat();
 const { getHealth } = usePlatformAdmin();
 
 const health = ref<AdminHealth | null>(null);

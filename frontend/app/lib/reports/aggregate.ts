@@ -9,6 +9,13 @@ import type {
   Promotion,
   PromotionUsage,
 } from "~/lib/types";
+import {
+  formatBangkokDateShort,
+  getBangkokParts,
+  getBangkokStartOfDay,
+  getBangkokStartOfMonth,
+  getBangkokStartOfWeek,
+} from "~/lib/timezone";
 import type {
   ReportCashierRow,
   ReportCategoryRow,
@@ -48,20 +55,16 @@ export function getPeriodRange(
   let since: Date;
   switch (period) {
     case "today":
-      since = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      since = getBangkokStartOfDay(now);
       break;
-    case "week": {
-      const day = now.getDay();
-      const diff = day === 0 ? 6 : day - 1;
-      since = new Date(now.getFullYear(), now.getMonth(), now.getDate() - diff);
-      since.setHours(0, 0, 0, 0);
+    case "week":
+      since = getBangkokStartOfWeek(now);
       break;
-    }
     case "month":
-      since = new Date(now.getFullYear(), now.getMonth(), 1);
+      since = getBangkokStartOfMonth(now);
       break;
     default:
-      since = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      since = getBangkokStartOfDay(now);
   }
 
   return { since: since.toISOString(), until: until.toISOString() };
@@ -123,7 +126,7 @@ function buildTimeSeries(
       count: 0,
     }));
     for (const o of orders) {
-      const h = new Date(o.created).getHours();
+      const h = getBangkokParts(o.created).hour;
       buckets[h]!.total += o.total;
       buckets[h]!.count += 1;
     }
@@ -132,12 +135,9 @@ function buildTimeSeries(
 
   const dayMap = new Map<string, ReportTimeSeriesPoint>();
   for (const o of orders) {
-    const d = new Date(o.created);
-    const key = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
-    const label = d.toLocaleDateString(locale === "th" ? "th-TH" : "en-US", {
-      month: "short",
-      day: "numeric",
-    });
+    const p = getBangkokParts(o.created);
+    const key = `${p.year}-${p.month}-${p.day}`;
+    const label = formatBangkokDateShort(o.created, locale);
     const existing = dayMap.get(key) ?? { label, total: 0, count: 0 };
     existing.total += o.total;
     existing.count += 1;
@@ -155,7 +155,7 @@ function buildDayOfWeek(orders: Order[], locale: string): ReportDayOfWeekRow[] {
     count: 0,
   }));
   for (const o of orders) {
-    const day = new Date(o.created).getDay();
+    const day = getBangkokParts(o.created).dayOfWeek;
     buckets[day]!.total += o.total;
     buckets[day]!.count += 1;
   }
@@ -165,9 +165,9 @@ function buildDayOfWeek(orders: Order[], locale: string): ReportDayOfWeekRow[] {
 function buildHourlyHeatmap(orders: Order[]): ReportHourlyHeatmapCell[] {
   const map = new Map<string, ReportHourlyHeatmapCell>();
   for (const o of orders) {
-    const d = new Date(o.created);
-    const day = d.getDay();
-    const hour = d.getHours();
+    const p = getBangkokParts(o.created);
+    const day = p.dayOfWeek;
+    const hour = p.hour;
     const key = `${day}-${hour}`;
     const existing = map.get(key) ?? { day, hour, total: 0, count: 0 };
     existing.total += o.total;
@@ -461,7 +461,7 @@ function buildSummary(
 
   const hourTotals = new Map<number, number>();
   for (const o of completed) {
-    const h = new Date(o.created).getHours();
+    const h = getBangkokParts(o.created).hour;
     hourTotals.set(h, (hourTotals.get(h) ?? 0) + o.total);
   }
   let peakHour: number | null = null;

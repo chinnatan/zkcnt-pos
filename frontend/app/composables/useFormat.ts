@@ -1,3 +1,5 @@
+import { bangkokWallTimeToUtc, getBangkokDateKey } from "~/lib/timezone";
+
 export function useFormat() {
   const { locale } = useI18n();
 
@@ -50,11 +52,19 @@ export function useFormat() {
     if (!local) return undefined;
     const [datePart, timePart] = local.split("T");
     if (!datePart || !timePart) return undefined;
-    const [year, month, day] = datePart.split("-").map(Number);
-    const [hour, minute] = timePart.split(":").map(Number);
-    // Bangkok is UTC+7 with no DST
-    const utcMs = Date.UTC(year, month - 1, day, hour - 7, minute);
-    return new Date(utcMs).toISOString();
+
+    const dateParts = datePart.split("-");
+    const timeParts = timePart.split(":");
+    if (dateParts.length !== 3 || timeParts.length < 2) return undefined;
+
+    const year = Number(dateParts[0]);
+    const month = Number(dateParts[1]);
+    const day = Number(dateParts[2]);
+    const hour = Number(timeParts[0]);
+    const minute = Number(timeParts[1]);
+    if (![year, month, day, hour, minute].every(Number.isFinite)) return undefined;
+
+    return bangkokWallTimeToUtc(year, month, day, hour, minute).toISOString();
   }
 
   function formatAmount(amount: number): string {
@@ -69,5 +79,6 @@ export function useFormat() {
     formatAmount,
     toDatetimeLocalValue,
     datetimeLocalToIso,
+    getBangkokDateKey,
   };
 }
