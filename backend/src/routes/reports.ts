@@ -7,6 +7,7 @@ import {
   requireStoreMember,
   type StoreAccessVariables,
 } from "../middleware/store-access";
+import { requireStoreFeature } from "../lib/feature-flags";
 import { buildStoreReports, reportsDataToCsv } from "../lib/reports";
 
 type Vars = AuthVariables & StoreAccessVariables;
@@ -17,6 +18,7 @@ reportRoutes.get(
   "/:storeId/reports",
   authMiddleware,
   requireStoreMember,
+  requireStoreFeature("reports_enabled"),
   async (c) => {
     const storeId = c.req.param("storeId");
     const since = c.req.query("since");
@@ -40,6 +42,7 @@ reportRoutes.get(
   "/:storeId/reports/export.csv",
   authMiddleware,
   requireStoreMember,
+  requireStoreFeature("reports_enabled"),
   async (c) => {
     const storeId = c.req.param("storeId");
     const since = c.req.query("since");

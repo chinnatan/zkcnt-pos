@@ -17,6 +17,7 @@ export function useSync() {
   const { $api } = useNuxtApp();
   const { activeStoreId } = useStore();
   const { isOnline } = useOnlineStatus();
+  const offlineSyncEnabled = useStoreFeatureEnabled("offline_sync_enabled");
 
   function initSync() {
     if (!activeStoreId.value) return;
@@ -37,8 +38,10 @@ export function useSync() {
       const since = options?.forceFullPull
         ? EPOCH
         : (lastSyncAt.value ?? EPOCH);
-      await syncEngine.drainSyncQueue();
-      await syncEngine.drainFileQueue();
+      if (offlineSyncEnabled.value) {
+        await syncEngine.drainSyncQueue();
+        await syncEngine.drainFileQueue();
+      }
       await syncEngine.pullAll(since);
       await syncEngine.prefetchProductImages();
       if (activeStoreId.value) {
