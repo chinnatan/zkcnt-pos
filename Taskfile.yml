@@ -241,3 +241,8 @@ tasks:
       - task: cf:db:migrate
       - task: cf:deploy
       - task: pages:deploy
+
+  release-notes:
+    desc: Generate release-notes.json from git commits since last tag
+    cmds:
+      - bun run scripts/generate-release-notes.ts {{.CLI_ARGS}}

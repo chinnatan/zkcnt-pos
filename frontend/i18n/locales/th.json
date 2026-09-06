@@ -492,7 +492,19 @@
     "apiVersion": "เวอร์ชัน API",
     "versionMatch": "ตรงกัน",
     "versionMismatch": "ไม่ตรงกัน",
-    "versionUnknown": "ไม่ทราบ"
+    "versionUnknown": "ไม่ทราบ",
+    "releaseNotes": "ประวัติการอัปเดต"
+  },
+  "releaseNotes": {
+    "title": "อัปเดตล่าสุด",
+    "whatsNew": "มีอะไรใหม่",
+    "viewAll": "ดูประวัติทั้งหมด",
+    "dismiss": "เข้าใจแล้ว",
+    "added": "เพิ่ม",
+    "fixed": "แก้ไข",
+    "improved": "ปรับปรุง",
+    "noNotes": "ยังไม่มีรายละเอียดสำหรับเวอร์ชันนี้",
+    "historyTitle": "ประวัติการอัปเดต"
   },
   "invitePage": {
     "title": "คำเชิญเข้าร่วมทีม",

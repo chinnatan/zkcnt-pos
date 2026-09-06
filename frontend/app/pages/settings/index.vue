@@ -277,6 +277,17 @@
             </dd>
           </div>
         </dl>
+        <div class="mt-4 border-t border-border-warm pt-4">
+          <NuxtLink
+            to="/release-notes"
+            class="inline-flex items-center gap-1 text-sm font-medium text-primary-600 hover:underline"
+          >
+            {{ t('settingsPage.releaseNotes') }}
+            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+            </svg>
+          </NuxtLink>
+        </div>
       </UiCraftCard>
     </div>
 
