@@ -715,9 +715,12 @@
       "overview": "Overview",
       "stores": "Stores",
       "users": "Users",
+      "tickets": "Tickets",
       "activity": "Activity",
       "devices": "Devices",
       "system": "System",
+      "announcements": "Announcements",
+      "ops": "Ops",
       "backToApp": "Back to POS"
     },
     "overview": {
@@ -728,7 +731,8 @@
       "gmv7d": "GMV 7 days",
       "orders": "orders",
       "alerts": "Alerts",
-      "inactiveStores": "Stores with no orders 7+ days"
+      "inactiveStores": "Stores with no orders 7+ days",
+      "openTickets": "Open support tickets"
     },
     "stores": {
       "name": "Store",
@@ -783,7 +787,89 @@
     "featureFlags": {
       "promotions": "Promotions enabled",
       "reports": "Reports enabled",
-      "offlineSync": "Offline sync enabled"
+      "offlineSync": "Offline sync enabled",
+      "disabled": "This feature is disabled for your store. Contact support if you need access."
+    },
+    "tickets": {
+      "backToList": "Back to tickets",
+      "detailTitle": "Ticket detail",
+      "viewInbox": "View ticket inbox",
+      "reporter": "Reporter"
+    },
+    "announcements": {
+      "title": "Platform announcements",
+      "active": "Show banner",
+      "severity": "Severity",
+      "messageTh": "Message (Thai)",
+      "messageEn": "Message (English)",
+      "expiresAt": "Expires at",
+      "save": "Save announcement",
+      "clear": "Clear announcement",
+      "preview": "Current banner preview",
+      "severities": {
+        "info": "Info",
+        "warning": "Warning",
+        "critical": "Critical"
+      }
+    },
+    "ops": {
+      "title": "Ops tools",
+      "onboarding": "Store onboarding",
+      "onboardingEmpty": "No stores need onboarding attention",
+      "noProducts": "No products",
+      "noOrders": "No orders yet",
+      "backup": "Backup status",
+      "backupLastRun": "Last backup",
+      "backupNever": "Never run",
+      "syncHealth": "Sync health",
+      "highPending": "High pending sync",
+      "platformConfig": "Platform config",
+      "configKey": "Key",
+      "configValue": "Value",
+      "configSave": "Save config"
+    }
+  },
+  "support": {
+    "title": "Help & support",
+    "newTicket": "Report an issue",
+    "empty": "No support tickets yet",
+    "backToList": "Back to tickets",
+    "subject": "Subject",
+    "category": "Category",
+    "message": "Message",
+    "messagePlaceholder": "Describe the issue, steps to reproduce, or your question…",
+    "submit": "Submit ticket",
+    "reply": "Reply",
+    "replyPlaceholder": "Write your reply…",
+    "sendReply": "Send reply",
+    "you": "You",
+    "adminReply": "Platform support",
+    "closedNotice": "This ticket is closed",
+    "validationRequired": "Subject and message are required",
+    "attachImage": "Image",
+    "imageInvalidType": "Use JPEG, PNG, or WebP images only",
+    "imageTooLarge": "Image must be 5 MB or smaller",
+    "status": "Status",
+    "allStatuses": "All statuses",
+    "allCategories": "All categories",
+    "categories": {
+      "bug": "Bug",
+      "question": "Question",
+      "feature": "Feature request",
+      "billing": "Billing",
+      "other": "Other"
+    },
+    "statuses": {
+      "open": "Open",
+      "in_progress": "In progress",
+      "waiting_user": "Waiting for you",
+      "resolved": "Resolved",
+      "closed": "Closed"
+    },
+    "priorities": {
+      "low": "Low",
+      "normal": "Normal",
+      "high": "High"
     }
   },
   "errors": {

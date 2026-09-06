@@ -113,9 +113,12 @@ const menuItems = computed(() => [
   { to: "/admin", label: t("admin.nav.overview") },
   { to: "/admin/stores", label: t("admin.nav.stores") },
   { to: "/admin/users", label: t("admin.nav.users") },
+  { to: "/admin/tickets", label: t("admin.nav.tickets") },
   { to: "/admin/activity", label: t("admin.nav.activity") },
   { to: "/admin/devices", label: t("admin.nav.devices") },
   { to: "/admin/system", label: t("admin.nav.system") },
+  { to: "/admin/announcements", label: t("admin.nav.announcements") },
+  { to: "/admin/ops", label: t("admin.nav.ops") },
 ]);
 
 function isActive(path: string) {
@@ -128,12 +131,16 @@ const pageTitle = computed(() => {
     "/admin": t("admin.nav.overview"),
     "/admin/stores": t("admin.nav.stores"),
     "/admin/users": t("admin.nav.users"),
+    "/admin/tickets": t("admin.nav.tickets"),
     "/admin/activity": t("admin.nav.activity"),
     "/admin/devices": t("admin.nav.devices"),
     "/admin/system": t("admin.nav.system"),
+    "/admin/announcements": t("admin.nav.announcements"),
+    "/admin/ops": t("admin.nav.ops"),
   };
   if (route.path.startsWith("/admin/stores/")) return t("admin.storeDetail.title");
   if (route.path.startsWith("/admin/users/")) return t("admin.userDetail.title");
+  if (route.path.startsWith("/admin/tickets/")) return t("admin.tickets.detailTitle");
   return map[route.path] || t("admin.nav.title");
 });
 

@@ -47,7 +47,13 @@ export type AuditAction =
   | "admin.store_activate"
   | "admin.user_disable"
   | "admin.user_enable"
-  | "admin.feature_flags_update";
+  | "admin.feature_flags_update"
+  | "support.ticket_create"
+  | "support.ticket_reply"
+  | "admin.ticket_status_change"
+  | "admin.ticket_reply"
+  | "admin.announcement_update"
+  | "admin.platform_config_update";
 
 export interface AuditEventInput {
   store?: string | null;

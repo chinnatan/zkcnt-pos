@@ -6,7 +6,12 @@ import type {
   AdminUserListItem,
   AuditEvent,
   Store,
+  SupportTicket,
+  SupportTicketDetail,
+  SupportTicketPriority,
+  SupportTicketStatus,
 } from "~/lib/types";
+import type { PlatformAnnouncement } from "~/composables/usePlatformAnnouncement";
 import { resolveApiBaseUrl } from "~/lib/api/url";
 
 export function usePlatformAdmin() {
@@ -150,6 +155,91 @@ export function usePlatformAdmin() {
       });
   }
 
+  function listTickets(params?: {
+    limit?: number;
+    offset?: number;
+    status?: string;
+    category?: string;
+    store?: string;
+    search?: string;
+  }) {
+    const qs = new URLSearchParams();
+    if (params?.limit) qs.set("limit", String(params.limit));
+    if (params?.offset) qs.set("offset", String(params.offset));
+    if (params?.status) qs.set("status", params.status);
+    if (params?.category) qs.set("category", params.category);
+    if (params?.store) qs.set("store", params.store);
+    if (params?.search) qs.set("search", params.search);
+    const q = qs.toString();
+    return $api.send<{ items: SupportTicket[]; totalItems: number }>(
+      `/admin/tickets${q ? `?${q}` : ""}`,
+    );
+  }
+
+  function getTicket(ticketId: string) {
+    return $api.send<SupportTicketDetail>(`/admin/tickets/${ticketId}`);
+  }
+
+  function patchTicket(
+    ticketId: string,
+    body: { status?: SupportTicketStatus; priority?: SupportTicketPriority },
+  ) {
+    return $api.send<SupportTicketDetail>(`/admin/tickets/${ticketId}`, {
+      method: "PATCH",
+      body,
+    });
+  }
+
+  function replyToTicket(ticketId: string, body_html: string) {
+    return $api.send<SupportTicketDetail>(`/admin/tickets/${ticketId}/messages`, {
+      method: "POST",
+      body: { body_html },
+    });
+  }
+
+  function getAnnouncement() {
+    return $api.send<PlatformAnnouncement>("/admin/announcement");
+  }
+
+  function saveAnnouncement(body: {
+    active: boolean;
+    severity: PlatformAnnouncement["severity"];
+    message_th: string;
+    message_en: string;
+    expires_at: string | null;
+  }) {
+    return $api.send<PlatformAnnouncement>("/admin/announcement", {
+      method: "PUT",
+      body,
+    });
+  }
+
+  function getOpsOverview() {
+    return $api.send<{
+      onboarding: Array<{ store_id: string; store_name: string; slug: string; issues: string[] }>;
+      backup_last_run: string | null;
+      sync_alerts: Array<{
+        id: string;
+        user: string;
+        store: string;
+        store_name: string;
+        pending_sync_count: number;
+        last_seen_at: string;
+      }>;
+    }>("/admin/ops");
+  }
+
+  function listPlatformConfig() {
+    return $api.send<{ items: Array<{ key: string; value: string; updated: string }> }>("/admin/config");
+  }
+
+  function savePlatformConfig(key: string, value: string) {
+    return $api.send(`/admin/config/${encodeURIComponent(key)}`, {
+      method: "PUT",
+      body: { value },
+    });
+  }
+
   return {
     getOverview,
     listStores,
@@ -162,6 +252,15 @@ export function usePlatformAdmin() {
     getHealth,
     listDevices,
     exportAuditCsv,
+    listTickets,
+    getTicket,
+    patchTicket,
+    replyToTicket,
+    getAnnouncement,
+    saveAnnouncement,
+    getOpsOverview,
+    listPlatformConfig,
+    savePlatformConfig,
   };
 }
 
