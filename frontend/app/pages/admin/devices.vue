@@ -24,9 +24,15 @@
             >
               <td class="px-4 py-3">
                 <div class="font-medium">{{ session.user_name }}</div>
-                <div class="text-xs text-ink-muted">{{ session.user_email }}</div>
+                <NuxtLink :to="`/admin/users/${session.user}`" class="text-xs text-primary-700 hover:underline">
+                  {{ session.user_email }}
+                </NuxtLink>
               </td>
-              <td class="px-4 py-3">{{ session.store_name }}</td>
+              <td class="px-4 py-3">
+                <NuxtLink :to="`/admin/stores/${session.store}`" class="text-primary-700 hover:underline">
+                  {{ session.store_name }}
+                </NuxtLink>
+              </td>
               <td class="px-4 py-3 text-xs">{{ session.client_version }} ({{ session.client_build }})</td>
               <td class="px-4 py-3">
                 <span :class="session.pending_sync_count > 0 ? 'font-semibold text-warning-600' : 'text-success-600'">
