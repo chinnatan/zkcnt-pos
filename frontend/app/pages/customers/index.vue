@@ -149,7 +149,7 @@
 <script setup lang="ts">
 import type { Customer } from "~/lib/types";
 
-definePageMeta({ middleware: "auth" });
+definePageMeta({ middleware: ["auth", "customers-feature"] });
 
 const { t } = useI18n();
 const { formatCurrency } = useFormat();
