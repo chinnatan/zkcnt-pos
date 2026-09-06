@@ -27,6 +27,7 @@ import type {
   ReportInventoryMovements,
   ReportLapsedCustomerRow,
   ReportLowStockRow,
+  ReportOrderRow,
   ReportPaymentBreakdown,
   ReportPeriod,
   ReportPeriodRange,
@@ -437,6 +438,49 @@ function buildPromotions(
   return [...map.values()].sort((a, b) => b.discountTotal - a.discountTotal);
 }
 
+function buildPeriodOrders(
+  inRangeOrders: Order[],
+  orderItems: OrderItem[],
+  customers: Customer[],
+  cashierNames: Map<string, string>,
+): ReportOrderRow[] {
+  const customerNameMap = new Map(customers.map((c) => [c.id, c.name]));
+  const orderIds = new Set(inRangeOrders.map((o) => o.id));
+  const itemsByOrder = new Map<string, OrderItem[]>();
+
+  for (const item of orderItems) {
+    if (!orderIds.has(item.order)) continue;
+    const list = itemsByOrder.get(item.order) ?? [];
+    list.push(item);
+    itemsByOrder.set(item.order, list);
+  }
+
+  return [...inRangeOrders]
+    .sort((a, b) => new Date(b.created).getTime() - new Date(a.created).getTime())
+    .map((o) => {
+      const items = itemsByOrder.get(o.id) ?? [];
+      return {
+        orderId: o.id,
+        orderNumber: o.order_number,
+        created: o.created,
+        status: o.status,
+        customerName: o.customer ? (customerNameMap.get(o.customer) ?? null) : null,
+        cashierName: cashierNames.get(o.cashier) ?? o.cashier,
+        itemCount: items.reduce((s, i) => s + i.quantity, 0),
+        subtotal: o.subtotal,
+        discountAmount: o.discount_amount,
+        taxAmount: o.tax_amount,
+        total: o.total,
+        paymentMethod: o.payment_method,
+        items: items.map((i) => ({
+          productName: i.product_name,
+          quantity: i.quantity,
+          total: i.total,
+        })),
+      };
+    });
+}
+
 function buildSummary(
   completed: Order[],
   previousCompleted: Order[],
@@ -458,6 +502,9 @@ function buildSummary(
   const itemCount = orderItems
     .filter((i) => completedOrderIds.has(i.order))
     .reduce((s, i) => s + i.quantity, 0);
+  const uniqueProductsSold = new Set(
+    orderItems.filter((i) => completedOrderIds.has(i.order)).map((i) => i.product),
+  ).size;
 
   const hourTotals = new Map<number, number>();
   for (const o of completed) {
@@ -504,6 +551,8 @@ function buildSummary(
     newCustomerCount: customerSegments.newCustomerCount,
     returningCustomerCount: customerSegments.returningCustomerCount,
     avgItemsPerOrder: totalOrders > 0 ? itemCount / totalOrders : 0,
+    totalItemsSold: itemCount,
+    uniqueProductsSold,
     peakHourLabel:
       peakHour !== null
         ? `${String(peakHour).padStart(2, "0")}:00–${String(peakHour + 1).padStart(2, "0")}:00`
@@ -689,6 +738,7 @@ export function aggregateReports(input: AggregateInput): ReportsData {
       ? buildInventoryMovements(inventoryTransactions, range)
       : null,
     reconciliation: null,
+    periodOrders: buildPeriodOrders(inRangeOrders, orderItems, customers, cashierNames),
   };
 }
 
@@ -699,11 +749,15 @@ export function reportsToCsv(data: ReportsData): string {
     `Total Sales,${data.summary.totalSales}`,
     `Total Orders,${data.summary.totalOrders}`,
     `Average Order,${data.summary.averageOrder}`,
+    `Subtotal,${data.summary.totalSubtotal}`,
     `Net Sales,${data.summary.netSales}`,
     `Gross Profit,${data.summary.grossProfit}`,
     `Gross Margin %,${data.summary.grossMarginPct ?? ""}`,
     `VAT Collected,${data.summary.totalTax}`,
     `Total Discount,${data.summary.totalDiscount}`,
+    `Total Items Sold,${data.summary.totalItemsSold}`,
+    `Unique Products Sold,${data.summary.uniqueProductsSold}`,
+    `Avg Items Per Order,${data.summary.avgItemsPerOrder}`,
     `Cash Sales,${data.summary.cashSales}`,
     `Cash Received,${data.summary.cashReceived}`,
     `Change Given,${data.summary.totalChange}`,
@@ -715,6 +769,13 @@ export function reportsToCsv(data: ReportsData): string {
     `Returning Customers,${data.summary.returningCustomerCount}`,
     `Stock Value Cost,${data.stockValue}`,
     `Stock Value Retail,${data.stockValueRetail}`,
+    "",
+    "Period Orders",
+    "Order Number,Date,Status,Customer,Cashier,Items,Subtotal,Discount,Tax,Total,Payment",
+    ...(data.periodOrders ?? []).map(
+      (o) =>
+        `${o.orderNumber},${o.created},${o.status},${o.customerName ?? ""},${o.cashierName},${o.itemCount},${o.subtotal},${o.discountAmount},${o.taxAmount},${o.total},${o.paymentMethod}`,
+    ),
     "",
     "All Products",
     "Name,SKU,Qty,Revenue,Margin,CategoryId",

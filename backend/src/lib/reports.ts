@@ -94,6 +94,38 @@ function sortProducts(
   });
 }
 
+function buildPeriodOrders(
+  orderRows: OrderRow[],
+  itemsByOrder: Map<string, OrderItemRow[]>,
+  customerNameMap: Map<string, string>,
+  cashierNameMap: Map<string, string>,
+) {
+  return [...orderRows]
+    .sort((a, b) => new Date(b.created).getTime() - new Date(a.created).getTime())
+    .map((o) => {
+      const items = itemsByOrder.get(o.id) ?? [];
+      return {
+        orderId: o.id,
+        orderNumber: o.orderNumber,
+        created: o.created,
+        status: o.status,
+        customerName: o.customer ? (customerNameMap.get(o.customer) ?? null) : null,
+        cashierName: cashierNameMap.get(o.cashier) ?? o.cashier,
+        itemCount: items.reduce((s, i) => s + i.quantity, 0),
+        subtotal: o.subtotal,
+        discountAmount: o.discountAmount,
+        taxAmount: o.taxAmount,
+        total: o.total,
+        paymentMethod: o.paymentMethod,
+        items: items.map((i) => ({
+          productName: i.productName,
+          quantity: i.quantity,
+          total: i.total,
+        })),
+      };
+    });
+}
+
 export async function buildStoreReports(
   storeId: string,
   range: ReportPeriodRange,
@@ -177,7 +209,11 @@ export async function buildStoreReports(
 
   let itemRows: OrderItemRow[] = [];
   let prevItemRows: OrderItemRow[] = [];
-  const allItemOrderIds = [...new Set([...completedIds, ...prevCompletedIds])];
+  let periodItemRows: OrderItemRow[] = [];
+  const periodOrderIds = new Set(orderRows.map((o) => o.id));
+  const allItemOrderIds = [
+    ...new Set([...completedIds, ...prevCompletedIds, ...periodOrderIds]),
+  ];
   if (allItemOrderIds.length > 0) {
     const allItems = await db
       .select()
@@ -185,6 +221,14 @@ export async function buildStoreReports(
       .where(inArray(orderItems.order, allItemOrderIds));
     itemRows = allItems.filter((i) => completedIds.has(i.order));
     prevItemRows = allItems.filter((i) => prevCompletedIds.has(i.order));
+    periodItemRows = allItems.filter((i) => periodOrderIds.has(i.order));
+  }
+
+  const itemsByOrder = new Map<string, OrderItemRow[]>();
+  for (const item of periodItemRows) {
+    const list = itemsByOrder.get(item.order) ?? [];
+    list.push(item);
+    itemsByOrder.set(item.order, list);
   }
 
   const cashierIds = [...new Set(orderRows.map((o) => o.cashier).filter(Boolean))];
@@ -399,6 +443,7 @@ export async function buildStoreReports(
   );
 
   const itemCount = itemRows.reduce((s, i) => s + i.quantity, 0);
+  const uniqueProductsSold = new Set(itemRows.map((i) => i.product)).size;
   const hourTotals = new Map<number, number>();
   for (const o of completed) {
     const h = getBangkokParts(o.created).hour;
@@ -521,6 +566,8 @@ export async function buildStoreReports(
       newCustomerCount,
       returningCustomerCount,
       avgItemsPerOrder: totalOrders > 0 ? itemCount / totalOrders : 0,
+      totalItemsSold: itemCount,
+      uniqueProductsSold,
       peakHourLabel:
         peakHour !== null
           ? `${String(peakHour).padStart(2, "0")}:00–${String(peakHour + 1).padStart(2, "0")}:00`
@@ -566,6 +613,12 @@ export async function buildStoreReports(
       ordersCount: completed.length,
       auditCount: auditRows.length,
     },
+    periodOrders: buildPeriodOrders(
+      orderRows,
+      itemsByOrder,
+      customerNameMap,
+      cashierNameMap,
+    ),
   };
 }
 
@@ -605,16 +658,32 @@ export function reportsDataToCsv(data: Awaited<ReturnType<typeof buildStoreRepor
     `Period,${data.period.since},${data.period.until}`,
     `Total Sales,${data.summary.totalSales}`,
     `Total Orders,${data.summary.totalOrders}`,
+    `Average Order,${data.summary.averageOrder}`,
+    `Subtotal,${data.summary.totalSubtotal}`,
     `Net Sales,${data.summary.netSales}`,
     `Gross Profit,${data.summary.grossProfit}`,
     `Gross Margin %,${data.summary.grossMarginPct ?? ""}`,
     `VAT,${data.summary.totalTax}`,
     `Discount,${data.summary.totalDiscount}`,
+    `Total Items Sold,${data.summary.totalItemsSold}`,
+    `Unique Products Sold,${data.summary.uniqueProductsSold}`,
+    `Avg Items Per Order,${data.summary.avgItemsPerOrder}`,
     `Cash Sales,${data.summary.cashSales}`,
     `Cash Received,${data.summary.cashReceived}`,
     `Change Given,${data.summary.totalChange}`,
+    `Voided Count,${data.summary.voidedCount}`,
+    `Voided Total,${data.summary.voidedTotal}`,
+    `Refunded Count,${data.summary.refundedCount}`,
+    `Refunded Total,${data.summary.refundedTotal}`,
     `Stock Value Cost,${data.stockValue}`,
     `Stock Value Retail,${data.stockValueRetail}`,
+    "",
+    "Period Orders",
+    "Order Number,Date,Status,Customer,Cashier,Items,Subtotal,Discount,Tax,Total,Payment",
+    ...data.periodOrders.map(
+      (o) =>
+        `${o.orderNumber},${o.created},${o.status},${o.customerName ?? ""},${o.cashierName},${o.itemCount},${o.subtotal},${o.discountAmount},${o.taxAmount},${o.total},${o.paymentMethod}`,
+    ),
     "",
     "All Products",
     "Name,SKU,Qty,Revenue,Margin",

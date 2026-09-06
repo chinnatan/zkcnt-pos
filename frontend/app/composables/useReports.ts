@@ -1,5 +1,6 @@
 import { db } from "~/lib/db";
 import { resolveApiBaseUrl } from "~/lib/api/url";
+import { CUSTOMERS_ENABLED } from "~/lib/features";
 import {
   aggregateReports,
   getPeriodRange,
@@ -7,6 +8,7 @@ import {
   reportsToCsv,
 } from "~/lib/reports/aggregate";
 import type {
+  ReportOrderRow,
   ReportPeriod,
   ReportProductRow,
   ReportsData,
@@ -19,7 +21,10 @@ export type ReportTab =
   | "categories"
   | "customers"
   | "cashiers"
-  | "promotions";
+  | "promotions"
+  | "orders";
+
+export type OrderStatusFilter = "" | "completed" | "voided" | "refunded";
 
 export type ProductSortKey = "revenue" | "qty" | "margin";
 
@@ -42,6 +47,8 @@ export function useReports() {
   const productSearch = ref("");
   const deadStockSearch = ref("");
   const expandedCategoryId = ref<string | null>(null);
+  const orderStatusFilter = ref<OrderStatusFilter>("");
+  const selectedReportOrder = ref<ReportOrderRow | null>(null);
 
   const range = computed(() => {
     const sinceIso =
@@ -160,6 +167,7 @@ export function useReports() {
       promotions: result.promotions ?? [],
       lowStockFastMovers: result.lowStockFastMovers ?? [],
       stockValueRetail: result.stockValueRetail ?? 0,
+      periodOrders: result.periodOrders ?? [],
       categoryBreakdown: (result.categoryBreakdown ?? []).map((row) => {
         const named =
           row.categoryId === "__uncategorized__" || row.name === "Uncategorized"
@@ -181,6 +189,8 @@ export function useReports() {
         cashReceived: result.summary.cashReceived ?? 0,
         newCustomerCount: result.summary.newCustomerCount ?? 0,
         returningCustomerCount: result.summary.returningCustomerCount ?? 0,
+        totalItemsSold: result.summary.totalItemsSold ?? 0,
+        uniqueProductsSold: result.summary.uniqueProductsSold ?? 0,
       },
     };
   }
@@ -191,6 +201,7 @@ export function useReports() {
     isLoading.value = true;
     error.value = "";
     expandedCategoryId.value = null;
+    selectedReportOrder.value = null;
 
     try {
       if (isOnline.value) {
@@ -300,6 +311,13 @@ export function useReports() {
     );
   });
 
+  const filteredPeriodOrders = computed(() => {
+    if (!data.value) return [];
+    const rows = data.value.periodOrders ?? [];
+    if (!orderStatusFilter.value) return rows;
+    return rows.filter((o) => o.status === orderStatusFilter.value);
+  });
+
   const expandedCategory = computed(() => {
     if (!data.value || !expandedCategoryId.value) return null;
     return (
@@ -323,6 +341,12 @@ export function useReports() {
     loadReports();
   });
 
+  watch(activeTab, (tab) => {
+    if (!CUSTOMERS_ENABLED && tab === "customers") {
+      activeTab.value = "products";
+    }
+  });
+
   return {
     period,
     customSince,
@@ -335,13 +359,17 @@ export function useReports() {
     productSearch,
     deadStockSearch,
     expandedCategoryId,
+    orderStatusFilter,
+    selectedReportOrder,
     expandedCategory,
     filteredProducts,
     filteredDeadStock,
+    filteredPeriodOrders,
     range,
     loadReports,
     exportCsv,
     formatChangePct,
     toggleCategory,
+    customersEnabled: CUSTOMERS_ENABLED,
   };
 }

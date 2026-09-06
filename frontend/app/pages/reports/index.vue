@@ -49,6 +49,9 @@
         <div class="craft-card craft-card--tag p-5">
           <p class="text-sm text-ink-muted">{{ t('reportsPage.totalSales') }}</p>
           <p class="mt-1 text-2xl font-bold text-ink">{{ formatCurrency(data.summary.totalSales) }}</p>
+          <p class="mt-0.5 text-xs text-ink-muted">
+            {{ t('reportsPage.salesFromOrders', { count: data.summary.totalOrders }) }}
+          </p>
           <p
             v-if="data.summary.salesChangePct !== null"
             class="mt-1 text-xs"
@@ -60,6 +63,12 @@
         <div class="craft-card craft-card--stitched p-5">
           <p class="text-sm text-ink-muted">{{ t('reportsPage.totalOrders') }}</p>
           <p class="mt-1 text-2xl font-bold text-ink">{{ data.summary.totalOrders }}</p>
+          <p class="mt-0.5 text-xs text-ink-muted">
+            {{ t('reportsPage.ordersWithSales', { amount: formatCurrency(data.summary.totalSales) }) }}
+          </p>
+          <p class="text-xs text-ink-muted">
+            {{ t('reportsPage.ordersAvgPerBill', { amount: formatCurrency(data.summary.averageOrder) }) }}
+          </p>
           <p
             v-if="data.summary.ordersChangePct !== null"
             class="mt-1 text-xs"
@@ -89,6 +98,30 @@
           >
             {{ formatChangePct(data.summary.grossProfitChangePct) }}
           </p>
+        </div>
+      </div>
+
+      <!-- Sales breakdown waterfall -->
+      <div class="craft-card craft-card--paper p-5">
+        <h3 class="mb-4 text-base font-semibold text-ink">{{ t('reportsPage.salesBreakdown') }}</h3>
+        <div class="space-y-2 text-sm">
+          <div class="flex items-center justify-between gap-4">
+            <span class="text-ink-muted">{{ t('reportsPage.subtotalBeforeDiscount') }}</span>
+            <span class="font-semibold text-ink">{{ formatCurrency(data.summary.totalSubtotal) }}</span>
+          </div>
+          <div class="flex items-center justify-between gap-4 text-danger-500">
+            <span>− {{ t('reportsPage.totalDiscount') }}</span>
+            <span class="font-semibold">{{ formatCurrency(data.summary.totalDiscount) }}</span>
+          </div>
+          <div class="flex items-center justify-between gap-4">
+            <span class="text-ink-muted">+ {{ t('reportsPage.totalTax') }}</span>
+            <span class="font-semibold text-ink">{{ formatCurrency(data.summary.totalTax) }}</span>
+          </div>
+          <hr class="border-border-warm" />
+          <div class="flex items-center justify-between gap-4 text-base font-bold">
+            <span class="text-ink">{{ t('reportsPage.totalSales') }}</span>
+            <span class="text-ink">{{ formatCurrency(data.summary.totalSales) }}</span>
+          </div>
         </div>
       </div>
 
@@ -159,7 +192,8 @@
           <ReportsSalesChart
             v-if="data.timeSeries.length > 0"
             :points="data.timeSeries"
-            :label="t('reportsPage.totalSales')"
+            :sales-label="t('reportsPage.chartSales')"
+            :orders-label="t('reportsPage.chartOrders')"
           />
           <p v-else class="py-8 text-center text-ink-muted">{{ t('reportsPage.noData') }}</p>
         </div>
@@ -205,6 +239,9 @@
                 </div>
               </div>
               <span class="w-24 text-right text-sm">{{ formatCurrency(dow.total) }}</span>
+              <span class="w-16 text-right text-xs text-ink-muted">
+                {{ t('reportsPage.dayOrderCount', { count: dow.count }) }}
+              </span>
             </div>
           </div>
         </div>
@@ -214,29 +251,41 @@
             v-if="data.hourlyHeatmap?.length"
             :cells="data.hourlyHeatmap"
             :day-labels="dayLabels"
+            :sales-mode-label="t('reportsPage.heatmapModeSales')"
+            :orders-mode-label="t('reportsPage.heatmapModeOrders')"
+            :mode-label="t('reportsPage.heatmapModeLabel')"
           />
           <p v-else class="py-8 text-center text-ink-muted">{{ t('reportsPage.noData') }}</p>
         </div>
       </div>
 
-      <!-- Customer mix + cash drawer -->
-      <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <div class="craft-card craft-card--polaroid p-5">
-          <p class="text-sm text-ink-muted">{{ t('reportsPage.walkIn') }}</p>
-          <p class="mt-1 text-xl font-bold">{{ data.summary.walkInCount }}</p>
-        </div>
-        <div class="craft-card craft-card--kraft p-5">
-          <p class="text-sm text-ink-muted">{{ t('reportsPage.newCustomers') }}</p>
-          <p class="mt-1 text-xl font-bold">{{ data.summary.newCustomerCount }}</p>
+      <!-- Sales mix + cash drawer -->
+      <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <template v-if="customersEnabled">
+          <div class="craft-card craft-card--polaroid p-5">
+            <p class="text-sm text-ink-muted">{{ t('reportsPage.walkIn') }}</p>
+            <p class="mt-1 text-xl font-bold">{{ data.summary.walkInCount }}</p>
+          </div>
+          <div class="craft-card craft-card--kraft p-5">
+            <p class="text-sm text-ink-muted">{{ t('reportsPage.newCustomers') }}</p>
+            <p class="mt-1 text-xl font-bold">{{ data.summary.newCustomerCount }}</p>
+            <p class="mt-0.5 text-xs text-ink-muted">
+              {{ t('reportsPage.returningCustomers') }}: {{ data.summary.returningCustomerCount }}
+            </p>
+          </div>
+        </template>
+        <div class="craft-card craft-card--canvas p-5">
+          <p class="text-sm text-ink-muted">{{ t('reportsPage.totalItemsSold') }}</p>
+          <p class="mt-1 text-xl font-bold">{{ data.summary.totalItemsSold }}</p>
           <p class="mt-0.5 text-xs text-ink-muted">
-            {{ t('reportsPage.returningCustomers') }}: {{ data.summary.returningCustomerCount }}
+            {{ t('reportsPage.uniqueProductsSold') }}: {{ data.summary.uniqueProductsSold }}
           </p>
         </div>
-        <div class="craft-card craft-card--canvas p-5">
+        <div class="craft-card craft-card--ticket p-5">
           <p class="text-sm text-ink-muted">{{ t('reportsPage.avgItemsPerOrder') }}</p>
           <p class="mt-1 text-xl font-bold">{{ data.summary.avgItemsPerOrder.toFixed(1) }}</p>
         </div>
-        <div class="craft-card craft-card--ticket p-5">
+        <div class="craft-card craft-card--label p-5">
           <h3 class="mb-2 text-sm font-semibold text-ink">{{ t('reportsPage.cashDrawer') }}</h3>
           <div class="space-y-1 text-sm">
             <div class="flex justify-between gap-2">
@@ -439,7 +488,7 @@
           </div>
 
           <!-- Customers tab -->
-          <div v-else-if="activeTab === 'customers'">
+          <div v-else-if="customersEnabled && activeTab === 'customers'">
             <div class="mb-6">
               <h4 class="mb-3 text-sm font-semibold text-ink">{{ t('reportsPage.topCustomers') }}</h4>
               <div v-if="data.topCustomers.length === 0" class="py-4 text-center text-ink-muted">
@@ -545,6 +594,135 @@
                     </div>
                   </template>
                 </UiMobileDataCard>
+              </template>
+            </UiMobileDataList>
+          </div>
+
+          <!-- Orders tab -->
+          <div v-else-if="activeTab === 'orders'">
+            <div class="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <p class="text-sm text-ink-muted">{{ t('reportsPage.ordersInPeriod') }}</p>
+              <select
+                v-model="orderStatusFilter"
+                class="w-full rounded-lg border border-border-warm px-3 py-2 text-sm focus:border-primary-500 focus:outline-none sm:w-auto"
+              >
+                <option value="">{{ t('status.all') }}</option>
+                <option value="completed">{{ t('status.completed') }}</option>
+                <option value="voided">{{ t('status.voided') }}</option>
+                <option value="refunded">{{ t('status.refunded') }}</option>
+              </select>
+            </div>
+            <div v-if="filteredPeriodOrders.length === 0" class="py-6 text-center text-ink-muted">
+              {{ t('reportsPage.noData') }}
+            </div>
+            <UiMobileDataList v-else>
+              <template #table>
+                <div class="max-h-96 overflow-auto">
+                  <table class="w-full text-sm">
+                    <thead class="sticky top-0 bg-paper">
+                      <tr class="border-b text-left text-ink-muted">
+                        <th class="pb-2 pr-3">{{ t('dashboard.orderNumber') }}</th>
+                        <th class="pb-2 pr-3">{{ t('common.date') }}</th>
+                        <th v-if="customersEnabled" class="pb-2 pr-3">{{ t('reportsPage.tabCustomers') }}</th>
+                        <th class="pb-2 pr-3 text-right">{{ t('reportsPage.qty') }}</th>
+                        <th class="pb-2 pr-3 text-right">{{ t('common.total') }}</th>
+                        <th class="pb-2 pr-3">{{ t('common.payment') }}</th>
+                        <th class="pb-2 pr-3">{{ t('common.status') }}</th>
+                        <th class="pb-2">{{ t('common.actions') }}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr
+                        v-for="order in filteredPeriodOrders"
+                        :key="order.orderId"
+                        class="border-b border-surface"
+                      >
+                        <td class="py-2 pr-3 font-medium">{{ order.orderNumber }}</td>
+                        <td class="py-2 pr-3 text-ink-muted">{{ formatDateShort(order.created) }}</td>
+                        <td v-if="customersEnabled" class="py-2 pr-3 text-ink-muted">
+                          {{ order.customerName ?? t('reportsPage.walkIn') }}
+                        </td>
+                        <td class="py-2 pr-3 text-right">{{ order.itemCount }}</td>
+                        <td class="py-2 pr-3 text-right font-semibold">{{ formatCurrency(order.total) }}</td>
+                        <td class="py-2 pr-3 capitalize text-ink-muted">{{ paymentLabel(order.paymentMethod) }}</td>
+                        <td class="py-2 pr-3">
+                          <span class="rounded-full px-2 py-0.5 text-xs font-medium" :class="statusBadge(order.status)">
+                            {{ statusLabel(order.status) }}
+                          </span>
+                        </td>
+                        <td class="py-2">
+                          <button
+                            type="button"
+                            class="rounded px-2 py-1 text-xs text-primary-600 hover:bg-primary-50"
+                            @click="selectedReportOrder = order"
+                          >
+                            {{ t('common.view') }}
+                          </button>
+                        </td>
+                      </tr>
+                    </tbody>
+                    <tfoot>
+                      <tr class="border-t-2 border-border-warm bg-surface font-semibold text-ink">
+                        <td :colspan="customersEnabled ? 3 : 2" class="py-2.5 pr-3">
+                          {{ t('reportsPage.ordersTableTotal') }}
+                          <span class="ml-1 text-xs font-normal text-ink-muted">
+                            ({{ t('reportsPage.salesFromOrders', { count: filteredPeriodOrders.length }) }})
+                          </span>
+                        </td>
+                        <td class="py-2.5 pr-3 text-right">{{ periodOrdersTotals.itemCount }}</td>
+                        <td class="py-2.5 pr-3 text-right">{{ formatCurrency(periodOrdersTotals.total) }}</td>
+                        <td colspan="3" />
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+              </template>
+              <template #cards>
+                <UiMobileDataCard
+                  v-for="order in filteredPeriodOrders"
+                  :key="order.orderId"
+                  :title="order.orderNumber"
+                  :subtitle="formatDateShort(order.created)"
+                >
+                  <template #badge>
+                    <span class="rounded-full px-2 py-0.5 text-xs font-medium" :class="statusBadge(order.status)">
+                      {{ statusLabel(order.status) }}
+                    </span>
+                  </template>
+                  <template #fields>
+                    <div v-if="customersEnabled">
+                      <span class="text-ink-muted">{{ t('reportsPage.tabCustomers') }}</span>
+                      <p class="font-medium text-ink">{{ order.customerName ?? t('reportsPage.walkIn') }}</p>
+                    </div>
+                    <div>
+                      <span class="text-ink-muted">{{ t('reportsPage.itemsInOrder', { count: order.itemCount }) }}</span>
+                      <p class="font-medium text-ink">{{ formatCurrency(order.total) }}</p>
+                    </div>
+                    <div>
+                      <span class="text-ink-muted">{{ t('common.payment') }}</span>
+                      <p class="text-ink-muted capitalize">{{ paymentLabel(order.paymentMethod) }}</p>
+                    </div>
+                  </template>
+                  <template #actions>
+                    <button
+                      type="button"
+                      class="w-full rounded-lg bg-primary-50 px-3 py-2.5 text-sm font-medium text-primary-700 hover:bg-primary-100"
+                      @click="selectedReportOrder = order"
+                    >
+                      {{ t('common.view') }}
+                    </button>
+                  </template>
+                </UiMobileDataCard>
+                <div class="mt-3 rounded-lg bg-surface px-4 py-3 text-sm">
+                  <div class="flex items-center justify-between font-semibold text-ink">
+                    <span>{{ t('reportsPage.ordersTotalQty') }}</span>
+                    <span>{{ periodOrdersTotals.itemCount }}</span>
+                  </div>
+                  <div class="mt-1 flex items-center justify-between text-ink-muted">
+                    <span>{{ t('common.total') }}</span>
+                    <span class="font-semibold text-ink">{{ formatCurrency(periodOrdersTotals.total) }}</span>
+                  </div>
+                </div>
               </template>
             </UiMobileDataList>
           </div>
@@ -684,15 +862,95 @@
     <div v-else class="rounded-xl bg-paper p-12 text-center text-ink-muted shadow-sm">
       {{ t('reportsPage.noData') }}
     </div>
+
+    <Teleport to="body">
+      <div
+        v-if="selectedReportOrder"
+        class="craft-modal-backdrop craft-modal-backdrop--center z-50"
+      >
+        <div class="craft-modal-panel craft-modal--ticket max-w-lg">
+          <div class="mb-4 flex items-center justify-between">
+            <h3 class="text-lg font-semibold">
+              {{ t('reportsPage.orderDetail', { number: selectedReportOrder.orderNumber }) }}
+            </h3>
+            <button
+              type="button"
+              class="text-ink-muted hover:text-ink"
+              @click="selectedReportOrder = null"
+            >
+              <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          <div class="space-y-3 text-sm">
+            <div class="flex justify-between">
+              <span class="text-ink-muted">{{ t('common.date') }}</span>
+              <span>{{ formatDateShort(selectedReportOrder.created) }}</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-ink-muted">{{ t('common.status') }}</span>
+              <span class="rounded-full px-2 py-0.5 text-xs font-medium" :class="statusBadge(selectedReportOrder.status)">
+                {{ statusLabel(selectedReportOrder.status) }}
+              </span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-ink-muted">{{ t('common.payment') }}</span>
+              <span>{{ paymentLabel(selectedReportOrder.paymentMethod) }}</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-ink-muted">{{ t('reportsPage.cashier') }}</span>
+              <span>{{ selectedReportOrder.cashierName }}</span>
+            </div>
+            <div v-if="customersEnabled && selectedReportOrder.customerName" class="flex justify-between">
+              <span class="text-ink-muted">{{ t('reportsPage.tabCustomers') }}</span>
+              <span>{{ selectedReportOrder.customerName }}</span>
+            </div>
+            <hr class="my-3" />
+            <div
+              v-for="(item, idx) in selectedReportOrder.items"
+              :key="idx"
+              class="flex items-center justify-between py-2"
+            >
+              <div>
+                <span class="font-medium">{{ item.productName }}</span>
+                <span class="ml-2 text-ink-muted">×{{ item.quantity }}</span>
+              </div>
+              <span>{{ formatCurrency(item.total) }}</span>
+            </div>
+            <hr class="my-3" />
+            <div class="flex justify-between">
+              <span class="text-ink-muted">{{ t('common.subtotal') }}</span>
+              <span>{{ formatCurrency(selectedReportOrder.subtotal) }}</span>
+            </div>
+            <div v-if="selectedReportOrder.discountAmount > 0" class="flex justify-between text-danger-500">
+              <span>{{ t('common.discount') }}</span>
+              <span>-{{ formatCurrency(selectedReportOrder.discountAmount) }}</span>
+            </div>
+            <div v-if="selectedReportOrder.taxAmount > 0" class="flex justify-between">
+              <span class="text-ink-muted">{{ t('reportsPage.totalTax') }}</span>
+              <span>{{ formatCurrency(selectedReportOrder.taxAmount) }}</span>
+            </div>
+            <div class="flex justify-between text-base font-bold">
+              <span>{{ t('common.total') }}</span>
+              <span>{{ formatCurrency(selectedReportOrder.total) }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
 
 <script setup lang="ts">
+import { CUSTOMERS_ENABLED } from "~/lib/features";
+import { orderStatusBadge } from "~/lib/ui/statusColors";
+
 definePageMeta({ middleware: "auth" });
 
 const { t, locale } = useI18n();
 const { formatCurrency, formatDateShort, toDatetimeLocalValue } = useFormat();
-const { paymentLabel } = useLabels();
+const { paymentLabel, statusLabel } = useLabels();
 const {
   period,
   customSince,
@@ -705,22 +963,42 @@ const {
   productSearch,
   deadStockSearch,
   expandedCategoryId,
+  orderStatusFilter,
+  selectedReportOrder,
   filteredProducts,
   filteredDeadStock,
+  filteredPeriodOrders,
   loadReports,
   exportCsv,
   formatChangePct,
   toggleCategory,
 } = useReports();
 
-const tabs = computed(() => [
-  { id: "products" as const, label: t("reportsPage.tabProducts") },
-  { id: "deadStock" as const, label: t("reportsPage.tabDeadStock") },
-  { id: "categories" as const, label: t("reportsPage.tabCategories") },
-  { id: "customers" as const, label: t("reportsPage.tabCustomers") },
-  { id: "cashiers" as const, label: t("reportsPage.tabCashiers") },
-  { id: "promotions" as const, label: t("reportsPage.tabPromotions") },
-]);
+function statusBadge(status: string) {
+  return orderStatusBadge(status);
+}
+
+const customersEnabled = CUSTOMERS_ENABLED;
+
+const periodOrdersTotals = computed(() => {
+  const orders = filteredPeriodOrders.value;
+  return {
+    itemCount: orders.reduce((sum, order) => sum + order.itemCount, 0),
+    total: orders.reduce((sum, order) => sum + order.total, 0),
+  };
+});
+
+const tabs = computed(() =>
+  [
+    { id: "products" as const, label: t("reportsPage.tabProducts") },
+    { id: "orders" as const, label: t("reportsPage.tabOrders") },
+    { id: "deadStock" as const, label: t("reportsPage.tabDeadStock") },
+    { id: "categories" as const, label: t("reportsPage.tabCategories") },
+    { id: "customers" as const, label: t("reportsPage.tabCustomers") },
+    { id: "cashiers" as const, label: t("reportsPage.tabCashiers") },
+    { id: "promotions" as const, label: t("reportsPage.tabPromotions") },
+  ].filter((tab) => customersEnabled || tab.id !== "customers"),
+);
 
 const productSortOptions = computed(() => [
   { id: "revenue" as const, label: t("reportsPage.byRevenue") },

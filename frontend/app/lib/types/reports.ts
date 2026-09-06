@@ -120,6 +120,28 @@ export interface ReportInventoryMovements {
   sale: number;
 }
 
+export interface ReportOrderItemRow {
+  productName: string;
+  quantity: number;
+  total: number;
+}
+
+export interface ReportOrderRow {
+  orderId: string;
+  orderNumber: string;
+  created: string;
+  status: "completed" | "voided" | "refunded";
+  customerName: string | null;
+  cashierName: string;
+  itemCount: number;
+  subtotal: number;
+  discountAmount: number;
+  taxAmount: number;
+  total: number;
+  paymentMethod: string;
+  items: ReportOrderItemRow[];
+}
+
 export interface ReportsSummary {
   totalSales: number;
   totalOrders: number;
@@ -143,6 +165,8 @@ export interface ReportsSummary {
   newCustomerCount: number;
   returningCustomerCount: number;
   avgItemsPerOrder: number;
+  totalItemsSold: number;
+  uniqueProductsSold: number;
   peakHourLabel: string | null;
   grossProfit: number;
   grossMarginPct: number | null;
@@ -184,4 +208,5 @@ export interface ReportsData {
     ordersCount: number;
     auditCount: number;
   } | null;
+  periodOrders: ReportOrderRow[];
 }
