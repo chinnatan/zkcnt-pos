@@ -53,18 +53,32 @@ export function validateCartItems(
   items: CartItem[],
   stockMap: Map<string, number>,
 ): StockShortage[] {
-  const shortages: StockShortage[] = [];
+  const qtyByProduct = new Map<string, { name: string; quantity: number }>();
 
   for (const item of items) {
     if (!item.product.track_inventory) continue;
 
-    const available = getAvailableQty(stockMap, item.product.id);
-    if (item.quantity > available) {
-      shortages.push({
-        productId: item.product.id,
+    const existing = qtyByProduct.get(item.product.id);
+    if (existing) {
+      existing.quantity += item.quantity;
+    } else {
+      qtyByProduct.set(item.product.id, {
         name: item.product.name,
+        quantity: item.quantity,
+      });
+    }
+  }
+
+  const shortages: StockShortage[] = [];
+
+  for (const [productId, { name, quantity }] of qtyByProduct) {
+    const available = getAvailableQty(stockMap, productId);
+    if (quantity > available) {
+      shortages.push({
+        productId,
+        name,
         available,
-        requested: item.quantity,
+        requested: quantity,
       });
     }
   }

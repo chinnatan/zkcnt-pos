@@ -418,6 +418,9 @@ function migrateOrderPromotionColumns(db: Database) {
       `ALTER TABLE order_items ADD COLUMN free_quantity INTEGER NOT NULL DEFAULT 0`,
     );
   }
+  if (!itemCols.includes("note")) {
+    db.exec(`ALTER TABLE order_items ADD COLUMN note TEXT NOT NULL DEFAULT ''`);
+  }
 }
 
 function migrateDiscountsToPromotions(db: Database) {

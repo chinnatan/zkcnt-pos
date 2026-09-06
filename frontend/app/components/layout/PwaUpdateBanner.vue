@@ -22,7 +22,13 @@
           {{ t("pwa.updateDescription", { version: displayVersion }) }}
         </p>
       </div>
-      <div class="flex shrink-0 flex-col gap-1 sm:flex-row">
+      <div class="flex shrink-0 flex-col gap-1 sm:flex-row sm:items-center">
+        <NuxtLink
+          to="/release-notes"
+          class="rounded-lg px-2 py-1.5 text-center text-xs font-medium text-primary-600 hover:bg-primary-100"
+        >
+          {{ t("releaseNotes.whatsNew") }}
+        </NuxtLink>
         <button
           type="button"
           class="rounded-lg bg-primary-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-primary-700"

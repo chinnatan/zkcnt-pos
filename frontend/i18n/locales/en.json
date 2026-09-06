@@ -181,6 +181,7 @@
     "applyCoupon": "Apply",
     "removeCoupon": "Remove coupon",
     "freeQty": "Free {qty} pcs",
+    "itemNotePlaceholder": "Item note (optional)",
     "netTotal": "Net Total",
     "paymentMethod": "Payment Method",
     "paymentReceived": "Amount Received",
@@ -491,7 +492,19 @@
     "apiVersion": "API version",
     "versionMatch": "In sync",
     "versionMismatch": "Out of sync",
-    "versionUnknown": "Unknown"
+    "versionUnknown": "Unknown",
+    "releaseNotes": "Release notes"
+  },
+  "releaseNotes": {
+    "title": "Latest update",
+    "whatsNew": "What's new",
+    "viewAll": "View all updates",
+    "dismiss": "Got it",
+    "added": "Added",
+    "fixed": "Fixed",
+    "improved": "Improved",
+    "noNotes": "No release notes for this version yet",
+    "historyTitle": "Update history"
   },
   "invitePage": {
     "title": "Team Invitation",

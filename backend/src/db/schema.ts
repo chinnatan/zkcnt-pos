@@ -222,6 +222,7 @@ export const orderItems = sqliteTable("order_items", {
   total: real("total").notNull(),
   promotionId: text("promotion_id"),
   freeQuantity: integer("free_quantity").notNull().default(0),
+  note: text("note").notNull().default(""),
   ...timestamps,
 });
 

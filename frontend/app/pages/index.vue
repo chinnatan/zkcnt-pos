@@ -14,6 +14,20 @@
     </div>
 
     <div v-else class="space-y-6">
+      <UiCraftCard
+        v-if="hasUnread && currentRelease"
+        variant="label"
+        padding="md"
+      >
+        <ReleaseNotesPanel
+          :release="currentRelease"
+          :changes="localizedChanges(currentRelease)"
+          show-dismiss
+          show-view-all
+          @dismiss="markAsRead"
+        />
+      </UiCraftCard>
+
       <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <UiCraftCard variant="tag" padding="md">
           <div class="flex items-center justify-between">
@@ -194,6 +208,7 @@ const { activeStore, activeStoreId } = useStore();
 const { isOnline } = useOnlineStatus();
 const { pendingSyncCount } = useSync();
 const { orders, fetchOrders } = useOrders();
+const { currentRelease, hasUnread, markAsRead, localizedChanges } = useReleaseNotes();
 
 const todaySales = ref(0);
 const todayOrderCount = ref(0);

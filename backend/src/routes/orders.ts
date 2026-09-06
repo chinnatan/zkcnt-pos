@@ -445,6 +445,7 @@ orderRoutes.post(
           total: Number(item.total ?? 0),
           promotionId: lineAdj?.promotion_id ?? null,
           freeQuantity: lineAdj?.free_quantity ?? 0,
+          note: String(item.note ?? ""),
           created: now,
           updated: now,
         });
@@ -529,6 +530,7 @@ orderRoutes.post(
             total: Number(item.total ?? 0),
             promotionId: lineAdj?.promotion_id ?? null,
             freeQuantity: lineAdj?.free_quantity ?? 0,
+            note: String(item.note ?? ""),
             created: now,
             updated: now,
           }),
@@ -647,6 +649,7 @@ orderRoutes.post(
       unitPrice: Number(body.unit_price ?? 0),
       discount: Number(body.discount ?? 0),
       total: Number(body.total ?? 0),
+      note: String(body.note ?? ""),
       created: now,
       updated: now,
     });

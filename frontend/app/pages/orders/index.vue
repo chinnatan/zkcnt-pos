@@ -204,6 +204,10 @@
               <span class="text-ink-muted">{{ t('common.payment') }}</span>
               <span>{{ paymentLabel(selectedOrder.payment_method) }}</span>
             </div>
+            <div v-if="selectedOrder.note" class="flex justify-between gap-4">
+              <span class="shrink-0 text-ink-muted">{{ t('common.note') }}</span>
+              <span class="text-right break-words">{{ selectedOrder.note }}</span>
+            </div>
 
             <hr class="my-3" />
 
@@ -213,6 +217,9 @@
                 <div>
                   <span class="font-medium">{{ item.product_name }}</span>
                   <span class="ml-2 text-ink-muted">x{{ item.quantity }}</span>
+                  <p v-if="item.note" class="mt-0.5 text-xs text-ink-muted">
+                    {{ t('common.note') }}: {{ item.note }}
+                  </p>
                 </div>
                 <span>{{ formatCurrency(item.total) }}</span>
               </div>

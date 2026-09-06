@@ -217,6 +217,7 @@ export function useOrders() {
       category_id?: string;
       promotion_id?: string;
       free_quantity?: number;
+      note?: string;
     }>;
     subtotal: number;
     discount_amount: number;
@@ -277,6 +278,7 @@ export function useOrders() {
       total: item.total,
       promotion_id: item.promotion_id || "",
       free_quantity: item.free_quantity ?? 0,
+      note: item.note || "",
     }));
 
     if (isOnline.value) {
@@ -320,6 +322,7 @@ export function useOrders() {
       category_id?: string;
       promotion_id?: string;
       free_quantity?: number;
+      note?: string;
     }>,
     clientId: string,
   ) {
@@ -361,6 +364,7 @@ export function useOrders() {
         total: item.total,
         promotion_id: item.promotion_id || "",
         free_quantity: item.free_quantity ?? 0,
+        note: item.note || "",
         created: now,
         updated: now,
       };
@@ -380,6 +384,7 @@ export function useOrders() {
           total: item.total,
           promotion_id: item.promotion_id || "",
           free_quantity: item.free_quantity ?? 0,
+          note: item.note || "",
         },
         store: String(order.store),
       });

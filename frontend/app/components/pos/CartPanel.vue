@@ -47,7 +47,7 @@
         <div>
           <div
             v-for="item in cartItems"
-            :key="item.product.id"
+            :key="item.line_id"
             class="pos-cart-item"
           >
             <div class="min-w-0 flex-1">
@@ -63,10 +63,19 @@
                   ({{ t('pos.freeQty', { qty: item.free_quantity }) }})
                 </span>
               </p>
+              <input
+                v-model="item.note"
+                type="text"
+                maxlength="200"
+                data-testid="cart-item-note"
+                :placeholder="t('pos.itemNotePlaceholder')"
+                class="touch-pos mt-1.5 w-full rounded-lg border border-border-warm bg-paper px-2 py-1.5 text-xs outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20"
+                @change="updateItemNote(item.line_id, item.note)"
+              />
               <div class="mt-2 flex items-center gap-2">
                 <button
                   class="pos-qty-btn"
-                  @click="updateQuantity(item.product.id, item.quantity - 1)"
+                  @click="updateQuantity(item.line_id, item.quantity - 1)"
                 >
                   <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" />
@@ -77,8 +86,8 @@
                 </span>
                 <button
                   class="pos-qty-btn disabled:cursor-not-allowed disabled:opacity-40"
-                  :disabled="!canIncreaseQty(item.product, item.quantity)"
-                  @click="handleUpdateQuantity(item.product.id, item.quantity + 1)"
+                  :disabled="!canIncreaseQty(item)"
+                  @click="handleUpdateQuantity(item.line_id, item.quantity + 1)"
                 >
                   <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
@@ -92,7 +101,7 @@
               </span>
               <button
                 class="touch-pos flex h-11 w-11 items-center justify-center rounded-lg text-ink-muted transition-colors hover:bg-danger-50 hover:text-danger-500"
-                @click="removeItem(item.product.id)"
+                @click="removeItem(item.line_id)"
               >
                 <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
@@ -189,6 +198,18 @@
           </div>
 
           <div class="space-y-2">
+            <label class="text-xs font-medium text-ink-muted">{{ t('common.note') }}</label>
+            <textarea
+              v-model="cartNote"
+              rows="2"
+              maxlength="500"
+              data-testid="order-note"
+              :placeholder="t('common.optionalNote')"
+              class="touch-pos input resize-none text-sm"
+            />
+          </div>
+
+          <div class="space-y-2">
             <label class="text-xs font-medium text-ink-muted">
               {{ t('pos.paymentMethod') }}
             </label>
@@ -279,8 +300,6 @@
 </template>
 
 <script setup lang="ts">
-import type { Product } from "~/lib/types";
-
 defineProps<{
   isCheckingOut?: boolean;
 }>();
@@ -303,6 +322,7 @@ const {
   cartItems,
   removeItem,
   updateQuantity,
+  updateItemNote,
   subtotal,
   discountAmount,
   appliedPromotions,
@@ -319,6 +339,7 @@ const {
   clearCoupon,
   paymentMethod,
   paymentReceived,
+  cartNote,
 } = useCart();
 
 const resolvedPromptPayId = computed(() =>
@@ -346,9 +367,15 @@ const canCheckout = computed(() => {
   return true;
 });
 
-function canIncreaseQty(product: Product, currentQty: number): boolean {
-  if (!product.track_inventory) return true;
-  return currentQty < maxCartQty(product);
+function getProductCartQty(productId: string): number {
+  return cartItems.value
+    .filter((i) => i.product.id === productId)
+    .reduce((sum, i) => sum + i.quantity, 0);
+}
+
+function canIncreaseQty(item: (typeof cartItems.value)[number]): boolean {
+  if (!item.product.track_inventory) return true;
+  return getProductCartQty(item.product.id) < maxCartQty(item.product);
 }
 
 function onDiscountInput(e: Event) {
@@ -363,11 +390,15 @@ function onPaymentReceivedInput(e: Event) {
   paymentReceived.value = Number((e.target as HTMLInputElement).value);
 }
 
-function handleUpdateQuantity(productId: string, quantity: number) {
-  const item = cartItems.value.find((i) => i.product.id === productId);
+function handleUpdateQuantity(lineId: string, quantity: number) {
+  const item = cartItems.value.find((i) => i.line_id === lineId);
   if (!item) return;
 
-  const capped = Math.min(quantity, maxCartQty(item.product));
+  const productId = item.product.id;
+  const otherQty = getProductCartQty(productId) - item.quantity;
+  const maxForLine = maxCartQty(item.product) - otherQty;
+  const capped = Math.min(quantity, maxForLine);
+
   if (quantity > capped && item.product.track_inventory) {
     void alert(
       t("pos.cannotAddExceedsStock", {
@@ -375,6 +406,6 @@ function handleUpdateQuantity(productId: string, quantity: number) {
       }),
     );
   }
-  updateQuantity(productId, capped);
+  updateQuantity(lineId, capped);
 }
 </script>

@@ -183,9 +183,11 @@ cd backend && wrangler rollback
 ### Release version
 
 1. อัปเดตเลขเวอร์ชันใน [`VERSION`](VERSION) ตาม [Semantic Versioning](https://semver.org/) (เช่น `0.2.0`)
-2. (แนะนำ) สร้าง git tag `v0.2.0`
-3. merge ไป `main` — CI จะ inject `APP_VERSION` / `BUILD_ID` ให้ Workers และ Pages อัตโนมัติ
-4. ตรวจในแอป: Sidebar แสดง `vX.Y.Z` และหน้า **ตั้งค่า → เกี่ยวกับระบบ** เปรียบเทียบ client กับ API
+2. รัน `task release-notes` เพื่อ generate [`frontend/app/data/release-notes.json`](frontend/app/data/release-notes.json) จาก git commits ตั้งแต่ tag ก่อนหน้า
+3. Review ข้อความใน JSON — แก้ wording ให้ user-friendly ถ้าจำเป็น
+4. (แนะนำ) สร้าง git tag `v0.2.0`
+5. merge ไป `main` — CI จะ inject `APP_VERSION` / `BUILD_ID` ให้ Workers และ Pages อัตโนมัติ
+6. ตรวจในแอป: Dashboard แสดง release notes, Sidebar แสดง `vX.Y.Z` และหน้า **ตั้งค่า → เกี่ยวกับระบบ** เปรียบเทียบ client กับ API
 
 Manual deploy ใช้ `task deploy:cloudflare` (อ่าน `VERSION` และ git commit เป็น build id)
 

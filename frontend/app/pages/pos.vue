@@ -394,7 +394,9 @@ const canCheckout = computed(() => {
 });
 
 function getCartQty(productId: string): number {
-  return cartItems.value.find((item) => item.product.id === productId)?.quantity ?? 0;
+  return cartItems.value
+    .filter((item) => item.product.id === productId)
+    .reduce((sum, item) => sum + item.quantity, 0);
 }
 
 function showStockAlert(message: string) {
@@ -513,6 +515,7 @@ async function completeCheckout() {
       total: item.product.price * item.quantity - item.discount,
       promotion_id: item.promotion_id || undefined,
       free_quantity: item.free_quantity,
+      note: item.note || undefined,
     }));
 
     const received =
