@@ -96,4 +96,16 @@ describe("CartPanel checkout gating", () => {
 
     expect(cartNote.value).toBe("");
   });
+
+  test("updates item note when typing in cart item note field", async () => {
+    const { addItem, cartItems } = useCart();
+    addItem(mockProduct);
+
+    const wrapper = await mountSuspended(CartPanel);
+    const noteField = wrapper.find('[data-testid="cart-item-note"]');
+    await noteField.setValue("ไม่หวาน");
+    await noteField.trigger("change");
+
+    expect(cartItems.value[0]?.note).toBe("ไม่หวาน");
+  });
 });

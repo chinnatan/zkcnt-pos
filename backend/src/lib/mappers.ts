@@ -250,6 +250,7 @@ export function mapOrderItem(row: {
   total: number;
   promotionId?: string | null;
   freeQuantity?: number;
+  note?: string;
   created: string;
   updated: string;
 }) {
@@ -265,6 +266,7 @@ export function mapOrderItem(row: {
     total: row.total,
     promotion_id: row.promotionId ?? "",
     free_quantity: row.freeQuantity ?? 0,
+    note: row.note ?? "",
     created: row.created,
     updated: row.updated,
   });

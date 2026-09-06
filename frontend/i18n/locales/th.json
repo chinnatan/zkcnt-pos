@@ -181,6 +181,7 @@
     "applyCoupon": "ใช้",
     "removeCoupon": "ลบคูปอง",
     "freeQty": "ฟรี {qty} ชิ้น",
+    "itemNotePlaceholder": "หมายเหตุรายการ (ไม่บังคับ)",
     "netTotal": "ยอดสุทธิ",
     "paymentMethod": "ช่องทางชำระเงิน",
     "paymentReceived": "รับเงิน",

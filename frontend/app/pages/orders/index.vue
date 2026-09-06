@@ -217,6 +217,9 @@
                 <div>
                   <span class="font-medium">{{ item.product_name }}</span>
                   <span class="ml-2 text-ink-muted">x{{ item.quantity }}</span>
+                  <p v-if="item.note" class="mt-0.5 text-xs text-ink-muted">
+                    {{ t('common.note') }}: {{ item.note }}
+                  </p>
                 </div>
                 <span>{{ formatCurrency(item.total) }}</span>
               </div>

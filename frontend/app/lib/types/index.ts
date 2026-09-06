@@ -145,6 +145,7 @@ export interface OrderItem extends BaseRecord {
   total: number;
   promotion_id: string;
   free_quantity: number;
+  note: string;
 }
 
 // ─── Inventory ───────────────────────────────────────────────────────────────
@@ -363,6 +364,7 @@ export interface AdminHealth {
 // ─── Cart (UI-only, not stored in DB) ────────────────────────────────────────
 
 export interface CartItem {
+  line_id: string;
   product: Product;
   quantity: number;
   discount: number;

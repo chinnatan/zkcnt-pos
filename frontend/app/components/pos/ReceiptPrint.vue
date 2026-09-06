@@ -46,6 +46,9 @@
             <span>{{ t('receipt.discount') }}</span>
             <span>-{{ formatCurrency(item.discount) }}</span>
           </div>
+          <div v-if="item.note" class="pl-2 text-ink-muted">
+            {{ t('common.note') }}: {{ item.note }}
+          </div>
         </div>
       </div>
 

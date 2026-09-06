@@ -181,6 +181,7 @@
     "applyCoupon": "Apply",
     "removeCoupon": "Remove coupon",
     "freeQty": "Free {qty} pcs",
+    "itemNotePlaceholder": "Item note (optional)",
     "netTotal": "Net Total",
     "paymentMethod": "Payment Method",
     "paymentReceived": "Amount Received",

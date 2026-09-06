@@ -18,6 +18,23 @@ const cartNote = ref("");
 
 const promotionInputs = ref<PromotionInput[]>([]);
 
+function createLineId(): string {
+  return crypto.randomUUID();
+}
+
+function findMergeableLine(
+  productId: string,
+  note: string,
+  excludeLineId?: string,
+): CartItem | undefined {
+  return cartItems.value.find(
+    (item) =>
+      item.line_id !== excludeLineId &&
+      item.product.id === productId &&
+      item.note === note,
+  );
+}
+
 export function useCart() {
   const grossSubtotal = computed(() =>
     cartItems.value.reduce(
@@ -87,10 +104,22 @@ export function useCart() {
 
   function syncLinePromotions() {
     const adjustments = promotionResult.value.line_adjustments;
+    const qtyByProduct = new Map<string, number>();
+
+    for (const item of cartItems.value) {
+      qtyByProduct.set(
+        item.product.id,
+        (qtyByProduct.get(item.product.id) ?? 0) + item.quantity,
+      );
+    }
+
     for (const item of cartItems.value) {
       const adj = adjustments.find((a) => a.product_id === item.product.id);
-      item.discount = adj?.discount ?? 0;
-      item.free_quantity = adj?.free_quantity ?? 0;
+      const totalQty = qtyByProduct.get(item.product.id) ?? item.quantity;
+      const share = totalQty > 0 ? item.quantity / totalQty : 1;
+
+      item.discount = Math.round((adj?.discount ?? 0) * share);
+      item.free_quantity = Math.round((adj?.free_quantity ?? 0) * share);
       item.promotion_id = adj?.promotion_id ?? "";
     }
     couponError.value = promotionResult.value.coupon_error ?? "";
@@ -107,13 +136,12 @@ export function useCart() {
   }
 
   function addItem(product: Product) {
-    const existing = cartItems.value.find(
-      (item) => item.product.id === product.id,
-    );
+    const existing = findMergeableLine(product.id, "");
     if (existing) {
       existing.quantity++;
     } else {
       cartItems.value.push({
+        line_id: createLineId(),
         product,
         quantity: 1,
         discount: 0,
@@ -125,23 +153,37 @@ export function useCart() {
     syncLinePromotions();
   }
 
-  function removeItem(productId: string) {
-    const idx = cartItems.value.findIndex(
-      (item) => item.product.id === productId,
-    );
+  function removeItem(lineId: string) {
+    const idx = cartItems.value.findIndex((item) => item.line_id === lineId);
     if (idx !== -1) cartItems.value.splice(idx, 1);
     syncLinePromotions();
   }
 
-  function updateQuantity(productId: string, quantity: number) {
-    const item = cartItems.value.find((item) => item.product.id === productId);
+  function updateQuantity(lineId: string, quantity: number) {
+    const item = cartItems.value.find((item) => item.line_id === lineId);
     if (item) {
       if (quantity <= 0) {
-        removeItem(productId);
+        removeItem(lineId);
       } else {
         item.quantity = quantity;
         syncLinePromotions();
       }
+    }
+  }
+
+  function updateItemNote(lineId: string, note: string) {
+    const item = cartItems.value.find((i) => i.line_id === lineId);
+    if (!item) return;
+
+    const trimmed = note.trim();
+    item.note = trimmed;
+
+    const duplicate = findMergeableLine(item.product.id, trimmed, lineId);
+    if (duplicate) {
+      duplicate.quantity += item.quantity;
+      removeItem(lineId);
+    } else {
+      syncLinePromotions();
     }
   }
 
@@ -195,6 +237,7 @@ export function useCart() {
     addItem,
     removeItem,
     updateQuantity,
+    updateItemNote,
     applyCoupon,
     clearCoupon,
     clearCart,
