@@ -204,6 +204,10 @@
               <span class="text-ink-muted">{{ t('common.payment') }}</span>
               <span>{{ paymentLabel(selectedOrder.payment_method) }}</span>
             </div>
+            <div v-if="selectedOrder.note" class="flex justify-between gap-4">
+              <span class="shrink-0 text-ink-muted">{{ t('common.note') }}</span>
+              <span class="text-right break-words">{{ selectedOrder.note }}</span>
+            </div>
 
             <hr class="my-3" />
 

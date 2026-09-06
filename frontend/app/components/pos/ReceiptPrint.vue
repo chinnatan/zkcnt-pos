@@ -49,6 +49,11 @@
         </div>
       </div>
 
+      <div v-if="order?.note" class="mb-2 text-ink-muted">
+        <span>{{ t('common.note') }}: </span>
+        <span>{{ order.note }}</span>
+      </div>
+
       <div class="mb-2 border-t border-dashed border-border-warm" />
 
       <div class="mb-2 space-y-0.5">

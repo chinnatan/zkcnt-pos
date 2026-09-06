@@ -74,4 +74,26 @@ describe("CartPanel checkout gating", () => {
     const wrapper = await mountSuspended(CartPanel);
     expect(wrapper.find('[data-testid="cart-total"]').text()).toContain("100");
   });
+
+  test("updates cartNote when typing in order note field", async () => {
+    const { addItem, cartNote } = useCart();
+    addItem(mockProduct);
+
+    const wrapper = await mountSuspended(CartPanel);
+    const noteField = wrapper.find('[data-testid="order-note"]');
+    await noteField.setValue("ส่งของหลัง 14:00");
+
+    expect(cartNote.value).toBe("ส่งของหลัง 14:00");
+  });
+
+  test("clears cartNote when cart is cleared", async () => {
+    const { addItem, cartNote, clearCart } = useCart();
+    addItem(mockProduct);
+    cartNote.value = "หมายเหตุทดสอบ";
+
+    await mountSuspended(CartPanel);
+    clearCart();
+
+    expect(cartNote.value).toBe("");
+  });
 });

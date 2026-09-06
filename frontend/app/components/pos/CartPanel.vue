@@ -189,6 +189,18 @@
           </div>
 
           <div class="space-y-2">
+            <label class="text-xs font-medium text-ink-muted">{{ t('common.note') }}</label>
+            <textarea
+              v-model="cartNote"
+              rows="2"
+              maxlength="500"
+              data-testid="order-note"
+              :placeholder="t('common.optionalNote')"
+              class="touch-pos input resize-none text-sm"
+            />
+          </div>
+
+          <div class="space-y-2">
             <label class="text-xs font-medium text-ink-muted">
               {{ t('pos.paymentMethod') }}
             </label>
@@ -319,6 +331,7 @@ const {
   clearCoupon,
   paymentMethod,
   paymentReceived,
+  cartNote,
 } = useCart();
 
 const resolvedPromptPayId = computed(() =>
