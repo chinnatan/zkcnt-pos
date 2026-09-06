@@ -107,3 +107,27 @@ export async function sendAdminAlertEmail(
     devLogLabel: "admin-alert",
   });
 }
+
+export async function sendSupportTicketReplyEmail(
+  email: string,
+  userName: string,
+  ticketSubject: string,
+  replyText: string,
+  ticketUrl: string,
+) {
+  const html = emailLayout(`
+    <h2 style="margin:0 0 16px;font-size:20px">มีการตอบกลับ ticket ของคุณ</h2>
+    <p style="margin:0 0 8px">สวัสดี ${userName},</p>
+    <p style="margin:0 0 8px"><strong>หัวข้อ:</strong> ${ticketSubject}</p>
+    <p style="margin:0 0 16px;white-space:pre-wrap">${replyText.slice(0, 1000)}</p>
+    <p style="margin:0 0 24px">${emailButton(ticketUrl, "ดู ticket")}</p>
+  `);
+
+  await sendEmail({
+    to: email,
+    subject: `ตอบกลับ ticket: ${ticketSubject} — zKCNT POS`,
+    html,
+    devLogLabel: "support-ticket-reply",
+    devLogLink: ticketUrl,
+  });
+}

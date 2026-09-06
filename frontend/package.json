@@ -15,6 +15,12 @@
   },
   "dependencies": {
     "@nuxtjs/i18n": "^10.4.0",
+    "@tiptap/extension-image": "^3.31.3",
+    "@tiptap/extension-link": "^3.31.3",
+    "@tiptap/extension-placeholder": "^3.31.3",
+    "@tiptap/pm": "^3.31.3",
+    "@tiptap/starter-kit": "^3.31.3",
+    "@tiptap/vue-3": "^3.31.3",
     "@vite-pwa/nuxt": "^1.1.1",
     "chart.js": "^4.5.1",
     "dexie": "^4.0.11",

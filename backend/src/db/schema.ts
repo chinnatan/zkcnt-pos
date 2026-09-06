@@ -419,6 +419,79 @@ export const clientSessions = sqliteTable(
   ],
 );
 
+export const supportTicketCategories = [
+  "bug",
+  "question",
+  "feature",
+  "billing",
+  "other",
+] as const;
+
+export const supportTicketStatuses = [
+  "open",
+  "in_progress",
+  "waiting_user",
+  "resolved",
+  "closed",
+] as const;
+
+export const supportTicketPriorities = ["low", "normal", "high"] as const;
+
+export const supportTickets = sqliteTable(
+  "support_tickets",
+  {
+    id: text("id").primaryKey(),
+    reporter: text("reporter")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    store: text("store").references(() => stores.id),
+    subject: text("subject").notNull(),
+    bodyHtml: text("body_html").notNull().default(""),
+    bodyText: text("body_text").notNull().default(""),
+    category: text("category", { enum: supportTicketCategories })
+      .notNull()
+      .default("other"),
+    status: text("status", { enum: supportTicketStatuses })
+      .notNull()
+      .default("open"),
+    priority: text("priority", { enum: supportTicketPriorities })
+      .notNull()
+      .default("normal"),
+    metadata: text("metadata", { mode: "json" })
+      .$type<Record<string, unknown>>()
+      .notNull()
+      .default({}),
+    lastReplyAt: text("last_reply_at"),
+    lastReplyBy: text("last_reply_by", { enum: ["user", "admin"] }),
+    ...timestamps,
+  },
+  (t) => [
+    index("idx_support_tickets_status").on(t.status),
+    index("idx_support_tickets_reporter").on(t.reporter),
+    index("idx_support_tickets_store").on(t.store),
+    index("idx_support_tickets_created").on(t.created),
+    index("idx_support_tickets_status_created").on(t.status, t.created),
+  ],
+);
+
+export const supportTicketMessages = sqliteTable(
+  "support_ticket_messages",
+  {
+    id: text("id").primaryKey(),
+    ticket: text("ticket")
+      .notNull()
+      .references(() => supportTickets.id, { onDelete: "cascade" }),
+    author: text("author")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    authorRole: text("author_role", { enum: ["user", "admin"] }).notNull(),
+    bodyHtml: text("body_html").notNull().default(""),
+    bodyText: text("body_text").notNull().default(""),
+    created: text("created").notNull(),
+  },
+  (t) => [index("idx_support_ticket_messages_ticket").on(t.ticket)],
+);
+
 export const schema = {
   users,
   passwordResetTokens,
@@ -438,4 +511,6 @@ export const schema = {
   auditEvents,
   systemMeta,
   clientSessions,
+  supportTickets,
+  supportTicketMessages,
 };

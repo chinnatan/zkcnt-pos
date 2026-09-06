@@ -303,6 +303,7 @@ export interface AdminOverview {
   orders_today: { count: number; gmv: number };
   orders_7d: { count: number; gmv: number };
   inactive_stores_7d: number;
+  open_support_tickets: number;
   alerts: Array<{ type: string; message: string; severity: 'warning' | 'info' }>;
 }
 
@@ -359,6 +360,49 @@ export interface AdminHealth {
     registrations: number;
   } | null;
   alerts: { login_failed_last_sent: string | null };
+}
+
+// ─── Support Tickets ──────────────────────────────────────────────────────────
+
+export type SupportTicketCategory = 'bug' | 'question' | 'feature' | 'billing' | 'other';
+export type SupportTicketStatus = 'open' | 'in_progress' | 'waiting_user' | 'resolved' | 'closed';
+export type SupportTicketPriority = 'low' | 'normal' | 'high';
+
+export interface SupportTicket {
+  id: string;
+  reporter: string;
+  reporter_name: string | null;
+  reporter_email: string | null;
+  store: string | null;
+  store_name: string | null;
+  subject: string;
+  body_html: string;
+  body_text: string;
+  category: SupportTicketCategory;
+  status: SupportTicketStatus;
+  priority: SupportTicketPriority;
+  metadata: Record<string, unknown>;
+  last_reply_at: string | null;
+  last_reply_by: 'user' | 'admin' | null;
+  created: string;
+  updated: string;
+}
+
+export interface SupportTicketMessage {
+  id: string;
+  ticket: string;
+  author: string;
+  author_name: string | null;
+  author_email: string | null;
+  author_role: 'user' | 'admin';
+  body_html: string;
+  body_text: string;
+  created: string;
+}
+
+export interface SupportTicketDetail {
+  ticket: SupportTicket;
+  messages: SupportTicketMessage[];
 }
 
 // ─── Cart (UI-only, not stored in DB) ────────────────────────────────────────
