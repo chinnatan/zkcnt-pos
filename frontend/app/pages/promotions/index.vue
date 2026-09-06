@@ -1,5 +1,10 @@
 <template>
   <div class="space-y-4">
+    <UiCraftCard v-if="!promotionsEnabled" variant="ticket" padding="md">
+      <p class="text-sm text-ink-muted">{{ t('admin.featureFlags.disabled') }}</p>
+    </UiCraftCard>
+
+    <template v-else>
     <div class="flex items-center justify-between">
       <h2 class="text-lg font-semibold text-ink">{{ t('promotionsPage.title') }}</h2>
       <button
@@ -272,6 +277,7 @@
         </div>
       </div>
     </Teleport>
+    </template>
   </div>
 </template>
 
@@ -282,6 +288,7 @@ import { activeBadge } from "~/lib/ui/statusColors";
 definePageMeta({ middleware: "auth" });
 
 const { t } = useI18n();
+const promotionsEnabled = useStoreFeatureEnabled("promotions_enabled");
 const { formatCurrency, formatDateShort } = useFormat();
 const { products, categories, fetchProducts, fetchCategories } = useProducts();
 const {

@@ -338,6 +338,13 @@ export class ApiClient {
     });
   }
 
+  async uploadSupportAttachment(form: FormData) {
+    return this.send<{ path: string }>("/support/attachments", {
+      method: "POST",
+      body: form,
+    });
+  }
+
   async deleteStoreLogo(storeId: string) {
     return this.send(`/stores/${storeId}/logo`, { method: "DELETE" });
   }

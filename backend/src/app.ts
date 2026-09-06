@@ -18,6 +18,8 @@ import { reportRoutes } from "./routes/reports";
 import { storeActionRoutes } from "./routes/store-actions";
 import { adminRoutes } from "./routes/admin";
 import { clientRoutes } from "./routes/client";
+import { platformRoutes } from "./routes/platform";
+import { supportRoutes } from "./routes/support";
 import { getUpload } from "./lib/uploads";
 import { log } from "./lib/logger";
 
@@ -125,6 +127,8 @@ export function createApp() {
   app.route("/api/stores", storeActionRoutes);
   app.route("/api/admin", adminRoutes);
   app.route("/api/client", clientRoutes);
+  app.route("/api/support", supportRoutes);
+  app.route("/api/platform", platformRoutes);
 
   return app;
 }

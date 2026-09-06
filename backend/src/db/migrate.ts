@@ -274,6 +274,49 @@ export function runMigrate() {
   cleanupOrphanInventory(db);
   backfillOrderAuditEvents(db);
   migratePlatformAdmin(db);
+  migrateSupportTickets(db);
+}
+
+function migrateSupportTickets(db: Database) {
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS support_tickets (
+      id TEXT PRIMARY KEY,
+      reporter TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      store TEXT REFERENCES stores(id),
+      subject TEXT NOT NULL,
+      body_html TEXT NOT NULL DEFAULT '',
+      body_text TEXT NOT NULL DEFAULT '',
+      category TEXT NOT NULL DEFAULT 'other',
+      status TEXT NOT NULL DEFAULT 'open',
+      priority TEXT NOT NULL DEFAULT 'normal',
+      metadata TEXT NOT NULL DEFAULT '{}',
+      last_reply_at TEXT,
+      last_reply_by TEXT,
+      created TEXT NOT NULL,
+      updated TEXT NOT NULL
+    )
+  `);
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS support_ticket_messages (
+      id TEXT PRIMARY KEY,
+      ticket TEXT NOT NULL REFERENCES support_tickets(id) ON DELETE CASCADE,
+      author TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      author_role TEXT NOT NULL,
+      body_html TEXT NOT NULL DEFAULT '',
+      body_text TEXT NOT NULL DEFAULT '',
+      created TEXT NOT NULL
+    )
+  `);
+  db.exec("CREATE INDEX IF NOT EXISTS idx_support_tickets_status ON support_tickets(status)");
+  db.exec("CREATE INDEX IF NOT EXISTS idx_support_tickets_reporter ON support_tickets(reporter)");
+  db.exec("CREATE INDEX IF NOT EXISTS idx_support_tickets_store ON support_tickets(store)");
+  db.exec("CREATE INDEX IF NOT EXISTS idx_support_tickets_created ON support_tickets(created)");
+  db.exec(
+    "CREATE INDEX IF NOT EXISTS idx_support_tickets_status_created ON support_tickets(status, created)",
+  );
+  db.exec(
+    "CREATE INDEX IF NOT EXISTS idx_support_ticket_messages_ticket ON support_ticket_messages(ticket)",
+  );
 }
 
 function migratePlatformAdmin(db: Database) {

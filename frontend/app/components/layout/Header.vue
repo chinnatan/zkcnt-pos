@@ -38,6 +38,13 @@
           class="absolute right-0 top-full z-50 mt-1 w-48 rounded-lg border border-border-warm bg-paper py-1 shadow-lg"
         >
           <NuxtLink
+            to="/support"
+            class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-ink hover:bg-surface"
+            @click="showUserMenu = false"
+          >
+            {{ t('support.title') }}
+          </NuxtLink>
+          <NuxtLink
             v-if="isPlatformAdmin"
             to="/admin"
             class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-ink hover:bg-surface"
@@ -79,6 +86,7 @@ const pageTitle = computed(() => {
     "/settings/roles": t("rolesPage.title"),
     "/stores": t("nav.stores"),
     "/promotions": t("nav.promotions"),
+    "/support": t("support.title"),
     "/admin": t("admin.nav.title"),
   };
   return titles[route.path] || t("nav.appName");

@@ -22,6 +22,7 @@ import {
   requireStoreMember,
   type StoreAccessVariables,
 } from "../middleware/store-access";
+import { requireStoreFeature } from "../lib/feature-flags";
 
 type Vars = AuthVariables & StoreAccessVariables;
 
@@ -122,6 +123,7 @@ promotionRoutes.get(
   "/:storeId/promotions",
   authMiddleware,
   requireStoreMember,
+  requireStoreFeature("promotions_enabled"),
   async (c) => {
     const storeId = c.req.param("storeId");
     const rows = await db
@@ -152,6 +154,7 @@ promotionRoutes.post(
   "/:storeId/promotions/validate-coupon",
   authMiddleware,
   requireStoreMember,
+  requireStoreFeature("promotions_enabled"),
   async (c) => {
     const storeId = c.req.param("storeId");
     const body = await c.req.json<{
@@ -194,6 +197,7 @@ promotionRoutes.post(
   "/:storeId/promotions",
   authMiddleware,
   requireStoreMember,
+  requireStoreFeature("promotions_enabled"),
   async (c) => {
     const storeId = c.req.param("storeId");
     const userId = c.get("userId");
@@ -253,6 +257,7 @@ promotionRoutes.patch(
   "/:storeId/promotions/:id",
   authMiddleware,
   requireStoreMember,
+  requireStoreFeature("promotions_enabled"),
   async (c) => {
     const storeId = c.req.param("storeId");
     const id = c.req.param("id");
@@ -375,6 +380,7 @@ promotionRoutes.delete(
   "/:storeId/promotions/:id",
   authMiddleware,
   requireStoreMember,
+  requireStoreFeature("promotions_enabled"),
   async (c) => {
     const storeId = c.req.param("storeId");
     const id = c.req.param("id");

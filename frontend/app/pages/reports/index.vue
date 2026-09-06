@@ -1,5 +1,10 @@
 <template>
   <div class="space-y-6">
+    <UiCraftCard v-if="!reportsEnabled" variant="ticket" padding="md">
+      <p class="text-sm text-ink-muted">{{ t('admin.featureFlags.disabled') }}</p>
+    </UiCraftCard>
+
+    <template v-else>
     <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
       <h2 class="text-lg font-semibold text-ink">{{ t('reportsPage.title') }}</h2>
       <div class="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center">
@@ -939,6 +944,7 @@
         </div>
       </div>
     </Teleport>
+    </template>
   </div>
 </template>
 
@@ -949,6 +955,7 @@ import { orderStatusBadge } from "~/lib/ui/statusColors";
 definePageMeta({ middleware: "auth" });
 
 const { t, locale } = useI18n();
+const reportsEnabled = useStoreFeatureEnabled("reports_enabled");
 const { formatCurrency, formatDateShort, toDatetimeLocalValue } = useFormat();
 const { paymentLabel, statusLabel } = useLabels();
 const {

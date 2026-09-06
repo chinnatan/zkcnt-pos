@@ -19,6 +19,26 @@ import {
   updateStoreFeatureFlags,
   updateUserActive,
 } from "../services/admin.service";
+import {
+  getPlatformAnnouncement,
+  setPlatformAnnouncement,
+  type PlatformAnnouncementSeverity,
+} from "../services/announcements.service";
+import {
+  getAdminOpsOverview,
+  listPlatformConfigKeys,
+  upsertPlatformConfig,
+} from "../services/ops.service";
+import {
+  addAdminTicketMessage,
+  getAdminSupportTicket,
+  isValidPriority,
+  isValidStatus,
+  listAdminSupportTickets,
+  updateAdminSupportTicket,
+  type SupportTicketPriority,
+  type SupportTicketStatus,
+} from "../services/support.service";
 
 type Vars = AuthVariables & PlatformAdminVariables;
 
@@ -204,4 +224,156 @@ adminRoutes.get("/devices", async (c) => {
   const store = c.req.query("store");
   const result = await listClientSessions({ limit, offset, store });
   return c.json(result);
+});
+
+adminRoutes.get("/tickets", async (c) => {
+  const limit = Math.min(Number(c.req.query("limit") ?? 50), 200);
+  const offset = Number(c.req.query("offset") ?? 0);
+  const result = await listAdminSupportTickets({
+    limit,
+    offset,
+    status: c.req.query("status"),
+    category: c.req.query("category"),
+    store: c.req.query("store"),
+    search: c.req.query("search")?.trim(),
+  });
+  return c.json(result);
+});
+
+adminRoutes.get("/tickets/:ticketId", async (c) => {
+  const detail = await getAdminSupportTicket(c.req.param("ticketId"));
+  if (!detail) {
+    throw new HTTPException(404, { message: "Ticket not found" });
+  }
+  return c.json(detail);
+});
+
+adminRoutes.patch("/tickets/:ticketId", async (c) => {
+  const ticketId = c.req.param("ticketId");
+  const body = await c.req.json<{ status?: string; priority?: string }>();
+  const existing = await getAdminSupportTicket(ticketId);
+  if (!existing) {
+    throw new HTTPException(404, { message: "Ticket not found" });
+  }
+
+  if (body.status && !isValidStatus(body.status)) {
+    throw new HTTPException(400, { message: "Invalid status" });
+  }
+  if (body.priority && !isValidPriority(body.priority)) {
+    throw new HTTPException(400, { message: "Invalid priority" });
+  }
+
+  const updated = await updateAdminSupportTicket(ticketId, {
+    status: body.status as SupportTicketStatus | undefined,
+    priority: body.priority as SupportTicketPriority | undefined,
+  });
+
+  if (body.status && body.status !== existing.ticket.status) {
+    logAuditEvent(c, {
+      actor: c.get("userId"),
+      action: "admin.ticket_status_change",
+      entityType: "support_ticket",
+      entityId: ticketId,
+      summary: `Platform admin changed ticket status to ${body.status}`,
+      metadata: { from: existing.ticket.status, to: body.status },
+    });
+  }
+
+  return c.json(updated);
+});
+
+adminRoutes.post("/tickets/:ticketId/messages", async (c) => {
+  const ticketId = c.req.param("ticketId");
+  const body = await c.req.json<{ body_html: string }>();
+  const existing = await getAdminSupportTicket(ticketId);
+  if (!existing) {
+    throw new HTTPException(404, { message: "Ticket not found" });
+  }
+
+  try {
+    const result = await addAdminTicketMessage(
+      ticketId,
+      c.get("userId"),
+      body.body_html ?? "",
+    );
+    if (!result) {
+      throw new HTTPException(404, { message: "Ticket not found" });
+    }
+
+    logAuditEvent(c, {
+      actor: c.get("userId"),
+      action: "admin.ticket_reply",
+      entityType: "support_ticket",
+      entityId: ticketId,
+      summary: `Platform admin replied to ticket: ${result.ticket.subject}`,
+    });
+
+    return c.json(result);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Failed to reply";
+    throw new HTTPException(400, { message });
+  }
+});
+
+adminRoutes.get("/announcement", async (c) => {
+  const announcement = await getPlatformAnnouncement();
+  return c.json(announcement);
+});
+
+adminRoutes.put("/announcement", async (c) => {
+  const body = await c.req.json<{
+    active?: boolean;
+    severity?: PlatformAnnouncementSeverity;
+    message_th?: string;
+    message_en?: string;
+    expires_at?: string | null;
+  }>();
+
+  const current = await getPlatformAnnouncement();
+  const announcement = await setPlatformAnnouncement({
+    active: body.active ?? current.active,
+    severity: body.severity ?? current.severity,
+    message_th: body.message_th ?? current.message_th,
+    message_en: body.message_en ?? current.message_en,
+    expires_at: body.expires_at === undefined ? current.expires_at : body.expires_at,
+  });
+
+  logAuditEvent(c, {
+    actor: c.get("userId"),
+    action: "admin.announcement_update",
+    entityType: "platform_announcement",
+    entityId: "platform.announcement",
+    summary: announcement.active
+      ? "Platform admin updated active announcement"
+      : "Platform admin cleared announcement",
+  });
+
+  return c.json(announcement);
+});
+
+adminRoutes.get("/ops", async (c) => {
+  const ops = await getAdminOpsOverview();
+  return c.json(ops);
+});
+
+adminRoutes.get("/config", async (c) => {
+  const items = await listPlatformConfigKeys();
+  return c.json({ items });
+});
+
+adminRoutes.put("/config/:key", async (c) => {
+  const key = c.req.param("key");
+  const body = await c.req.json<{ value: string }>();
+  if (typeof body.value !== "string") {
+    throw new HTTPException(400, { message: "value required" });
+  }
+  const item = await upsertPlatformConfig(key, body.value);
+  logAuditEvent(c, {
+    actor: c.get("userId"),
+    action: "admin.platform_config_update",
+    entityType: "system_meta",
+    entityId: key,
+    summary: `Platform admin updated config ${key}`,
+  });
+  return c.json(item);
 });

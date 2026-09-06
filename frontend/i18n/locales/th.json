@@ -715,9 +715,12 @@
       "overview": "ภาพรวม",
       "stores": "ร้านค้า",
       "users": "ผู้ใช้",
+      "tickets": "Tickets",
       "activity": "กิจกรรม",
       "devices": "อุปกรณ์",
       "system": "ระบบ",
+      "announcements": "ประกาศ",
+      "ops": "Ops",
       "backToApp": "กลับ POS"
     },
     "overview": {
@@ -728,7 +731,8 @@
       "gmv7d": "ยอดขาย 7 วัน",
       "orders": "ออเดอร์",
       "alerts": "การแจ้งเตือน",
-      "inactiveStores": "ร้านไม่มีออเดอร์ 7+ วัน"
+      "inactiveStores": "ร้านไม่มีออเดอร์ 7+ วัน",
+      "openTickets": "Ticket ที่เปิดอยู่"
     },
     "stores": {
       "name": "ชื่อร้าน",
@@ -783,7 +787,89 @@
     "featureFlags": {
       "promotions": "เปิดใช้โปรโมชัน",
       "reports": "เปิดใช้รายงาน",
-      "offlineSync": "เปิดใช้ offline sync"
+      "offlineSync": "เปิดใช้ offline sync",
+      "disabled": "ฟีเจอร์นี้ถูกปิดสำหรับร้านของคุณ ติดต่อ support หากต้องการใช้งาน"
+    },
+    "tickets": {
+      "backToList": "กลับรายการ ticket",
+      "detailTitle": "รายละเอียด ticket",
+      "viewInbox": "ดู ticket inbox",
+      "reporter": "ผู้แจ้ง"
+    },
+    "announcements": {
+      "title": "ประกาศแพลตฟอร์ม",
+      "active": "แสดง banner",
+      "severity": "ระดับความสำคัญ",
+      "messageTh": "ข้อความ (ไทย)",
+      "messageEn": "ข้อความ (English)",
+      "expiresAt": "หมดอายุ",
+      "save": "บันทึกประกาศ",
+      "clear": "ล้างประกาศ",
+      "preview": "ตัวอย่าง banner ปัจจุบัน",
+      "severities": {
+        "info": "ข้อมูล",
+        "warning": "เตือน",
+        "critical": "วิกฤต"
+      }
+    },
+    "ops": {
+      "title": "เครื่องมือ ops",
+      "onboarding": "ร้านที่ต้อง onboarding",
+      "onboardingEmpty": "ไม่มีร้านที่ต้องติดตาม onboarding",
+      "noProducts": "ยังไม่มีสินค้า",
+      "noOrders": "ยังไม่มีออเดอร์",
+      "backup": "สถานะ backup",
+      "backupLastRun": "Backup ล่าสุด",
+      "backupNever": "ยังไม่เคยรัน",
+      "syncHealth": "สุขภาพ sync",
+      "highPending": "รอซิงก์สูง",
+      "platformConfig": "ตั้งค่า platform",
+      "configKey": "Key",
+      "configValue": "Value",
+      "configSave": "บันทึก config"
+    }
+  },
+  "support": {
+    "title": "ช่วยเหลือ / แจ้งปัญหา",
+    "newTicket": "แจ้งปัญหา",
+    "empty": "ยังไม่มี ticket",
+    "backToList": "กลับรายการ ticket",
+    "subject": "หัวข้อ",
+    "category": "หมวดหมู่",
+    "message": "รายละเอียด",
+    "messagePlaceholder": "อธิบายปัญหา ขั้นตอนที่ทำให้เกิด หรือคำถามของคุณ…",
+    "submit": "ส่ง ticket",
+    "reply": "ตอบกลับ",
+    "replyPlaceholder": "พิมพ์ข้อความตอบกลับ…",
+    "sendReply": "ส่งข้อความ",
+    "you": "คุณ",
+    "adminReply": "ทีม support",
+    "closedNotice": "ticket นี้ปิดแล้ว",
+    "validationRequired": "กรุณากรอกหัวข้อและรายละเอียด",
+    "attachImage": "แนบรูป",
+    "imageInvalidType": "รองรับเฉพาะ JPEG, PNG หรือ WebP",
+    "imageTooLarge": "รูปต้องไม่เกิน 5 MB",
+    "status": "สถานะ",
+    "allStatuses": "ทุกสถานะ",
+    "allCategories": "ทุกหมวด",
+    "categories": {
+      "bug": "บั๊ก",
+      "question": "คำถาม",
+      "feature": "ขอฟีเจอร์",
+      "billing": "การเงิน",
+      "other": "อื่นๆ"
+    },
+    "statuses": {
+      "open": "เปิด",
+      "in_progress": "กำลังดำเนินการ",
+      "waiting_user": "รอคุณตอบ",
+      "resolved": "แก้แล้ว",
+      "closed": "ปิด"
+    },
+    "priorities": {
+      "low": "ต่ำ",
+      "normal": "ปกติ",
+      "high": "สูง"
     }
   },
   "errors": {

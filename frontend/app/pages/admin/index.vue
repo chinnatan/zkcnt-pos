@@ -34,6 +34,21 @@
         </UiCraftCard>
       </div>
 
+      <div class="grid gap-4 sm:grid-cols-2">
+        <UiCraftCard variant="ticket" padding="md">
+          <p class="text-sm text-ink-muted">{{ t('admin.overview.openTickets') }}</p>
+          <p class="mt-1 font-display text-2xl font-bold text-ink">{{ overview.open_support_tickets }}</p>
+          <NuxtLink to="/admin/tickets" class="mt-2 inline-block text-sm text-primary-700 hover:underline">
+            {{ t('admin.tickets.viewInbox') }}
+          </NuxtLink>
+        </UiCraftCard>
+
+        <UiCraftCard variant="paper" padding="md">
+          <p class="text-sm text-ink-muted">{{ t('admin.overview.inactiveStores') }}</p>
+          <p class="mt-1 text-lg font-semibold text-ink">{{ overview.inactive_stores_7d }}</p>
+        </UiCraftCard>
+      </div>
+
       <UiCraftCard v-if="overview.alerts.length > 0" variant="canvas" padding="md">
         <h3 class="mb-3 text-sm font-semibold text-ink">{{ t('admin.overview.alerts') }}</h3>
         <ul class="space-y-2">
@@ -46,11 +61,6 @@
             {{ alert.message }}
           </li>
         </ul>
-      </UiCraftCard>
-
-      <UiCraftCard variant="paper" padding="md">
-        <p class="text-sm text-ink-muted">{{ t('admin.overview.inactiveStores') }}</p>
-        <p class="mt-1 text-lg font-semibold text-ink">{{ overview.inactive_stores_7d }}</p>
       </UiCraftCard>
     </template>
   </div>

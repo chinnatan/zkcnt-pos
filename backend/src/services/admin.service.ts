@@ -19,12 +19,17 @@ import {
   storeInvites,
   storeMembers,
   stores,
+  supportTickets,
   users,
 } from "../db/schema";
 import { getRuntimeConfig } from "../env";
 import { mapAuditEvent, mapStore, mapUser } from "../lib/mappers";
 import { getSystemMeta } from "../lib/system-meta";
 import { nowIso } from "../lib/timestamps";
+import {
+  countOpenSupportTickets,
+  getStaleOpenTicketCount,
+} from "./support.service";
 
 const LOGIN_FAILED_THRESHOLD = 10;
 
@@ -152,6 +157,25 @@ export async function getAdminOverview() {
     });
   }
 
+  const [openTickets, staleTickets] = await Promise.all([
+    countOpenSupportTickets(),
+    getStaleOpenTicketCount(3),
+  ]);
+  if (openTickets > 0) {
+    alerts.push({
+      type: "open_support_tickets",
+      message: `Open support tickets: ${openTickets}`,
+      severity: "warning",
+    });
+  }
+  if (staleTickets > 0) {
+    alerts.push({
+      type: "stale_support_tickets",
+      message: `Support tickets open 3+ days without update: ${staleTickets}`,
+      severity: "warning",
+    });
+  }
+
   return {
     stores: {
       total: storeStats[0]?.total ?? 0,
@@ -171,6 +195,7 @@ export async function getAdminOverview() {
       gmv: Number(order7d[0]?.gmv ?? 0),
     },
     inactive_stores_7d: inactiveStores,
+    open_support_tickets: openTickets,
     alerts,
   };
 }
@@ -500,6 +525,7 @@ export async function getAdminHealth(_r2Available: boolean) {
     ["products", products],
     ["audit_events", auditEvents],
     ["client_sessions", clientSessions],
+    ["support_tickets", supportTickets],
   ] as const;
 
   const rowCounts: Record<string, number> = {};
