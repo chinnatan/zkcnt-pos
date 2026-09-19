@@ -12,7 +12,7 @@
 | **Uploads** | **Cloudflare R2** |
 | **Email** | Resend (external) |
 | **Local cache** | Dexie.js (IndexedDB) |
-| **Local dev** | Bun + SQLite (`task local`) |
+| **Local dev** | Backend Docker + Frontend Bun (`task local`) |
 
 ## Architecture
 
@@ -32,19 +32,21 @@ Cloudflare Pages  ── /api/* ──►  Cloudflare Workers (Hono)
 
 ## Features
 
-- Multi-tenant (หลายร้าน) — แต่ละร้านมีข้อมูลแยกกัน
-- Offline-first — ใช้งานได้แม้ไม่มีอินเทอร์เน็ต
+- Multi-store + Roles — จัดการหลายร้านต่อผู้ใช้ + role management
+- Offline-first — ใช้งานได้แม้ไม่มีอินเทอร์เน็ต พร้อม sync observability
 - POS Terminal — หน้าขายสินค้าแบบ touch-friendly
 - Product Management — จัดการสินค้าและหมวดหมู่
-- Inventory Management — จัดการสต็อก แจ้งเตือน low stock
+- Inventory Management — จัดการสต็อก แจ้งเตือน low stock + กำหนดเกณฑ์เตือนต่อรายการ
 - Customer Management — จัดการข้อมูลลูกค้า
-- Order Management — ดูประวัติการขาย
-- Reports & Dashboard — สรุปยอดขาย รายงาน
-- Discount System — ระบบส่วนลด/โปรโมชั่น
+- Order Management — ดูประวัติการขาย (orders immutable)
+- Reports & Dashboard — สรุปยอดขาย รายงานสต็อก
+- Promotion System — ส่วนลด/โปรโมชั่นแบบ rule engine (หน้า Promotions)
+- Support Tickets — ระบบแจ้งปัญหาในแอป
+- Platform Admin — แดชบอร์ดผู้ดูแลระบบ (users, stores, devices, announcements, audit)
 - Receipt Printing — พิมพ์ใบเสร็จผ่าน browser
 - Multi-payment — รองรับเงินสด, QR
 - PWA — ติดตั้งเป็น app บนอุปกรณ์ได้
-- Responsive — รองรับ mobile, tablet, desktop
+- Responsive + th/en — รองรับ mobile, tablet, desktop สองภาษาไทย/อังกฤษ
 
 ## Prerequisites
 
@@ -55,7 +57,7 @@ Cloudflare Pages  ── /api/* ──►  Cloudflare Workers (Hono)
 | [wrangler](https://developers.cloudflare.com/workers/wrangler/) | Deploy Workers/Pages/D1 | `bun add -g wrangler` |
 | Cloudflare account | Production (Workers Paid ~$5/mo) | [dash.cloudflare.com](https://dash.cloudflare.com) |
 | Resend account | Transactional email | [resend.com](https://resend.com) |
-| Docker (optional) | `task dev` full Docker stack | Docker Desktop |
+| Docker | `task local` รัน backend ใน container | Docker Desktop |
 
 ## Quick Start (Local Dev)
 
@@ -73,7 +75,13 @@ task local
 
 | Task | คำอธิบาย |
 |------|----------|
-| `task local` | **Hybrid local** — Backend Docker + Frontend Bun (dev ประจำวัน) |
+| `task env` | Copy `.env.example` → `.env` (ทำครั้งแรกครั้งเดียว) |
+| `task local` | **Hybrid local** — Backend Docker + Frontend Bun (dev ประจำวัน, FE :4000 / API :4001) |
+| `task local:frontend` | รันเฉพาะ frontend (เมื่อ container backend เปิดอยู่แล้ว) |
+| `task local:stop` | หยุด backend container |
+| `task dev` | Full dev stack ใน Docker ทั้งหมด |
+| `task db-admin` | SQLite admin UI (Adminer) ที่ http://localhost:8080 |
+| `task backend:migrate` | รัน Drizzle migrations ของ `pos.db` (local SQLite) |
 | `task cf:dev` | ทดสอบ Workers + D1 local (`wrangler dev`) |
 | `task cf:deploy` | Deploy Workers API ไป Cloudflare |
 | `task cf:db:migrate` | Apply D1 migrations (remote) |
@@ -82,16 +90,20 @@ task local
 | `task cf:sync-uploads` | อัปโหลด `backend/data/uploads/` ไป R2 |
 | `task pages:deploy` | Build + deploy frontend ไป Cloudflare Pages |
 | `task deploy:cloudflare` | Migrate D1 + deploy API + Pages |
-| `task test` | รัน backend + frontend tests |
-| `task test:e2e` | Playwright E2E tests |
+| `task test` | รัน backend (`bun test`) + frontend (`vitest`) |
+| `task test:e2e` | Playwright E2E (build ก่อนอัตโนมัติ) |
 | `task build` | Build frontend สำหรับ production |
+| `task release-notes` | Generate `release-notes.json` จาก git commits ตั้งแต่ tag ก่อนหน้า |
+
+ดูทั้งหมดด้วย `task --list`
 
 ### Legacy (Raspberry Pi / Docker)
 
 | Task | คำอธิบาย |
 |------|----------|
 | `task prod` | Production Docker stack บน Pi (deprecated) |
-| `task backup` | Backup SQLite + uploads (deprecated — ใช้ D1/R2 backup แทน) |
+| `task backup` / `task backup:upload` | Backup SQLite + uploads (+ push ขึ้น Google Drive ผ่าน rclone) (deprecated — ใช้ D1/R2 backup แทน) |
+| `task restore -- <file>` | Restore จาก backup archive (deprecated) |
 
 ## First-Time Cloudflare Setup
 
@@ -113,7 +125,7 @@ task local
    wrangler secret put RESEND_API_KEY
    wrangler secret put RESEND_FROM
    ```
-6. อัปเดต `[vars]` ใน `wrangler.toml`: `APP_URL`, `ALLOWED_ORIGIN`
+ 6. อัปเดต `[vars]` ใน `wrangler.toml`: `APP_URL`, `ALLOWED_ORIGIN`, `PLATFORM_ADMIN_EMAIL` (email ที่ได้ role platform admin อัตโนมัติเมื่อ login + เข้า `/admin`)
 7. Apply schema:
    ```bash
    task cf:db:migrate:local   # ทดสอบ local ก่อน
@@ -150,6 +162,7 @@ task local
 |----------|----------|
 | `APP_URL` | Public app URL (ลิงก์ในอีเมล) |
 | `ALLOWED_ORIGIN` | CORS origin ที่อนุญาต |
+| `PLATFORM_ADMIN_EMAIL` | Email ที่ได้ platform admin (เข้า `/admin`) |
 | `LOG_LEVEL` | `debug` / `info` / `warn` |
 
 ### Frontend build-time (`.env` / Pages)
@@ -195,7 +208,7 @@ Manual deploy ใช้ `task deploy:cloudflare` (อ่าน `VERSION` แล�
 
 | งาน | ความถี่ | วิธีทำ |
 |-----|---------|--------|
-| ตรวจ D1 backup | รายสัปดาห์ | ดู R2 bucket `backups/` (Cron Worker รันทุกวัน 01:00 UTC) |
+| ตรวจ D1 backup | รายสัปดาห์ | ดู R2 bucket `backups/` (Cron Worker: backup marker 01:00 UTC + warm-up `/api/health` 01:45 UTC ทุกวัน) |
 | Monitor Workers errors | รายวัน | Cloudflare dashboard → Workers → Logs |
 | D1 storage usage | รายเดือน | dashboard → D1 → metrics |
 | R2 storage usage | รายเดือน | dashboard → R2 |
@@ -253,21 +266,32 @@ task cf:sync-uploads
 
 ```
 zkcnt-pos/
-├── Taskfile.yml
+├── Taskfile.yml              # ทุก command เข้าผ่าน task
+├── AGENTS.md                 # workflow + conventions สำหรับ AI agent
+├── .cursor/rules/            # detail conventions (UI/API/dev workflow)
+├── docs/                     # TESTING.md + sub-plan per ฟีเจอร์
+├── shared/test-fixtures/     # fixture ใช้ร่วมกัน backend/frontend (promotions)
+├── scripts/                  # backup/restore (legacy) + generate-release-notes
 ├── frontend/                 # Nuxt 3 SPA/PWA → Cloudflare Pages
 │   ├── app/
-│   │   ├── lib/db.ts       # Dexie schema
-│   │   ├── lib/sync/       # Offline sync engine
-│   │   └── composables/    # useProducts, useOrders, etc.
-│   └── public/_routes.json # Pages routing (exclude /api, /uploads)
+│   │   ├── lib/db.ts         # Dexie schema
+│   │   ├── lib/sync/         # Offline sync engine
+│   │   ├── composables/      # useProducts, useOrders, etc.
+│   │   └── pages/            # pos, products, inventory, promotions, reports,
+│   │                         # orders, customers, stores, settings, support, admin
+│   └── public/_routes.json   # Pages routing (exclude /api, /uploads)
 ├── backend/
-│   ├── wrangler.toml       # Workers + D1 + R2 config
-│   ├── migrations/         # D1 SQL migrations
-│   ├── scripts/            # migrate-to-d1, sync-uploads-to-r2
+│   ├── wrangler.toml         # Workers + D1 + R2 config (+ cron triggers)
+│   ├── migrations/           # D1 SQL migrations (production)
+│   ├── scripts/              # migrate-to-d1, sync-uploads-to-r2
 │   └── src/
-│       ├── worker.ts       # Cloudflare Workers entry
-│       ├── index.ts        # Bun local entry
-│       └── routes/         # Hono API routes
+│       ├── worker.ts         # Cloudflare Workers entry
+│       ├── index.ts          # Bun local entry
+│       ├── cron.ts           # scheduled backup + warm-up
+│       ├── db/schema.ts      # Drizzle schema (local SQLite)
+│       └── routes/           # Hono API routes (auth, stores, catalog, orders,
+│                             # inventory, promotions, reports, sync, support, admin, platform)
+├── docker-compose.dev.yml    # hybrid local (backend container + adminer)
 └── .github/workflows/
     ├── ci.yml
     └── deploy.yml
