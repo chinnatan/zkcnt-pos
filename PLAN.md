@@ -44,9 +44,9 @@
 - [ ] หน้า inventory: ดูชิ้นเหลือ/ขายแล้วต่อสินค้า + รูปต่อชิ้น (R2 มีอยู่แล้ว)
 
 ## Phase 4: Sync & ความเชื่อมั่น offline
-- [ ] UI สถานะ sync แบบเห็นทั้ง queue (pending/failed/retry count) ใน layout — `engine.ts`/`queue.ts` มีข้อมูลอยู่แล้ว แค่ยังไม่มีหน้า
-- [ ] บันทึกเหตุผล conflict ที่ LWW ทับแล้ว (audit + หน้าตรวจของ owner)
-- [ ] self-check ระยะ store: เทียบยอด D1 vs Dexie หลัง sync ครบ (รายงานความต่าง ไม่ auto-fix)
+- [x] UI สถานะ sync แบบเห็นทั้ง queue (pending/failed/retry count) ใน layout — `engine.ts`/`queue.ts` มีข้อมูลอยู่แล้ว แค่ยังไม่มีหน้า → chip + modal ใน Header (`components/layout/SyncStatus.vue`)
+- [x] บันทึกเหตุผล conflict ที่ LWW ทับแล้ว (audit + หน้าตรวจของ owner) → `pullAll` เลิกทับเงียบ ๆ (local ใหม่กว่า = อยู่ต่อ + log `syncConflicts` Dexie) แสดงใน modal เฉพาะ manager — ดู `docs/sub-plan-sync-observability.md`
+- [x] self-check ระยะ store: เทียบยอด D1 vs Dexie หลัง sync ครบ (รายงานความต่าง ไม่ auto-fix) → `GET /:storeId/sync/verify` + ปุ่ม "ตรวจความตรง" ใน modal เดียวกัน (กัน `temp_*` ออกจากฝั่ง local)
 
 ## Phase 5: เติมมาตรฐานใบเสร็จ/ไทย
 - [ ] ข้อมูลร้านสำหรับภาษี: store TIN, branch, ใบกำกับภาษี/ใบลดหนี้ header
