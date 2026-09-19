@@ -206,6 +206,16 @@
             </div>
 
             <div>
+              <label class="mb-1 block text-sm font-medium text-ink">{{ t('common.threshold') }}</label>
+              <input
+                v-model.number="adjustForm.threshold"
+                type="number"
+                min="0"
+                class="w-full rounded-lg border border-border-warm px-3 py-2.5 text-sm focus:border-primary-500 focus:outline-none"
+              />
+            </div>
+
+            <div>
               <label class="mb-1 block text-sm font-medium text-ink">{{ t('common.note') }}</label>
               <input
                 v-model="adjustForm.note"
@@ -258,6 +268,7 @@ const adjustForm = reactive({
   type: "stock_in" as "stock_in" | "stock_out" | "adjustment",
   quantity: 1,
   note: "",
+  threshold: 0,
 });
 
 const inventoryWithProducts = computed(() => {
@@ -306,7 +317,7 @@ function openAdjust(item: any) {
 }
 
 async function handleAdjust() {
-  await adjustStock(adjustForm.productId, adjustForm.type, adjustForm.quantity, adjustForm.note);
+  await adjustStock(adjustForm.productId, adjustForm.type, adjustForm.quantity, adjustForm.note, adjustForm.threshold);
   showAdjustModal.value = false;
 }
 
@@ -327,6 +338,8 @@ watch(
     if (adjustForm.type === "adjustment" && productId) {
       adjustForm.quantity = selectedProductStock.value;
     }
+    const inv = inventoryItems.value.find((i) => i.product === productId);
+    adjustForm.threshold = inv?.low_stock_threshold ?? 0;
   },
 );
 
