@@ -5,26 +5,26 @@
     "changes": {
       "added": {
         "th": [
-          "กำหนดเกณฑ์เตือนตอนปรับสต็อกผ่าน modal + transaction API",
-          "เพิ่มค้นหาและกรองสถานะ/หมวดหมู่ในหน้าสต็อก",
-          "เพิ่ม UI สถานะซิงค์แบบเห็นทั้งคิว บันทึก LWW conflict และ self-check เทียบยอด D1 กับ Dexie"
+          "ตั้งเกณฑ์เตือนสินค้าใกล้หมดได้ทันทีตอนปรับสต็อก",
+          "ค้นหาและกรองสินค้าในหน้าสต็อกได้ตามสถานะและหมวดหมู่",
+          "เห็นสถานะการซิงค์ข้อมูลชัดเจนขึ้น บอกจำนวนรายการที่ค้างส่ง และตรวจความถูกต้องของข้อมูลให้อัตโนมัติ"
         ],
         "en": [
-          "กำหนดเกณฑ์เตือนตอนปรับสต็อกผ่าน modal + transaction API",
-          "เพิ่มค้นหาและกรองสถานะ/หมวดหมู่ในหน้าสต็อก",
-          "เพิ่ม UI สถานะซิงค์แบบเห็นทั้งคิว บันทึก LWW conflict และ self-check เทียบยอด D1 กับ Dexie"
+          "Set the low-stock alert threshold right when adjusting stock",
+          "Search and filter products in the stock page by status and category",
+          "Clearer sync status showing pending items, with automatic data consistency checks"
         ]
       },
       "fixed": {
         "th": [
-          "แก้เฉพาะเกณฑ์เตือนไม่ถูกบันทึก เพราะ early-return delta=0",
-          "รวมลิสต์สต็อกวิกฤตเป็นชุดเดียวพร้อม badge หมด/ใกล้หมด และลบเซกชันขายดีซ้ำซ้อน",
-          "ขยายหน้าสินค้าเต็มพื้นที่และลด padding ซ้าย-ขวาการ์ดมือถือ"
+          "แก้กรณีปรับเฉพาะเกณฑ์เตือนอย่างเดียวแล้วไม่ถูกบันทึก",
+          "รวมรายการสินค้าหมด/ใกล้หมดในหน้ารายงานเป็นชุดเดียว พร้อมป้ายกำกับชัดเจน",
+          "หน้าสินค้าแสดงเต็มพื้นที่ เว้นขอบเหมาะสมขึ้นบนมือถือ"
         ],
         "en": [
-          "แก้เฉพาะเกณฑ์เตือนไม่ถูกบันทึก เพราะ early-return delta=0",
-          "รวมลิสต์สต็อกวิกฤตเป็นชุดเดียวพร้อม badge หมด/ใกล้หมด และลบเซกชันขายดีซ้ำซ้อน",
-          "ขยายหน้าสินค้าเต็มพื้นที่และลด padding ซ้าย-ขวาการ์ดมือถือ"
+          "Fix alert threshold changes not being saved when stock quantity is unchanged",
+          "Merge out-of-stock and low-stock items into one clearly labeled list in reports",
+          "Full-width products page with better spacing on mobile"
         ]
       },
       "improved": {
