@@ -1,3 +1,5 @@
+import { stockStatusOf } from "~/lib/stock";
+
 export function useLabels() {
   const { t } = useI18n();
 
@@ -36,8 +38,9 @@ export function useLabels() {
   }
 
   function stockStatusLabel(quantity: number, threshold: number): string {
-    if (quantity <= 0) return t("stock.outOfStock");
-    if (quantity <= threshold) return t("stock.lowStock");
+    const status = stockStatusOf(quantity, threshold);
+    if (status === "out") return t("stock.outOfStock");
+    if (status === "low") return t("stock.lowStock");
     return t("stock.inStock");
   }
 
