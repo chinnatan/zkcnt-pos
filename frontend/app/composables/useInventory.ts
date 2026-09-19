@@ -50,6 +50,7 @@ export function useInventory() {
     type: "stock_in" | "stock_out" | "adjustment",
     quantity: number,
     note?: string,
+    threshold?: number,
   ) {
     if (!activeStoreId.value || !authUser.value) return;
 
@@ -86,7 +87,13 @@ export function useInventory() {
     if (isOnline.value) {
       await $api.send(
         `/stores/${activeStoreId.value}/inventory-transactions`,
-        { method: "POST", body: txData },
+        {
+          method: "POST",
+          body:
+            threshold === undefined
+              ? txData
+              : { ...txData, low_stock_threshold: threshold },
+        },
       );
     } else {
       const txId = `temp_${Date.now()}`;
@@ -100,12 +107,16 @@ export function useInventory() {
       });
 
       if (current) {
-        await db.inventory.update(current.id, { quantity: afterQty, updated: now });
+        const invUpdates =
+          threshold === undefined
+            ? { quantity: afterQty, updated: now }
+            : { quantity: afterQty, low_stock_threshold: threshold, updated: now };
+        await db.inventory.update(current.id, invUpdates);
         await addToSyncQueue({
           collection: "inventory",
           action: "update",
           record_id: current.id,
-          data: { quantity: afterQty },
+          data: invUpdates,
           store: activeStoreId.value,
         });
       } else {
@@ -115,7 +126,7 @@ export function useInventory() {
           store: activeStoreId.value,
           product: productId,
           quantity: afterQty,
-          low_stock_threshold: 10,
+          low_stock_threshold: threshold ?? 0,
           created: now,
           updated: now,
         };
