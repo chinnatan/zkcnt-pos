@@ -25,6 +25,7 @@ reportRoutes.get(
     const until = c.req.query("until") ?? new Date().toISOString();
     const period = (c.req.query("period") ?? "today") as
       | "today"
+      | "last7"
       | "week"
       | "month"
       | "custom";
@@ -49,6 +50,7 @@ reportRoutes.get(
     const until = c.req.query("until") ?? new Date().toISOString();
     const period = (c.req.query("period") ?? "today") as
       | "today"
+      | "last7"
       | "week"
       | "month"
       | "custom";

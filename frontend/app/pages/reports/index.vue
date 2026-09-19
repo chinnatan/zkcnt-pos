@@ -13,6 +13,7 @@
           class="w-full rounded-lg border border-border-warm px-3 py-2.5 text-sm focus:border-primary-500 focus:outline-none sm:w-auto"
         >
           <option value="today">{{ t('reportsPage.today') }}</option>
+          <option value="last7">{{ t('reportsPage.last7Days') }}</option>
           <option value="week">{{ t('reportsPage.thisWeek') }}</option>
           <option value="month">{{ t('reportsPage.thisMonth') }}</option>
           <option value="custom">{{ t('reportsPage.customRange') }}</option>

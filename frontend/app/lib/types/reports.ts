@@ -1,4 +1,4 @@
-export type ReportPeriod = "today" | "week" | "month" | "custom";
+export type ReportPeriod = "today" | "last7" | "week" | "month" | "custom";
 
 export interface ReportPeriodRange {
   since: string;

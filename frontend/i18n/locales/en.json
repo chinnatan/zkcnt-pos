@@ -333,6 +333,7 @@
   "reportsPage": {
     "title": "Reports",
     "today": "Today",
+    "last7Days": "Last 7 Days",
     "thisWeek": "This Week",
     "thisMonth": "This Month",
     "customRange": "Custom Range",

@@ -58,6 +58,9 @@ export function getPeriodRange(
     case "today":
       since = getBangkokStartOfDay(now);
       break;
+    case "last7":
+      since = getBangkokStartOfDay(new Date(now.getTime() - 6 * 86_400_000));
+      break;
     case "week":
       since = getBangkokStartOfWeek(now);
       break;

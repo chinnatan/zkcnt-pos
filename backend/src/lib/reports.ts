@@ -129,7 +129,7 @@ function buildPeriodOrders(
 export async function buildStoreReports(
   storeId: string,
   range: ReportPeriodRange,
-  period: "today" | "week" | "month" | "custom",
+  period: "today" | "last7" | "week" | "month" | "custom",
 ) {
   const previousRange = getPreviousPeriodRange(range);
 
