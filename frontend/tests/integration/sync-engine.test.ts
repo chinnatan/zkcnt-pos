@@ -350,3 +350,70 @@ describe("SyncEngine offline order sync", () => {
     expect(remaining).toBe(0);
   });
 });
+
+describe("SyncEngine pullAll LWW guard", () => {
+  const storeId = "store-lww";
+  const productId = "prod-lww";
+
+  function productRecord(updated: string, name: string) {
+    return {
+      id: productId,
+      store: storeId,
+      name,
+      sku: "",
+      barcode: "",
+      description: "",
+      price: 10,
+      cost: 0,
+      category: "",
+      image: "",
+      unit: "",
+      track_inventory: false,
+      is_active: true,
+      created: updated,
+      updated,
+    };
+  }
+
+  function engineWithDelta(products: Record<string, unknown>[]) {
+    return new SyncEngine(
+      { syncDelta: vi.fn().mockResolvedValue({ products }) } as never,
+      storeId,
+    );
+  }
+
+  test("keeps newer local record and logs the conflict", async () => {
+    await db.products.put(productRecord("2026-01-02T00:00:00.000Z", "local edit"));
+
+    await engineWithDelta([productRecord("2026-01-01T00:00:00.000Z", "remote stale")]).pullAll();
+
+    expect((await db.products.get(productId))?.name).toBe("local edit");
+    const conflicts = await db.syncConflicts.where("record_id").equals(productId).toArray();
+    expect(conflicts).toHaveLength(1);
+    expect(conflicts[0]?.reason).toBe("local_newer_kept");
+    expect((conflicts[0]?.remote_snapshot as { name: string }).name).toBe("remote stale");
+  });
+
+  test("applies newer remote without logging", async () => {
+    await db.products.put(productRecord("2026-01-01T00:00:00.000Z", "local stale"));
+
+    await engineWithDelta([productRecord("2026-01-02T00:00:00.000Z", "remote fresh")]).pullAll();
+
+    expect((await db.products.get(productId))?.name).toBe("remote fresh");
+    expect(await db.syncConflicts.count()).toBe(0);
+  });
+
+  test("tombstone does not delete a newer local record", async () => {
+    await db.products.put(productRecord("2026-01-02T00:00:00.000Z", "local edit"));
+
+    await engineWithDelta([
+      {
+        ...productRecord("2026-01-01T00:00:00.000Z", "remote deleted"),
+        deleted_at: "2026-01-01T00:00:00.000Z",
+      },
+    ]).pullAll();
+
+    expect(await db.products.get(productId)).toBeDefined();
+    expect(await db.syncConflicts.count()).toBe(1);
+  });
+});

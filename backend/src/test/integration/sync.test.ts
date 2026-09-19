@@ -33,3 +33,26 @@ describe("GET /api/stores/:storeId/sync", () => {
     expect(products.some((p) => p.name === "Sync Product")).toBe(true);
   });
 });
+
+describe("GET /api/stores/:storeId/sync/verify", () => {
+  test("returns per-collection aggregates matching seeded catalog", async () => {
+    const { token } = await registerUser({ email: "sync-verify-user@test.com" });
+    const store = await createStore(token, { slug: "sync-verify-store" });
+    const category = await createCategory(token, store.id);
+    await createProduct(token, store.id, category.id, { name: "Verify Product", price: 10 });
+
+    const { res, json } = await jsonRequest<{
+      checked_at: string;
+      collections: Record<string, { count: number; completed_total?: number }>;
+    }>(`/api/stores/${store.id}/sync/verify`, { headers: authHeaders(token) });
+
+    expect(res.status).toBe(200);
+    expect(json.checked_at).toBeTruthy();
+    expect(json.collections.categories.count).toBe(1);
+    expect(json.collections.products.count).toBe(1);
+    expect(json.collections.customers.count).toBe(0);
+    expect(json.collections.inventory.count).toBe(0);
+    expect(json.collections.orders).toEqual({ count: 0, completed_total: 0 });
+    expect(json.collections.order_items.count).toBe(0);
+  });
+});

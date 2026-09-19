@@ -270,6 +270,17 @@ export interface SyncQueueItem {
   store: string;
 }
 
+export interface SyncConflict {
+  id?: number;
+  store: string;
+  collection: string;
+  record_id: string;
+  local_snapshot: Record<string, unknown>;
+  remote_snapshot: Record<string, unknown>;
+  reason: 'local_newer_kept';
+  created: string;
+}
+
 // ─── Audit ───────────────────────────────────────────────────────────────────
 
 export interface AuditEvent {

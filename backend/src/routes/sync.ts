@@ -1,4 +1,4 @@
-import { and, eq, gt } from "drizzle-orm";
+import { and, count, eq, gt, inArray, isNull, sum } from "drizzle-orm";
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
 import { db } from "../db/client";
@@ -176,6 +176,83 @@ syncRoutes.get(
       orders: orderRows.map(mapOrder),
       order_items: filteredItems.map(mapOrderItem),
       inventory_transactions: txRows.map(mapInventoryTransaction),
+    });
+  },
+);
+
+// Read-only self-check: server-side aggregates for comparing against the
+// device's Dexie copy. Reports differences only — never fixes anything.
+syncRoutes.get(
+  "/:storeId/sync/verify",
+  authMiddleware,
+  requireStoreMember,
+  async (c) => {
+    const storeId = c.req.param("storeId");
+
+    const storeOrderIds = db
+      .select({ id: orders.id })
+      .from(orders)
+      .where(eq(orders.store, storeId));
+
+    const [
+      catRows,
+      prodRows,
+      custRows,
+      invRows,
+      promoRows,
+      orderRows,
+      itemRows,
+    ] = await Promise.all([
+      db
+        .select({ c: count() })
+        .from(categories)
+        .where(
+          and(eq(categories.store, storeId), isNull(categories.deletedAt)),
+        ),
+      db
+        .select({ c: count() })
+        .from(products)
+        .where(and(eq(products.store, storeId), isNull(products.deletedAt))),
+      db
+        .select({ c: count() })
+        .from(customers)
+        .where(
+          and(eq(customers.store, storeId), isNull(customers.deletedAt)),
+        ),
+      db
+        .select({ c: count() })
+        .from(inventory)
+        .where(eq(inventory.store, storeId)),
+      db
+        .select({ c: count() })
+        .from(promotions)
+        .where(and(eq(promotions.store, storeId), isNull(promotions.deletedAt))),
+      db
+        .select({ c: count(), completedTotal: sum(orders.total) })
+        .from(orders)
+        .where(and(eq(orders.store, storeId), eq(orders.status, "completed"))),
+      db
+        .select({ c: count() })
+        .from(orderItems)
+        .where(inArray(orderItems.order, storeOrderIds)),
+    ]);
+
+    logger.debug(`sync verify storeId=${storeId}`);
+
+    return c.json({
+      checked_at: new Date().toISOString(),
+      collections: {
+        categories: { count: catRows[0]?.c ?? 0 },
+        products: { count: prodRows[0]?.c ?? 0 },
+        customers: { count: custRows[0]?.c ?? 0 },
+        inventory: { count: invRows[0]?.c ?? 0 },
+        promotions: { count: promoRows[0]?.c ?? 0 },
+        orders: {
+          count: orderRows[0]?.c ?? 0,
+          completed_total: orderRows[0]?.completedTotal ?? 0,
+        },
+        order_items: { count: itemRows[0]?.c ?? 0 },
+      },
     });
   },
 );

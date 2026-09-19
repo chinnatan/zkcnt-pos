@@ -1,6 +1,6 @@
 import { SyncEngine } from "~/lib/sync/engine";
 import { applyTransactionHistoryClearForStoreId } from "~/lib/sync/purge-transactional";
-import { getPendingCount } from "~/lib/sync/queue";
+import { getPendingItems } from "~/lib/sync/queue";
 import { createLogger } from "~/lib/logger";
 
 const logger = createLogger("use-sync");
@@ -10,6 +10,7 @@ const EPOCH = "1970-01-01T00:00:00.000Z";
 let syncEngine: SyncEngine | null = null;
 let syncWatchesInitialized = false;
 const pendingSyncCount = ref(0);
+const syncFailedCount = ref(0);
 const isSyncing = ref(false);
 const lastSyncAt = ref<string | null>(null);
 
@@ -66,7 +67,9 @@ export function useSync() {
   }
 
   async function updatePendingCount() {
-    pendingSyncCount.value = await getPendingCount(activeStoreId.value ?? undefined);
+    const items = await getPendingItems(activeStoreId.value ?? undefined);
+    pendingSyncCount.value = items.length;
+    syncFailedCount.value = items.filter((i) => i.status === "error").length;
   }
 
   async function sendHeartbeat() {
@@ -113,6 +116,7 @@ export function useSync() {
 
   return {
     pendingSyncCount: readonly(pendingSyncCount),
+    failedCount: readonly(syncFailedCount),
     isSyncing: readonly(isSyncing),
     lastSyncAt: readonly(lastSyncAt),
     initSync,

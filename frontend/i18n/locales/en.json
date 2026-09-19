@@ -81,6 +81,57 @@
     "removeItem": "Remove {name}",
     "appTagline": "Offline-First Point of Sale"
   },
+  "sync": {
+    "title": "Sync status",
+    "syncNow": "Sync now",
+    "syncing": "Syncing...",
+    "lastSync": "Last sync: {time}",
+    "never": "No sync yet this session",
+    "failed": "{count} failed",
+    "queue": "Pending queue",
+    "queueEmpty": "Nothing waiting to sync",
+    "collection": "Collection",
+    "action": "Action",
+    "record": "Record",
+    "status": "Status",
+    "retry": "Retry",
+    "detail": "Detail",
+    "statusCol": "Status",
+    "status": {
+      "pending": "pending",
+      "in_flight": "in flight",
+      "error": "failed"
+    },
+    "conflicts": "Overwrite log (LWW)",
+    "conflictsEmpty": "No local edits were overwritten",
+    "reason": {
+      "local_newer_kept": "Local was newer — kept this device's copy and queued it for push"
+    },
+    "check": "Data check (device vs server)",
+    "checkHint": "Compares row counts after sync. Differences are reported only — nothing is auto-fixed.",
+    "checkRun": "Run check",
+    "checking": "Checking...",
+    "checkLocal": "This device",
+    "checkServer": "Server",
+    "checkDiff": "Diff",
+    "checkMatch": "All collections match",
+    "checkMismatch": "Mismatch found — check the pending queue or sync again",
+    "checkFailed": "Check failed",
+    "names": {
+      "categories": "Categories",
+      "products": "Products",
+      "customers": "Customers",
+      "inventory": "Inventory",
+      "promotions": "Promotions",
+      "promotion_targets": "Promotion targets",
+      "promotion_usages": "Promotion usages",
+      "orders": "Orders",
+      "order_items": "Order items",
+      "orders_total": "Orders completed total",
+      "stores": "Stores",
+      "store_members": "Store members"
+    }
+  },
   "pwa": {
     "installTitle": "Install zKCNT POS",
     "installDescription": "Tap Share, then choose \"Add to Home Screen\" to use it like an app",
