@@ -813,35 +813,34 @@
         </div>
 
         <div class="craft-card craft-card--label p-5">
-          <h3 class="mb-4 text-base font-semibold text-ink">{{ t('reportsPage.lowStock') }}</h3>
+          <h3 class="mb-4 text-base font-semibold text-ink">{{ t('reportsPage.lowStockCard') }}</h3>
           <div v-if="data.lowStock.length === 0" class="py-4 text-center text-ink-muted">
             {{ t('reportsPage.noLowStock') }}
           </div>
-          <div v-else class="max-h-40 space-y-2 overflow-y-auto">
+          <div v-else class="max-h-64 space-y-2 overflow-y-auto">
             <div
-              v-for="item in data.lowStock"
+              v-for="item in lowStockRows"
               :key="item.productId"
-              class="flex items-center justify-between rounded-lg bg-warning-500/10 px-3 py-2 text-sm"
+              class="flex items-center justify-between rounded-lg px-3 py-2 text-sm"
+              :class="item.out ? 'bg-danger-50' : 'bg-warning-500/10'"
             >
-              <span class="font-medium">{{ item.name }}</span>
-              <span class="text-warning-500">{{ item.quantity }} / {{ item.threshold }}</span>
-            </div>
-          </div>
-          <template v-if="data.lowStockFastMovers?.length">
-            <h4 class="mb-2 mt-4 text-sm font-semibold text-ink">{{ t('reportsPage.fastMoversLowStock') }}</h4>
-            <div class="max-h-32 space-y-2 overflow-y-auto">
-              <div
-                v-for="item in data.lowStockFastMovers"
-                :key="`fast-${item.productId}`"
-                class="flex items-center justify-between rounded-lg bg-danger-50 px-3 py-2 text-sm"
-              >
-                <span class="font-medium">{{ item.name }}</span>
-                <span class="text-danger-500">
-                  {{ t('reportsPage.soldAndStock', { sold: item.qtySold, stock: item.quantity }) }}
+              <div class="min-w-0">
+                <p class="truncate font-medium">{{ item.name }}</p>
+                <p v-if="item.qtySold > 0" class="text-xs text-ink-muted">
+                  {{ t('reportsPage.soldDuringPeriod', { sold: item.qtySold }) }}
+                </p>
+              </div>
+              <div class="flex shrink-0 items-center gap-2 pl-2">
+                <span v-if="!item.out" class="text-xs text-warning-500">{{ item.quantity }} / {{ item.threshold }}</span>
+                <span
+                  class="rounded-full px-2 py-0.5 text-xs font-medium"
+                  :class="stockQuantityBadge(item.quantity, item.threshold)"
+                >
+                  {{ stockStatusLabel(item.quantity, item.threshold) }}
                 </span>
               </div>
             </div>
-          </template>
+          </div>
         </div>
       </div>
 
@@ -951,14 +950,15 @@
 
 <script setup lang="ts">
 import { CUSTOMERS_ENABLED } from "~/lib/features";
-import { orderStatusBadge } from "~/lib/ui/statusColors";
+import { stockStatusOf } from "~/lib/stock";
+import { orderStatusBadge, stockQuantityBadge } from "~/lib/ui/statusColors";
 
 definePageMeta({ middleware: "auth" });
 
 const { t, locale } = useI18n();
 const reportsEnabled = useStoreFeatureEnabled("reports_enabled");
 const { formatCurrency, formatDateShort, toDatetimeLocalValue } = useFormat();
-const { paymentLabel, statusLabel } = useLabels();
+const { paymentLabel, statusLabel, stockStatusLabel } = useLabels();
 const {
   period,
   customSince,
@@ -987,6 +987,15 @@ function statusBadge(status: string) {
 }
 
 const customersEnabled = CUSTOMERS_ENABLED;
+
+const lowStockRows = computed(() => {
+  const soldMap = new Map((data.value?.lowStockFastMovers ?? []).map((r) => [r.productId, r.qtySold]));
+  return (data.value?.lowStock ?? []).map((item) => ({
+    ...item,
+    qtySold: soldMap.get(item.productId) ?? 0,
+    out: stockStatusOf(item.quantity, item.threshold) === "out",
+  }));
+});
 
 const periodOrdersTotals = computed(() => {
   const orders = filteredPeriodOrders.value;
