@@ -1,5 +1,31 @@
 [
   {
+    "version": "0.5.1",
+    "date": "2026-09-19",
+    "changes": {
+      "added": {
+        "th": [
+          "หน้ารายงาน: เพิ่มช่วงเวลา \"7 วันย้อนหลัง\" และตั้งเป็นค่าเริ่มต้น ดูยอดขายต่อเนื่อง 7 วันล่าสุดได้ทันที"
+        ],
+        "en": [
+          "Reports: new \"Last 7 days\" period, now the default view"
+        ]
+      },
+      "fixed": {
+        "th": [
+          "หน้าจอหลัก: แก้ยอดขายวันนี้ให้นับครบทั้งวัน (ก่อนหน้านี้อาจแสดงไม่ครบถ้าขายเยอะ)"
+        ],
+        "en": [
+          "Dashboard: today's sales now counts all orders of the day"
+        ]
+      },
+      "improved": {
+        "th": [],
+        "en": []
+      }
+    }
+  },
+  {
     "version": "0.5.0",
     "date": "2026-09-06",
     "changes": {
