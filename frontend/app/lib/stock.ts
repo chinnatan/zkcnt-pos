@@ -7,6 +7,14 @@ export interface StockShortage {
   requested: number;
 }
 
+export type StockStatus = "out" | "low" | "ok";
+
+export function stockStatusOf(quantity: number, threshold: number): StockStatus {
+  if (quantity <= 0) return "out";
+  if (quantity <= threshold) return "low";
+  return "ok";
+}
+
 export function buildStockMap(
   inventory: ReadonlyArray<Pick<Inventory, "product" | "quantity">>,
 ): Map<string, number> {

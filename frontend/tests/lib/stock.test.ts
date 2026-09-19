@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { validateCartItems } from "~/lib/stock";
+import { validateCartItems, stockStatusOf } from "~/lib/stock";
 import type { CartItem, Product } from "~/lib/types";
 
 function makeProduct(id: string, name: string, track = true): Product {
@@ -69,5 +69,17 @@ describe("validateCartItems", () => {
     );
 
     expect(shortages).toHaveLength(0);
+  });
+});
+
+describe("stockStatusOf", () => {
+  test("boundaries: 0 => out, == threshold => low, > threshold => ok", () => {
+    expect(stockStatusOf(0, 5)).toBe("out");
+    expect(stockStatusOf(-1, 5)).toBe("out");
+    expect(stockStatusOf(5, 5)).toBe("low");
+    expect(stockStatusOf(3, 5)).toBe("low");
+    expect(stockStatusOf(6, 5)).toBe("ok");
+    expect(stockStatusOf(0, 0)).toBe("out");
+    expect(stockStatusOf(1, 0)).toBe("ok");
   });
 });

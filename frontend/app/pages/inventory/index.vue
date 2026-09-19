@@ -19,17 +19,58 @@
       </h3>
     </div>
 
-    <div class="rounded-xl bg-paper shadow-sm">
-      <div v-if="isLoading" class="flex justify-center py-12">
-        <div class="h-8 w-8 animate-spin rounded-full border-4 border-primary-200 border-t-primary-600" />
+    <div v-if="isLoading" class="flex justify-center rounded-xl bg-paper shadow-sm py-12">
+      <div class="h-8 w-8 animate-spin rounded-full border-4 border-primary-200 border-t-primary-600" />
+    </div>
+
+    <div v-else-if="inventoryWithProducts.length === 0" class="rounded-xl bg-paper shadow-sm py-12 text-center text-ink-muted">
+      {{ t('stock.noData') }}
+    </div>
+
+    <template v-else>
+      <div class="mb-4 grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+        <div class="relative min-w-0">
+          <svg class="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-ink-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+          <input
+            v-model="searchQuery"
+            type="text"
+            :placeholder="t('stock.searchPlaceholder')"
+            class="h-10 w-full rounded-lg border border-border-warm bg-paper py-0 pl-10 pr-4 text-sm shadow-sm transition focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+          />
+        </div>
+        <div class="flex h-10 overflow-hidden rounded-lg border border-border-warm bg-paper shadow-sm transition focus-within:border-primary-500 focus-within:ring-2 focus-within:ring-primary-500/20 sm:min-w-[14rem]">
+          <div class="relative min-w-0 flex-1 sm:w-40 lg:w-44">
+            <select
+              v-model="statusFilter"
+              class="h-full w-full appearance-none border-0 bg-transparent py-0 pl-3 pr-9 text-sm focus:outline-none focus:ring-0"
+            >
+              <option value="all">{{ t('stock.allStatuses') }}</option>
+              <option value="ok">{{ t('stock.inStock') }}</option>
+              <option value="low">{{ t('stock.lowStock') }}</option>
+              <option value="out">{{ t('stock.outOfStock') }}</option>
+            </select>
+            <svg class="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+          </div>
+          <div class="w-px self-stretch bg-border-warm" aria-hidden="true" />
+          <div class="relative min-w-0 flex-1 sm:w-44 lg:w-52">
+            <select
+              v-model="selectedCategoryId"
+              class="h-full w-full appearance-none border-0 bg-transparent py-0 pl-3 pr-9 text-sm focus:outline-none focus:ring-0"
+            >
+              <option :value="null">{{ t('stock.allCategories') }}</option>
+              <option v-for="cat in categories" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
+            </select>
+            <svg class="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+          </div>
+        </div>
       </div>
 
-      <div v-else-if="inventoryWithProducts.length === 0" class="py-12 text-center text-ink-muted">
-        {{ t('stock.noData') }}
-      </div>
+      <div class="rounded-xl bg-paper shadow-sm">
+        <div v-if="filteredInventory.length === 0" class="py-12 text-center text-ink-muted">
+          {{ t('stock.noResults') }}
+        </div>
 
-      <div v-else>
-        <UiMobileDataList>
+        <UiMobileDataList v-else table-from="lg">
           <template #table>
             <div class="overflow-x-auto">
               <table class="w-full text-left text-sm">
@@ -44,7 +85,7 @@
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-border-warm">
-                  <tr v-for="item in inventoryWithProducts" :key="item.id" class="hover:bg-surface">
+                  <tr v-for="item in filteredInventory" :key="item.id" class="hover:bg-surface">
                     <td class="px-4 py-3 font-medium text-ink">{{ item.productName }}</td>
                     <td class="px-4 py-3 text-ink-muted">{{ item.productSku || '-' }}</td>
                     <td class="px-4 py-3 text-right font-semibold" :class="item.quantity <= item.low_stock_threshold ? 'text-danger-500' : ''">
@@ -74,7 +115,7 @@
           </template>
           <template #cards>
             <UiMobileDataCard
-              v-for="item in inventoryWithProducts"
+              v-for="item in filteredInventory"
               :key="item.id"
               :title="item.productName"
               :subtitle="item.productSku || t('common.noSku')"
@@ -111,7 +152,7 @@
           </template>
         </UiMobileDataList>
       </div>
-    </div>
+    </template>
 
     <Teleport to="body">
       <div v-if="showAdjustModal" class="craft-modal-backdrop craft-modal-backdrop--center z-50">
@@ -198,13 +239,18 @@
 
 <script setup lang="ts">
 import { stockQuantityBadge } from "~/lib/ui/statusColors";
+import { stockStatusOf, type StockStatus } from "~/lib/stock";
 definePageMeta({ middleware: "auth" });
 
 const { t } = useI18n();
 const { stockStatusLabel } = useLabels();
 const { inventoryItems, isLoading, lowStockItems, fetchInventory, adjustStock } = useInventory();
-const { products, fetchProducts } = useProducts();
+const { products, categories, fetchProducts, fetchCategories } = useProducts();
 const { activeStoreId } = useStore();
+
+const searchQuery = ref("");
+const statusFilter = ref<"all" | StockStatus>("all");
+const selectedCategoryId = ref<string | null>(null);
 
 const showAdjustModal = ref(false);
 const adjustForm = reactive({
@@ -221,7 +267,18 @@ const inventoryWithProducts = computed(() => {
       ...inv,
       productName: product?.name || t("common.unknown"),
       productSku: product?.sku || "",
+      productCategory: product?.category || "",
     };
+  });
+});
+
+const filteredInventory = computed(() => {
+  const q = searchQuery.value.trim().toLowerCase();
+  return inventoryWithProducts.value.filter((item) => {
+    if (q && !item.productName.toLowerCase().includes(q) && !item.productSku.toLowerCase().includes(q)) return false;
+    if (statusFilter.value !== "all" && stockStatusOf(item.quantity, item.low_stock_threshold) !== statusFilter.value) return false;
+    if (selectedCategoryId.value && item.productCategory !== selectedCategoryId.value) return false;
+    return true;
   });
 });
 
@@ -276,5 +333,6 @@ watch(
 onMounted(() => {
   fetchInventory();
   fetchProducts();
+  fetchCategories();
 });
 </script>
