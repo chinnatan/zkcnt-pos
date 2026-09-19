@@ -74,6 +74,33 @@
 
 ---
 
+## เสร็จแล้ว (รายละเอียดใน `docs/sub-plan-*.md` — ใช้เป็น know-how ของการแตกงาน)
+
+### Auto-deploy ผ่าน GitHub Actions (`docs/sub-plan-auto-deploy.md`)
+- [x] ตรวจพบสาเหตุจริง: ตั้ง secrets เป็น Environment secret ของ `PRODUCTION` แต่ job ไม่ประกาศ `environment:` → secret ไม่ถูกส่ง (แก้ใน `2d7a81b`)
+- [x] สร้าง Cloudflare API Token แบบ scoped (Workers Edit / D1 Edit / Pages Edit / Zone Read) + ยืนยัน Pages project `zkcnt-pos` กับ Workers routes `/api/*`, `/uploads/*`
+- [ ] ค้าง: manual `workflow_dispatch` บน `main`, ตรวจ variable `NUXT_PUBLIC_APP_URL`, ตัดสิน trigger (auto vs approval) — ดู Phase 2–4 ในไฟล์
+
+### Dashboard ยอดขายไม่ตรง Reports (`docs/sub-plan-dashboard-sales-mismatch.md`)
+- [x] สาเหตุ: `fetchOrders(10)` แล้ว sum จาก slice 10 รายการล่าสุด → helpers นับต่ำกว่าจริงทุกครั้งที่ขายเกิน 10 ออร์เดอร์/วัน
+- [x] แก้: helper `getTodayStats` ใน `frontend/app/lib/dashboard.ts` query Dexie ผ่าน compound index `[store+status]` กรองขอบวัน Bangkok; `fetchOrders(10)` คงไว้เฉพาะตาราง "ออร์เดอร์ล่าสุด"
+- [x] proof: `tests/lib/dashboard.test.ts` (vitest + fake-indexeddb) ครอบ >10 รายการ/วัน, ย้อนวัน, voided/refunded, ต่าง store
+
+### Reports preset "7 วันย้อนหลัง" (`docs/sub-plan-reports-last7.md`)
+- [x] เพิ่ม `last7` ใน `ReportPeriod` + `getPeriodRange` (now ย้อน 6 วัน ที่ Bangkok start-of-day) + เปลี่ยน default หน้ารายงานเป็น `last7`
+- [x] backend แก้แค่ type union 3 จุด — `period` ใช้เลือก granularity เท่านั้น ไม่แตะ SQL/schema
+- [x] proof: `tests/lib/reportsPeriod.test.ts` + typecheck ทั้งสอง package
+
+### Know-how ที่ใช้ซ้ำได้ (จากทั้งสามไฟล์)
+1. sub-plan ทุกไฟล์มีโครงสร้าง: Branch → สรุปสาเหตุ/ข้อเท็จจริง (Phase 0) → Business Goals → ตาราง edge cases → Phase checklist → Proof → Appendix ผลสำรวจ
+2. bug fix ไล่จาก source of truth: grep ทุก caller ของ pattern ที่พังก่อนแก้ (เคสนี้ไม่มีหน้าอื่น sum จาก slice ซ้ำ)
+3. แก้ที่ชั้น helper + compound index เดิมพอ → ไม่ต้องแตะ Dexie schema / sync / migration
+4. UI-only + type union = ยอมรับข้ามชั้น backend ได้ แต่ต้อง sync type contract ทั้งสองฝั่ง
+5. ติ๊ก `[x]` พร้อมสาเหตุ/commit ในบรรทัด, ข้อที่รอ user ตรวจคง `[ ]` พร้อมหมายเหตุ (เช่น "รอ user ตรวจ")
+6. typecheck baseline: เก่า error = เดิม develop → record ตัวเลข baseline ไว้ใน proof ว่าไม่เพิ่ม
+
+---
+
 ## Appendix: สิ่งที่สำรวจแล้ว (ไม่ต้องเพิ่ม)
 - barcode: มี field + ค้นจาก search ใน POS (`pos.vue:376`) — สแกนเนอร์ USB-HID พิมพ์แล้ว enter ได้เลย ถ้าอยากได้ scan-mode dedicated ค่อยคิด Phase แยก
 - VAT 7% + CSV export มีใน reports แล้ว
