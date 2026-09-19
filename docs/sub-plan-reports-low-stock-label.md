@@ -30,7 +30,7 @@ Branch: `fix/reports-low-stock-label` (แตกจาก `develop` เมื่
 ## Phase 2: Review & Quality Assurance
 
 - [x] `bun run typecheck` = 11 error เท่า baseline develop (pre-existing: `admin/stores/[id].vue` + `sync-engine.test.ts` — ไม่มี error ใน scope); `bun run test tests/lib` = 17 ผ่าน (มี `stockStatusOf` test ครอบคลุม helper อยู่แล้ว ไม่เพิ่ม suite สำหรับ template)
-- [ ] manual บน `task local`: สินค้า qty=0 แสดง badge "หมดสต็อก" (danger) ในลิสต์เดียว ไม่มีสินค้าซ้ำสองเซกชัน และไม่มี "0 / 0" warning (รอ user ตรวจ)
+- [x] manual บน `task local`: ยืนยันกับข้อมูลจริงแล้ว — badge "หมดสต็อก" แสดงถูกไม่มีซ้ำ/ไม่มี "0 / 0" และตัวเลขขาย 10 ชิ้นตรงกับ DB (ชาไทย 4+3+2+1 วันนี้) ไม่ใช่บั๊ก filter
 
 ## Appendix: ผลสำรวจ
 
