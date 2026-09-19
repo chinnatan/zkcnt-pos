@@ -36,7 +36,7 @@ export function useReports() {
   const { locale, t } = useI18n();
   const { datetimeLocalToIso } = useFormat();
 
-  const period = ref<ReportPeriod>("today");
+  const period = ref<ReportPeriod>("last7");
   const customSince = ref("");
   const customUntil = ref("");
   const data = ref<ReportsData | null>(null);

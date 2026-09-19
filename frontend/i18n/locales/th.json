@@ -333,6 +333,7 @@
   "reportsPage": {
     "title": "รายงาน",
     "today": "วันนี้",
+    "last7Days": "7 วันย้อนหลัง",
     "thisWeek": "สัปดาห์นี้",
     "thisMonth": "เดือนนี้",
     "customRange": "กำหนดช่วงเอง",
