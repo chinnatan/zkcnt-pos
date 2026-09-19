@@ -34,7 +34,9 @@ Branch: `feat/stock-threshold-input` (แตกจาก `develop` เมื่�
 - [x] typecheck = baseline เดิมเป๊ะ (backend 8, frontend 11 errors — pre-existing `admin/stores/[id].vue` + `sync-engine.test.ts`; ไม่มี error ในไฟล์ที่แก้ — ยืนยันด้วย stash เทียบ backend)
 - [x] เพิ่ม `backend/src/test/integration/inventory-threshold.test.ts` — create ด้วย threshold, tx ไม่ส่ง threshold → ค่าเดิมไม่ถูกรีเซ็ต (กันบั๊ก 0 ทับของเก่า), ส่งใหม่ → แก้ได้, default 0; `bun test src/test/integration` = 30 ผ่าน
 - [x] `bun run test tests/unit` = 13 ผ่าน; ไม่มี test ของ `adjustStock` เดิม → ไม่เพิ่ม suite (mock `$api`+Dexie หนักกว่าผลที่ได้, LWW ของ `updated` ใน queue data ยืนยันด้วย type แล้ว)
-- [ ] manual บน `task local`: online → ปรับสต็อก+ตั้งเกณฑ์ → reload ยังอยู่ + badge "ใกล้หมด" เปลี่ยน; offline → ทำเดียวกัน → sync ขึ้นแล้วค่าตรง
+- [x] manual round 1 พัง: แก้เกณฑ์อย่างเดียวไม่อัปเดต → root cause คือ early-return `if (txQuantity === 0) return;` ใน branch adjustment ของ `useInventory.ts` (ปรับเกณฑ์อย่างเดียว delta=0 → หาวทิ้งเงียบ ๆ) — ยืนยัน backend ถูกด้วย curl (create thr=3, update thr=7 ผ่าน tx POST)
+- [x] fix: guard ใหม่ `txQuantity === 0 && !thresholdChanged` → online: tx POST เมื่อ qty เปลี่ยน/ไม่มีแถว, PATCH `/inventory/:id` เมื่อเปลี่ยนเฉพาะเกณฑ์; offline mirror เดียวกัน (ข้าม queue tx ตัว 0) — typecheck 11 = baseline, unit 13 ผ่าน
+- [ ] manual ซ้ำบน `task local`: ปรับเฉพาะเกณฑ์ (qty เดิม) → badge เปลี่ยนทันที + reload ยังอยู่; offline → sync ขึ้นแล้วค่าตรง
 
 ## Appendix: ผลสำรวจ
 

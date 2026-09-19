@@ -63,7 +63,6 @@ export function useInventory() {
     if (type === "adjustment") {
       afterQty = quantity;
       txQuantity = Math.abs(afterQty - beforeQty);
-      if (txQuantity === 0) return;
     } else if (type === "stock_out") {
       afterQty = beforeQty - quantity;
       txQuantity = quantity;
@@ -71,6 +70,10 @@ export function useInventory() {
       afterQty = beforeQty + quantity;
       txQuantity = quantity;
     }
+
+    const thresholdChanged =
+      threshold !== undefined && threshold !== current?.low_stock_threshold;
+    if (txQuantity === 0 && !thresholdChanged) return;
 
     const txData: Partial<InventoryTransaction> = {
       store: activeStoreId.value,
@@ -85,26 +88,38 @@ export function useInventory() {
     };
 
     if (isOnline.value) {
-      await $api.send(
-        `/stores/${activeStoreId.value}/inventory-transactions`,
-        {
-          method: "POST",
-          body:
-            threshold === undefined
-              ? txData
-              : { ...txData, low_stock_threshold: threshold },
-        },
-      );
+      if (txQuantity > 0 || !current) {
+        await $api.send(
+          `/stores/${activeStoreId.value}/inventory-transactions`,
+          {
+            method: "POST",
+            body:
+              threshold === undefined
+                ? txData
+                : { ...txData, low_stock_threshold: threshold },
+          },
+        );
+      } else if (thresholdChanged) {
+        await $api.send(
+          `/stores/${activeStoreId.value}/inventory/${current.id}`,
+          {
+            method: "PATCH",
+            body: { low_stock_threshold: threshold },
+          },
+        );
+      }
     } else {
       const txId = `temp_${Date.now()}`;
       const now = new Date().toISOString();
-      await addToSyncQueue({
-        collection: "inventory_transactions",
-        action: "create",
-        record_id: txId,
-        data: txData,
-        store: activeStoreId.value,
-      });
+      if (txQuantity > 0 || !current) {
+        await addToSyncQueue({
+          collection: "inventory_transactions",
+          action: "create",
+          record_id: txId,
+          data: txData,
+          store: activeStoreId.value,
+        });
+      }
 
       if (current) {
         const invUpdates =
