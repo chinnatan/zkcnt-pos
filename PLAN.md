@@ -44,9 +44,9 @@
 - [ ] หน้า inventory: ดูชิ้นเหลือ/ขายแล้วต่อสินค้า + รูปต่อชิ้น (R2 มีอยู่แล้ว)
 
 ## Phase 4: Sync & ความเชื่อมั่น offline
-- [ ] UI สถานะ sync แบบเห็นทั้ง queue (pending/failed/retry count) ใน layout — `engine.ts`/`queue.ts` มีข้อมูลอยู่แล้ว แค่ยังไม่มีหน้า
-- [ ] บันทึกเหตุผล conflict ที่ LWW ทับแล้ว (audit + หน้าตรวจของ owner)
-- [ ] self-check ระยะ store: เทียบยอด D1 vs Dexie หลัง sync ครบ (รายงานความต่าง ไม่ auto-fix)
+- [x] UI สถานะ sync แบบเห็นทั้ง queue (pending/failed/retry count) ใน layout — `engine.ts`/`queue.ts` มีข้อมูลอยู่แล้ว แค่ยังไม่มีหน้า → chip + modal ใน Header (`components/layout/SyncStatus.vue`)
+- [x] บันทึกเหตุผล conflict ที่ LWW ทับแล้ว (audit + หน้าตรวจของ owner) → `pullAll` เลิกทับเงียบ ๆ (local ใหม่กว่า = อยู่ต่อ + log `syncConflicts` Dexie) แสดงใน modal เฉพาะ manager — ดู `docs/sub-plan-sync-observability.md`
+- [x] self-check ระยะ store: เทียบยอด D1 vs Dexie หลัง sync ครบ (รายงานความต่าง ไม่ auto-fix) → `GET /:storeId/sync/verify` + ปุ่ม "ตรวจความตรง" ใน modal เดียวกัน (กัน `temp_*` ออกจากฝั่ง local)
 
 ## Phase 5: เติมมาตรฐานใบเสร็จ/ไทย
 - [ ] ข้อมูลร้านสำหรับภาษี: store TIN, branch, ใบกำกับภาษี/ใบลดหนี้ header
@@ -71,6 +71,33 @@
 - [ ] รัน `bun run typecheck` + `task test` เฉพาะ scope ที่แก้
 - [ ] เพิ่ม integration test ให้ endpoint ใหม่น้อยที่สุด happy + void/conflict path
 - [ ] E2E: `task test:e2e` (build ก่อน) สำหรับ flow POS ที่แก้
+
+---
+
+## เสร็จแล้ว (รายละเอียดใน `docs/sub-plan-*.md` — ใช้เป็น know-how ของการแตกงาน)
+
+### Auto-deploy ผ่าน GitHub Actions (`docs/sub-plan-auto-deploy.md`)
+- [x] ตรวจพบสาเหตุจริง: ตั้ง secrets เป็น Environment secret ของ `PRODUCTION` แต่ job ไม่ประกาศ `environment:` → secret ไม่ถูกส่ง (แก้ใน `2d7a81b`)
+- [x] สร้าง Cloudflare API Token แบบ scoped (Workers Edit / D1 Edit / Pages Edit / Zone Read) + ยืนยัน Pages project `zkcnt-pos` กับ Workers routes `/api/*`, `/uploads/*`
+- [ ] ค้าง: manual `workflow_dispatch` บน `main`, ตรวจ variable `NUXT_PUBLIC_APP_URL`, ตัดสิน trigger (auto vs approval) — ดู Phase 2–4 ในไฟล์
+
+### Dashboard ยอดขายไม่ตรง Reports (`docs/sub-plan-dashboard-sales-mismatch.md`)
+- [x] สาเหตุ: `fetchOrders(10)` แล้ว sum จาก slice 10 รายการล่าสุด → helpers นับต่ำกว่าจริงทุกครั้งที่ขายเกิน 10 ออร์เดอร์/วัน
+- [x] แก้: helper `getTodayStats` ใน `frontend/app/lib/dashboard.ts` query Dexie ผ่าน compound index `[store+status]` กรองขอบวัน Bangkok; `fetchOrders(10)` คงไว้เฉพาะตาราง "ออร์เดอร์ล่าสุด"
+- [x] proof: `tests/lib/dashboard.test.ts` (vitest + fake-indexeddb) ครอบ >10 รายการ/วัน, ย้อนวัน, voided/refunded, ต่าง store
+
+### Reports preset "7 วันย้อนหลัง" (`docs/sub-plan-reports-last7.md`)
+- [x] เพิ่ม `last7` ใน `ReportPeriod` + `getPeriodRange` (now ย้อน 6 วัน ที่ Bangkok start-of-day) + เปลี่ยน default หน้ารายงานเป็น `last7`
+- [x] backend แก้แค่ type union 3 จุด — `period` ใช้เลือก granularity เท่านั้น ไม่แตะ SQL/schema
+- [x] proof: `tests/lib/reportsPeriod.test.ts` + typecheck ทั้งสอง package
+
+### Know-how ที่ใช้ซ้ำได้ (จากทั้งสามไฟล์)
+1. sub-plan ทุกไฟล์มีโครงสร้าง: Branch → สรุปสาเหตุ/ข้อเท็จจริง (Phase 0) → Business Goals → ตาราง edge cases → Phase checklist → Proof → Appendix ผลสำรวจ
+2. bug fix ไล่จาก source of truth: grep ทุก caller ของ pattern ที่พังก่อนแก้ (เคสนี้ไม่มีหน้าอื่น sum จาก slice ซ้ำ)
+3. แก้ที่ชั้น helper + compound index เดิมพอ → ไม่ต้องแตะ Dexie schema / sync / migration
+4. UI-only + type union = ยอมรับข้ามชั้น backend ได้ แต่ต้อง sync type contract ทั้งสองฝั่ง
+5. ติ๊ก `[x]` พร้อมสาเหตุ/commit ในบรรทัด, ข้อที่รอ user ตรวจคง `[ ]` พร้อมหมายเหตุ (เช่น "รอ user ตรวจ")
+6. typecheck baseline: เก่า error = เดิม develop → record ตัวเลข baseline ไว้ใน proof ว่าไม่เพิ่ม
 
 ---
 

@@ -197,10 +197,18 @@ inventoryRoutes.post(
       .where(and(eq(inventory.store, storeId), eq(inventory.product, productId)))
       .limit(1);
 
+    const thresholdNum = Number(body.low_stock_threshold);
+    const threshold =
+      body.low_stock_threshold !== undefined && Number.isFinite(thresholdNum)
+        ? thresholdNum
+        : undefined;
+
     if (existing[0]) {
+      const updates: Partial<typeof inventory.$inferInsert> = { quantity: afterQty, updated: now };
+      if (threshold !== undefined) updates.lowStockThreshold = threshold;
       await db
         .update(inventory)
-        .set({ quantity: afterQty, updated: now })
+        .set(updates)
         .where(eq(inventory.id, existing[0].id));
     } else {
       await db.insert(inventory).values({
@@ -208,7 +216,7 @@ inventoryRoutes.post(
         store: storeId,
         product: productId,
         quantity: afterQty,
-        lowStockThreshold: 0,
+        lowStockThreshold: threshold ?? 0,
         created: now,
         updated: now,
       });

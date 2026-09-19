@@ -34,6 +34,16 @@ export interface SyncDelta {
   inventory_transactions: Record<string, unknown>[];
 }
 
+export interface SyncVerifyCollection {
+  count: number;
+  completed_total?: number;
+}
+
+export interface SyncVerifyResult {
+  checked_at: string;
+  collections: Record<string, SyncVerifyCollection>;
+}
+
 type SendOptions = {
   method?: string;
   body?: unknown;
@@ -251,6 +261,10 @@ export class ApiClient {
     return this.send<SyncDelta>(
       `/stores/${storeId}/sync?since=${encodeURIComponent(since)}`,
     );
+  }
+
+  async syncVerify(storeId: string): Promise<SyncVerifyResult> {
+    return this.send<SyncVerifyResult>(`/stores/${storeId}/sync/verify`);
   }
 
   async clearTransactionHistory(

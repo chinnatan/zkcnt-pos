@@ -4,7 +4,7 @@
       <slot name="table" />
     </div>
     <div
-      class="flex flex-col gap-3 p-4"
+      class="flex flex-col gap-3 py-4"
       :class="tableFrom === 'lg' ? 'lg:hidden' : 'md:hidden'"
     >
       <slot name="cards" />

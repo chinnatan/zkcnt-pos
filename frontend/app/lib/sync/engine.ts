@@ -85,22 +85,13 @@ async function remapLocalOrderItems(tempOrderId: string, realOrderId: string) {
 
 const logger = createLogger("sync");
 
-type SyncRecord = { id: string; deleted_at?: string | null };
+type SyncRecord = { id: string; updated?: string; deleted_at?: string | null };
 
-async function applySyncedRecords<T extends SyncRecord>(
-  table: { bulkPut: (items: never[]) => Promise<void>; bulkDelete: (keys: string[]) => Promise<void> },
-  records: T[],
-) {
-  if (!records.length) return;
-  const toPut: T[] = [];
-  const toDelete: string[] = [];
-  for (const record of records) {
-    if (record.deleted_at) toDelete.push(record.id);
-    else toPut.push(record);
-  }
-  if (toPut.length) await table.bulkPut(toPut as never[]);
-  if (toDelete.length) await table.bulkDelete(toDelete);
-}
+type PullTable = {
+  get: (id: string) => Promise<SyncRecord | undefined>;
+  bulkPut: (items: never[]) => Promise<unknown>;
+  bulkDelete: (keys: string[]) => Promise<unknown>;
+};
 
 export class SyncEngine {
   private api: ApiClient;
@@ -140,47 +131,101 @@ export class SyncEngine {
     );
 
     if (delta.stores?.length) {
-      await db.stores.bulkPut(delta.stores as never[]);
+      await this.applyPull(db.stores, "stores", delta.stores as SyncRecord[]);
     }
     if (delta.store_members?.length) {
-      await db.storeMembers.bulkPut(delta.store_members as never[]);
-    }
-    if (delta.categories?.length) {
-      await applySyncedRecords(db.categories, delta.categories as SyncRecord[]);
-    }
-    if (delta.products?.length) {
-      const deletedProductIds = (delta.products as SyncRecord[])
-        .filter((record) => record.deleted_at)
-        .map((record) => record.id);
-      await applySyncedRecords(db.products, delta.products as SyncRecord[]);
-      for (const productId of deletedProductIds) {
-        await db.inventory.where("product").equals(productId).delete();
-      }
-    }
-    if (delta.customers?.length) {
-      await applySyncedRecords(db.customers, delta.customers as SyncRecord[]);
-    }
-    if (delta.inventory?.length) {
-      await db.inventory.bulkPut(delta.inventory as never[]);
-    }
-    if (delta.promotions?.length) {
-      await applySyncedRecords(db.promotions, delta.promotions as SyncRecord[]);
-    }
-    if (delta.promotion_targets?.length) {
-      await applySyncedRecords(
-        db.promotionTargets,
-        delta.promotion_targets as SyncRecord[],
+      await this.applyPull(
+        db.storeMembers,
+        "store_members",
+        delta.store_members as SyncRecord[],
       );
     }
-    if (delta.promotion_usages?.length) {
-      await db.promotionUsages.bulkPut(delta.promotion_usages as never[]);
+    await this.applyPull(
+      db.categories,
+      "categories",
+      (delta.categories ?? []) as SyncRecord[],
+    );
+    const deletedProductIds = await this.applyPull(
+      db.products,
+      "products",
+      (delta.products ?? []) as SyncRecord[],
+    );
+    for (const productId of deletedProductIds) {
+      await db.inventory.where("product").equals(productId).delete();
     }
-    if (delta.orders?.length) {
-      await db.orders.bulkPut(delta.orders as never[]);
+    await this.applyPull(
+      db.customers,
+      "customers",
+      (delta.customers ?? []) as SyncRecord[],
+    );
+    await this.applyPull(
+      db.inventory,
+      "inventory",
+      (delta.inventory ?? []) as SyncRecord[],
+    );
+    await this.applyPull(
+      db.promotions,
+      "promotions",
+      (delta.promotions ?? []) as SyncRecord[],
+    );
+    await this.applyPull(
+      db.promotionTargets,
+      "promotion_targets",
+      (delta.promotion_targets ?? []) as SyncRecord[],
+    );
+    await this.applyPull(
+      db.promotionUsages,
+      "promotion_usages",
+      (delta.promotion_usages ?? []) as SyncRecord[],
+    );
+    await this.applyPull(
+      db.orders,
+      "orders",
+      (delta.orders ?? []) as SyncRecord[],
+    );
+    await this.applyPull(
+      db.orderItems,
+      "order_items",
+      (delta.order_items ?? []) as SyncRecord[],
+    );
+  }
+
+  /**
+   * Apply pulled records with true last-write-wins on `updated` (tie → remote).
+   * A local record newer than the incoming one is kept and the overwrite
+   * attempt is logged to `syncConflicts` for owner review — never silently.
+   */
+  private async applyPull(
+    table: PullTable,
+    collection: string,
+    records: SyncRecord[],
+  ): Promise<string[]> {
+    if (!records.length) return [];
+    const toPut: SyncRecord[] = [];
+    const toDelete: string[] = [];
+    for (const record of records) {
+      const local = await table.get(record.id);
+      if (local && (local.updated ?? "") > (record.updated ?? "")) {
+        await db.syncConflicts.add({
+          store: this.storeId,
+          collection,
+          record_id: record.id,
+          local_snapshot: local as Record<string, unknown>,
+          remote_snapshot: record as Record<string, unknown>,
+          reason: "local_newer_kept",
+          created: new Date().toISOString(),
+        });
+        logger.warn(
+          `LWW conflict ${collection} ${record.id}: local newer — kept local, logged`,
+        );
+        continue;
+      }
+      if (record.deleted_at) toDelete.push(record.id);
+      else toPut.push(record);
     }
-    if (delta.order_items?.length) {
-      await db.orderItems.bulkPut(delta.order_items as never[]);
-    }
+    if (toPut.length) await table.bulkPut(toPut as never[]);
+    if (toDelete.length) await table.bulkDelete(toDelete);
+    return toDelete;
   }
 
   async drainSyncQueue() {

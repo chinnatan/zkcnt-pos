@@ -12,6 +12,7 @@ import type {
   PromotionTarget,
   PromotionUsage,
   SyncQueueItem,
+  SyncConflict,
   FileBlob,
   FileUploadQueueItem,
 } from './types';
@@ -29,6 +30,7 @@ export class PosDatabase extends Dexie {
   promotionTargets!: Table<PromotionTarget>;
   promotionUsages!: Table<PromotionUsage>;
   syncQueue!: Table<SyncQueueItem, number>;
+  syncConflicts!: Table<SyncConflict, number>;
   fileBlobs!: Table<FileBlob>;
   fileUploadQueue!: Table<FileUploadQueueItem, number>;
 
@@ -63,6 +65,10 @@ export class PosDatabase extends Dexie {
 
     this.version(6).stores({
       promotionUsages: 'id, store, [store+promotion], promotion, order, customer',
+    });
+
+    this.version(7).stores({
+      syncConflicts: '++id, store, collection, record_id, created',
     });
   }
 }
