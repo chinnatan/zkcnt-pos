@@ -13,6 +13,7 @@
 
     <div class="flex items-center gap-3">
       <LayoutLocaleSwitcher />
+      <LayoutThemeToggle />
       <LayoutSyncStatus />
 
       <span

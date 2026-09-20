@@ -33,7 +33,7 @@
       <div class="flex h-14 items-center justify-between border-b border-border-warm px-4">
         <NuxtLink
           to="/admin"
-          class="font-display text-lg font-bold text-primary-700"
+          class="font-pixel text-lg font-bold text-primary-700"
           @click="sidebarOpen = false"
         >
           {{ t('admin.nav.title') }}

@@ -5,7 +5,7 @@
   >
     <div class="flex h-full flex-col">
       <div class="flex h-14 items-center justify-between border-b border-border-warm px-4">
-        <NuxtLink to="/" class="font-display text-lg font-bold text-primary-700">{{ t('nav.appName') }}</NuxtLink>
+        <NuxtLink to="/" class="font-pixel text-lg font-bold text-primary-700">{{ t('nav.appName') }}</NuxtLink>
         <button class="rounded p-1 text-ink-muted hover:text-ink lg:hidden" @click="close">
           <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
