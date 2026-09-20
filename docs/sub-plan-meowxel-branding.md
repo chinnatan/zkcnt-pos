@@ -71,7 +71,7 @@
   3. "ระบบ POS สไตล์คราฟต์ เติมความสมบูรณ์แบบให้ทุกการขาย"
 
 ## ผลการดำเนินงาน (feature/meowxel-branding)
-- เปลี่ยนแบรนด์/สี/ฟอนต์/ปุ่ม/การ์ด/modal/anim ครบตาม checklist — 19 ไฟล์, ยังไม่ commit
+- เปลี่ยนแบรนด์/สี/ฟอนต์/ปุ่ม/การ์ด/modal/anim ครบตาม checklist — งานหลัก 19 ไฟล์ และมีการปรับ logo เพิ่มเติม
 - หลักฐาน: frontend unit 15/15, components 6/6, integration+lib 28/28, build ✓; backend integration 33/33
 - typecheck สองฝั่งพังตั้งแต่ baseline develop (frontend 10 errors ใน sync-engine.test, backend drizzle types) — งานนี้ไม่เพิ่ม error ใหม่ (พิสูจน์ด้วย worktree HEAD)
 - E2E 6 specs fail บน develop เองที่เครื่องนี้ (login waitForURL timeout) — ไม่ใช่ regression; testid/class ที่ assert (`success-modal`, `checkout-btn`, `text-warning`) คงชื่อครบ, ReceiptPrint (พิมพ์จริง) ไม่ถูกแตะ
@@ -100,3 +100,7 @@
 - [x] เปลี่ยน logo หน้าปกติใน `Sidebar.vue` ให้ใช้ pixel font แบบเดียวกับหน้า POS
 - [x] เปลี่ยน logo หน้า Platform Admin ใน `layouts/admin.vue` ให้ใช้ pixel font แบบเดียวกับหน้า POS
 - [x] คงข้อความแบรนด์, link, accessibility และ business logic เดิม
+
+### ผลลัพธ์
+- commit แล้ว: `6fb3fff fix(brand): ปรับโลโก้หน้าปกติและแอดมินเป็นพิกเซล`
+- push ยังไม่สำเร็จ เนื่องจาก GitHub SSH ปฏิเสธ key (`Permission denied (publickey)`); local branch อยู่ข้างหน้า remote 1 commit
