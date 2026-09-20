@@ -57,7 +57,7 @@
           </div>
         </UiCraftCard>
 
-        <UiCraftCard variant="polaroid" padding="sm" :tilt="-0.4">
+        <UiCraftCard variant="polaroid" padding="sm">
           <div class="flex items-center justify-between">
             <div>
               <p class="text-sm text-ink-muted">{{ t('nav.products') }}</p>

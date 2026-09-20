@@ -79,7 +79,9 @@
     "selectedCount": "เลือกแล้ว {count} รายการ",
     "noSearchResults": "ไม่พบรายการที่ค้นหา",
     "removeItem": "ลบ {name}",
-    "appTagline": "ระบบ POS ทำงานออฟไลน์ได้"
+    "appTagline": "ระบบ POS สไตล์คราฟต์ เติมความสมบูรณ์แบบให้ทุกการขาย",
+    "lightMode": "ใช้โหมดสว่าง",
+    "darkMode": "ใช้โหมดมืด"
   },
   "sync": {
     "title": "สถานะซิงค์",
@@ -132,7 +134,7 @@
     }
   },
   "pwa": {
-    "installTitle": "ติดตั้งแอป zKCNT POS",
+    "installTitle": "ติดตั้งแอป Meowxel POS",
     "installDescription": "กด Share (ไอคอนลูกศรขึ้น) แล้วเลือก \"เพิ่มที่หน้าจอโฮม\" เพื่อใช้งานแบบแอป",
     "dismiss": "ปิด",
     "updateTitle": "มีเวอร์ชันใหม่",
@@ -153,7 +155,7 @@
     "promotions": "โปรโมชัน",
     "logout": "ออกจากระบบ",
     "more": "เพิ่มเติม",
-    "appName": "zKCNT POS"
+    "appName": "Meowxel POS"
   },
   "auth": {
     "signIn": "เข้าสู่ระบบ",

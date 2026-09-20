@@ -9,7 +9,6 @@
     <div class="flex items-center gap-3">
       <span
         class="inline-flex h-8 min-w-8 items-center justify-center rounded-md bg-primary-500 px-2 text-sm font-bold text-white"
-        style="transform: rotate(-2deg)"
       >
         {{ itemCount }}
       </span>

@@ -50,7 +50,7 @@ export default defineNuxtConfig({
 
   app: {
     head: {
-      title: "zKCNT POS",
+      title: "Meowxel POS",
       meta: [
         { charset: "utf-8" },
         {
@@ -59,9 +59,9 @@ export default defineNuxtConfig({
             "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover",
         },
         { name: "description", content: "Offline-First POS System" },
-        { name: "theme-color", content: "#5a8da8" },
+        { name: "theme-color", content: "#0f172a" },
         { name: "apple-mobile-web-app-capable", content: "yes" },
-        { name: "apple-mobile-web-app-title", content: "zKCNT POS" },
+        { name: "apple-mobile-web-app-title", content: "Meowxel POS" },
         { name: "apple-mobile-web-app-status-bar-style", content: "default" },
       ],
       link: [
@@ -76,7 +76,7 @@ export default defineNuxtConfig({
         },
         {
           rel: "stylesheet",
-          href: "https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&display=swap",
+          href: "https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=Noto+Sans+Thai:wght@400;500;600;700&display=swap",
         },
         {
           rel: "icon",
@@ -108,13 +108,13 @@ export default defineNuxtConfig({
       ],
     },
     manifest: {
-      name: "zKCNT POS - Offline-First Point of Sale",
-      short_name: "zKCNT POS",
+      name: "Meowxel POS - Offline-First Point of Sale",
+      short_name: "Meowxel POS",
       description: "Offline-First POS System",
       start_url: "/",
       scope: "/",
-      theme_color: "#5a8da8",
-      background_color: "#f6f9fc",
+      theme_color: "#0f172a",
+      background_color: "#f8fafc",
       display: "standalone",
       orientation: "any",
       icons: [

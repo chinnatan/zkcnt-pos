@@ -61,7 +61,7 @@ export async function sendInviteEmail(email: string, inviteLink: string) {
 
   await sendEmail({
     to: email,
-    subject: "คำเชิญเข้าร่วมทีม — zKCNT POS",
+    subject: "คำเชิญเข้าร่วมทีม — Meowxel POS",
     html,
     devLogLabel: "invite",
     devLogLink: inviteLink,
@@ -83,7 +83,7 @@ export async function sendPasswordResetEmail(
 
   await sendEmail({
     to: email,
-    subject: "รีเซ็ตรหัสผ่าน — zKCNT POS",
+    subject: "รีเซ็ตรหัสผ่าน — Meowxel POS",
     html,
     devLogLabel: "password-reset",
     devLogLink: resetLink,
@@ -96,13 +96,13 @@ export async function sendAdminAlertEmail(
   bodyHtml: string,
 ) {
   const html = emailLayout(`
-    <h2 style="margin:0 0 16px;font-size:20px">zKCNT POS — Platform Alert</h2>
+    <h2 style="margin:0 0 16px;font-size:20px">Meowxel POS — Platform Alert</h2>
     ${bodyHtml}
   `);
 
   await sendEmail({
     to: email,
-    subject: `[zKCNT POS] ${subject}`,
+    subject: `[Meowxel POS] ${subject}`,
     html,
     devLogLabel: "admin-alert",
   });
@@ -125,7 +125,7 @@ export async function sendSupportTicketReplyEmail(
 
   await sendEmail({
     to: email,
-    subject: `ตอบกลับ ticket: ${ticketSubject} — zKCNT POS`,
+    subject: `ตอบกลับ ticket: ${ticketSubject} — Meowxel POS`,
     html,
     devLogLabel: "support-ticket-reply",
     devLogLink: ticketUrl,

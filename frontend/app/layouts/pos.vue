@@ -1,17 +1,15 @@
 <template>
   <div class="flex h-dvh flex-col overflow-hidden bg-craft-texture">
     <header
-      class="flex h-14 shrink-0 items-center justify-between border-b border-primary-200/60 bg-paper px-3 sm:px-4"
-      style="border-bottom-style: dashed"
+      class="flex h-14 shrink-0 items-center justify-between border-b-4 border-primary-200/60 bg-paper px-3 sm:px-4"
     >
       <div class="flex min-w-0 items-center gap-2 sm:gap-3">
-        <NuxtLink to="/" class="font-display hidden shrink-0 text-lg font-bold text-primary-700 sm:inline">
+        <NuxtLink to="/" class="font-pixel hidden shrink-0 text-lg font-bold text-primary-700 sm:inline">
           {{ t('nav.appName') }}
         </NuxtLink>
         <span
           v-if="activeStore"
           class="max-w-[140px] truncate rounded-md border border-primary-200 bg-primary-50 px-2.5 py-0.5 text-xs font-semibold text-primary-700 sm:max-w-none sm:px-3 sm:text-sm"
-          style="transform: rotate(-0.3deg)"
         >
           {{ activeStore.name }}
         </span>
@@ -20,6 +18,7 @@
         <div class="hidden sm:block">
           <LayoutLocaleSwitcher />
         </div>
+        <LayoutThemeToggle />
         <span
           class="flex items-center gap-1.5 text-sm"
           :class="isOnline ? 'text-success-500' : 'text-danger-500'"

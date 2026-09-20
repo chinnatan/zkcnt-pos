@@ -157,7 +157,7 @@ async function checkLoginFailedAlert(bindings: WorkerBindings): Promise<void> {
     await sendAdminAlertEmail(
       adminEmail,
       "Login failure spike detected",
-      `<p>There were <strong>${failedCount}</strong> failed login attempts in the last 24 hours on zKCNT POS.</p>`,
+      `<p>There were <strong>${failedCount}</strong> failed login attempts in the last 24 hours on Meowxel POS.</p>`,
     );
     await setSystemMeta("alert.login_failed.last_sent", new Date().toISOString());
     logger.info(`login failed alert sent to=${adminEmail} count=${failedCount}`);

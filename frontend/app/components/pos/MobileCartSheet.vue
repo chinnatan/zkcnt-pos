@@ -19,7 +19,6 @@
         >
           <div
             class="relative flex shrink-0 flex-col items-center border-b border-primary-200/60 px-4 py-3"
-            style="border-bottom-style: dashed"
             @touchstart.passive="onTouchStart"
             @touchmove.passive="onTouchMove"
             @touchend="onTouchEnd"

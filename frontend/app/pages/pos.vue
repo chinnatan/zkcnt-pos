@@ -82,25 +82,7 @@
         >
           <div v-if="isLoading" class="flex h-full items-center justify-center">
             <div class="text-center text-ink-muted">
-              <svg
-                class="mx-auto h-8 w-8 animate-spin"
-                fill="none"
-                viewBox="0 0 24 24"
-              >
-                <circle
-                  class="opacity-25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  stroke-width="4"
-                />
-                <path
-                  class="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-                />
-              </svg>
+              <div class="pixel-cat-loader pixel mx-auto" aria-hidden="true" />
               <p class="mt-2 text-sm">{{ t('pos.loadingProducts') }}</p>
             </div>
           </div>
@@ -238,6 +220,16 @@
         <div
           class="craft-modal-panel craft-modal--tag max-w-sm animate-[scaleIn_0.2s_ease-out] text-center"
         >
+          <div class="pixel-paid-stamp" aria-hidden="true">
+            <i /><i /><i />
+            <svg class="pixel h-4 w-4" viewBox="0 0 8 8" fill="currentColor">
+              <rect x="3" y="1" width="2" height="1" />
+              <rect x="1" y="2" width="1" height="1" />
+              <rect x="6" y="2" width="1" height="1" />
+              <rect x="2" y="4" width="4" height="3" />
+            </svg>
+            <span>PAID</span>
+          </div>
           <div
             class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-accent-100"
           >

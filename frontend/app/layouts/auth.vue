@@ -2,10 +2,11 @@
   <div class="bg-craft-texture relative flex min-h-screen items-center justify-center p-4">
     <div class="absolute right-4 top-4">
       <LayoutLocaleSwitcher />
+      <LayoutThemeToggle class="mt-2" />
     </div>
     <div class="w-full max-w-md">
       <div class="mb-8 text-center">
-        <h1 class="font-display text-3xl font-bold text-primary-700">{{ t('nav.appName') }}</h1>
+        <h1 class="font-pixel text-2xl font-bold text-primary-700">{{ t('nav.appName') }}</h1>
         <p class="mt-1 text-sm text-ink-muted">{{ t('common.appTagline') }}</p>
       </div>
       <slot />
