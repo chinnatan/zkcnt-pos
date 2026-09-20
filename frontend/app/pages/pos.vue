@@ -42,6 +42,7 @@
                 <option value="nameDesc">{{ t('pos.sortNameDesc') }}</option>
                 <option value="priceAsc">{{ t('pos.sortPriceAsc') }}</option>
                 <option value="priceDesc">{{ t('pos.sortPriceDesc') }}</option>
+                <option value="bestSelling">{{ t('pos.sortBestSelling') }}</option>
               </select>
               <label class="touch-pos flex cursor-pointer items-center gap-2 text-sm text-ink-muted">
                 <input
@@ -296,6 +297,7 @@
 import type { Product } from "~/lib/types";
 import { createLogger } from "~/lib/logger";
 import { sortPosProducts } from "~/lib/pos/productSort";
+import { fetchProductSales } from "~/lib/pos/productSales";
 import { InsufficientStockError } from "~/composables/useOrders";
 
 const logger = createLogger("pos");
@@ -341,6 +343,7 @@ const { productSort, stockFirst } = usePosProductListPrefs();
 const showMobileCart = ref(false);
 const searchQuery = ref("");
 const selectedCategory = ref<string | null>(null);
+const salesByProduct = ref<ReadonlyMap<string, number>>(new Map());
 const isCheckingOut = ref(false);
 const showSuccessModal = ref(false);
 const showQrModal = ref(false);
@@ -382,6 +385,7 @@ const filteredProducts = computed(() => {
     stockFirst: stockFirst.value,
     locale: locale.value,
     isOutOfStock,
+    salesByProduct: salesByProduct.value,
   });
 });
 
@@ -544,6 +548,7 @@ async function completeCheckout() {
     showMobileCart.value = false;
     showSuccessModal.value = true;
     await fetchInventory();
+    await refreshProductSales(activeStoreId.value);
   } catch (err) {
     logger.error("Checkout failed:", err);
     if (err instanceof InsufficientStockError) {
@@ -566,6 +571,10 @@ function handleNewOrder() {
   showMobileCart.value = false;
 }
 
+async function refreshProductSales(storeId: string | null | undefined) {
+  salesByProduct.value = storeId ? await fetchProductSales(storeId) : new Map();
+}
+
 watch(
   activeStoreId,
   (id) => {
@@ -575,6 +584,7 @@ watch(
       fetchCategories(),
       fetchInventory(),
       fetchPromotions(),
+      refreshProductSales(id),
     ]).then(() => setPromotionInputs(getPromotionInputs()));
   },
   { immediate: true },
