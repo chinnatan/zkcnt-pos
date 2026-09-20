@@ -15,6 +15,7 @@ import {
   listAdminStores,
   listAdminUsers,
   listClientSessions,
+  revokeUserSessions,
   updateStoreActive,
   updateStoreFeatureFlags,
   updateUserActive,
@@ -160,6 +161,25 @@ adminRoutes.patch("/users/:userId", async (c) => {
 
   const updated = await getAdminUserDetail(userId);
   return c.json(updated);
+});
+
+adminRoutes.post("/users/:userId/revoke-sessions", async (c) => {
+  const userId = c.req.param("userId");
+  const detail = await getAdminUserDetail(userId);
+  if (!detail) {
+    throw new HTTPException(404, { message: "User not found" });
+  }
+
+  await revokeUserSessions(userId);
+  logAuditEvent(c, {
+    actor: c.get("userId"),
+    action: "admin.user_revoke_sessions",
+    entityType: "user",
+    entityId: userId,
+    summary: `Platform admin revoked sessions for ${detail.user.email}`,
+  });
+
+  return c.json({ ok: true });
 });
 
 adminRoutes.get("/audit", async (c) => {

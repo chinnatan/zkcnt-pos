@@ -16,16 +16,18 @@ export type StoreAccessVariables = AuthVariables & {
 async function getMembership(userId: string, storeId: string) {
   const rows = await db
     .select()
-    .from(storeMembers)
-    .where(
-      and(
-        eq(storeMembers.store, storeId),
-        eq(storeMembers.user, userId),
-        eq(storeMembers.isActive, true),
-      ),
-    )
-    .limit(1);
-  return rows[0] ?? null;
+      .from(storeMembers)
+      .innerJoin(stores, eq(storeMembers.store, stores.id))
+      .where(
+        and(
+          eq(storeMembers.store, storeId),
+          eq(storeMembers.user, userId),
+          eq(storeMembers.isActive, true),
+          eq(stores.isActive, true),
+        ),
+      )
+      .limit(1);
+  return rows[0]?.store_members ?? null;
 }
 
 export const requireStoreMember = createMiddleware<{

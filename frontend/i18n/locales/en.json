@@ -529,6 +529,7 @@
     "inviteLinkCopyFailed": "Could not copy link",
     "confirmRemoveMember": "Remove this team member?",
     "auditLog": "Audit log",
+    "sessions": "Active sessions",
     "rolesAndPermissions": "Roles & permissions",
     "paymentSettings": "Payment",
     "promptpayId": "PromptPay ID",
@@ -825,7 +826,9 @@
       "version": "Version",
       "syncPending": "Pending sync",
       "lastSeen": "Last seen",
-      "empty": "No device sessions yet"
+      "empty": "No device sessions yet",
+      "revoke": "Revoke sessions",
+      "confirmRevoke": "Revoke all sessions for this user?"
     },
     "system": {
       "apiStatus": "API status",
@@ -844,6 +847,7 @@
       "promotions": "Promotions enabled",
       "reports": "Reports enabled",
       "offlineSync": "Offline sync enabled",
+      "customers": "Customers enabled",
       "disabled": "This feature is disabled for your store. Contact support if you need access."
     },
     "tickets": {

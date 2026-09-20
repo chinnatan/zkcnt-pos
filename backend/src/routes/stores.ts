@@ -34,6 +34,7 @@ import {
   type StoreAccessVariables,
 } from "../middleware/store-access";
 import { createStoreWithOwner } from "../services/store.service";
+import { listClientSessions, revokeUserSessions } from "../services/admin.service";
 import { deleteUpload, saveUpload } from "../lib/uploads";
 import { createLogger } from "../lib/logger";
 
@@ -46,6 +47,59 @@ function isUploadFile(value: unknown): value is File {
 export const storeRoutes = new Hono<{
   Variables: AuthVariables | StoreAccessVariables;
 }>();
+
+storeRoutes.get(
+  "/:storeId/sessions",
+  authMiddleware,
+  requireStoreManager,
+  async (c) => {
+    const limit = Math.min(Number(c.req.query("limit") ?? 50), 200);
+    const offset = Number(c.req.query("offset") ?? 0);
+    return c.json(
+      await listClientSessions({
+        limit,
+        offset,
+        store: c.req.param("storeId"),
+        activeMembers: true,
+      }),
+    );
+  },
+);
+
+storeRoutes.post(
+  "/:storeId/members/:userId/revoke-sessions",
+  authMiddleware,
+  requireStoreManager,
+  async (c) => {
+    const storeId = c.req.param("storeId");
+    const userId = c.req.param("userId");
+    const target = await db
+      .select({
+        isActive: storeMembers.isActive,
+        isPlatformAdmin: users.isPlatformAdmin,
+      })
+      .from(storeMembers)
+      .innerJoin(users, eq(storeMembers.user, users.id))
+      .where(and(eq(storeMembers.store, storeId), eq(storeMembers.user, userId)))
+      .limit(1);
+
+    if (!target[0] || !target[0].isActive || target[0].isPlatformAdmin) {
+      throw new HTTPException(403, { message: "Cannot revoke this session" });
+    }
+
+    await revokeUserSessions(userId);
+    logAuditEvent(c, {
+      actor: c.get("userId"),
+      store: storeId,
+      action: "user.session_revoke",
+      entityType: "user",
+      entityId: userId,
+      summary: "Store manager revoked user sessions",
+    });
+
+    return c.json({ ok: true });
+  },
+);
 
 storeRoutes.get("/memberships", authMiddleware, async (c) => {
   const userId = c.get("userId");
