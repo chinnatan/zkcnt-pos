@@ -2,10 +2,11 @@ import { and, eq } from "drizzle-orm";
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
 import { db } from "../db/client";
-import { clientSessions, storeMembers } from "../db/schema";
+import { clientSessions } from "../db/schema";
 import { generateId } from "../lib/id";
 import { nowIso } from "../lib/timestamps";
 import { authMiddleware, type AuthVariables } from "../middleware/auth";
+import { assertStoreMemberByStoreId } from "../middleware/store-access";
 
 export const clientRoutes = new Hono<{ Variables: AuthVariables }>();
 
@@ -26,21 +27,7 @@ clientRoutes.post("/heartbeat", authMiddleware, async (c) => {
     throw new HTTPException(400, { message: "store required" });
   }
 
-  const membership = await db
-    .select({ id: storeMembers.id })
-    .from(storeMembers)
-    .where(
-      and(
-        eq(storeMembers.store, storeId),
-        eq(storeMembers.user, userId),
-        eq(storeMembers.isActive, true),
-      ),
-    )
-    .limit(1);
-
-  if (!membership[0]) {
-    throw new HTTPException(403, { message: "Not a store member" });
-  }
+  await assertStoreMemberByStoreId(userId, storeId);
 
   const now = nowIso();
   const existing = await db

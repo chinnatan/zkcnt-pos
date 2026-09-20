@@ -124,6 +124,10 @@ export function usePlatformAdmin() {
     );
   }
 
+  function revokeUserSessions(userId: string) {
+    return $api.send(`/admin/users/${userId}/revoke-sessions`, { method: "POST" });
+  }
+
   function exportAuditCsv(filters: {
     since?: string;
     until?: string;
@@ -251,6 +255,7 @@ export function usePlatformAdmin() {
     listAudit,
     getHealth,
     listDevices,
+    revokeUserSessions,
     exportAuditCsv,
     listTickets,
     getTicket,

@@ -7,7 +7,6 @@
         <span
           v-if="itemCount > 0"
           class="ml-1 inline-flex h-6 min-w-6 items-center justify-center rounded-md bg-primary-500 px-1.5 text-xs font-bold text-white"
-          style="transform: rotate(-2deg)"
         >
           {{ itemCount }}
         </span>
@@ -281,14 +280,14 @@
     >
       <div class="mb-3 flex items-center justify-between text-lg">
         <span class="font-display font-bold text-ink">{{ t('pos.netTotal') }}</span>
-        <span class="font-bold text-primary-600" data-testid="cart-total">
+        <span class="font-bold text-cyber-600" data-testid="cart-total">
           {{ formatCurrency(total) }}
         </span>
       </div>
 
       <button
         data-testid="checkout-btn"
-        class="touch-pos w-full rounded-lg border-2 border-primary-400 bg-primary-500 py-4 text-base font-bold text-white shadow-md transition hover:bg-primary-600 active:bg-primary-700 disabled:border-transparent disabled:bg-ink-muted/60 disabled:opacity-50 disabled:shadow-none lg:active:scale-[0.98]"
+        class="touch-pos btn-pay w-full"
         :disabled="isCheckingOut || !canCheckout"
         @click="emit('checkout')"
       >

@@ -94,6 +94,8 @@
 </template>
 
 <script setup lang="ts">
+import { STORE_FEATURE_FLAGS } from "~/lib/feature-flags";
+
 definePageMeta({ middleware: ["auth", "platform-admin"], layout: "admin" });
 
 const route = useRoute();
@@ -107,17 +109,23 @@ const isLoading = ref(true);
 const isSaving = ref(false);
 const featureFlags = ref<Record<string, boolean>>({});
 
-const featureFlagOptions = computed(() => [
-  { key: "promotions_enabled", label: t("admin.featureFlags.promotions") },
-  { key: "reports_enabled", label: t("admin.featureFlags.reports") },
-  { key: "offline_sync_enabled", label: t("admin.featureFlags.offlineSync") },
-]);
+const featureFlagOptions = computed(() =>
+  STORE_FEATURE_FLAGS.map((flag) => ({
+    key: flag.key,
+    label: t(flag.labelKey),
+  })),
+);
 
 async function loadDetail() {
   isLoading.value = true;
   try {
     detail.value = await getStore(storeId.value);
-    featureFlags.value = { ...detail.value.feature_flags };
+    featureFlags.value = Object.fromEntries(
+      STORE_FEATURE_FLAGS.map((flag) => [
+        flag.key,
+        detail.value!.feature_flags[flag.key] ?? flag.default,
+      ]),
+    );
   } finally {
     isLoading.value = false;
   }
@@ -145,7 +153,7 @@ async function saveFeatureFlags() {
     detail.value = await patchStore(storeId.value, {
       feature_flags: featureFlags.value,
     }) as typeof detail.value;
-    featureFlags.value = { ...detail.value.feature_flags };
+    featureFlags.value = { ...detail.value!.feature_flags };
   } finally {
     isSaving.value = false;
   }

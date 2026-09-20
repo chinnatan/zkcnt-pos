@@ -74,8 +74,8 @@ authRoutes.post("/register", async (c) => {
 
   const user = mapUser(row);
 
-  const token = await signAccessToken(id);
-  const refreshToken = await signRefreshToken(id);
+  const token = await signAccessToken(id, row.tokenVersion);
+  const refreshToken = await signRefreshToken(id, row.tokenVersion);
 
   logger.info(`register success userId=${id} email=${email}`);
 
@@ -121,8 +121,8 @@ authRoutes.post("/login", async (c) => {
   await maybePromotePlatformAdmin(row.id, row.email);
   const freshRow = (await loadUserById(row.id)) ?? row;
   const user = mapUser(freshRow);
-  const token = await signAccessToken(row.id);
-  const refreshToken = await signRefreshToken(row.id);
+  const token = await signAccessToken(row.id, freshRow.tokenVersion);
+  const refreshToken = await signRefreshToken(row.id, freshRow.tokenVersion);
 
   logger.info(`login success userId=${row.id} email=${email}`);
 
@@ -163,11 +163,15 @@ authRoutes.post("/refresh", async (c) => {
     throw new HTTPException(403, { message: "Account disabled" });
   }
 
+  if ((payload.tv ?? 0) !== row.tokenVersion) {
+    throw new HTTPException(401, { message: "Session revoked" });
+  }
+
   await maybePromotePlatformAdmin(row.id, row.email);
   const freshRow = (await loadUserById(row.id)) ?? row;
   const user = mapUser(freshRow);
-  const token = await signAccessToken(row.id);
-  const refreshToken = await signRefreshToken(row.id);
+  const token = await signAccessToken(row.id, freshRow.tokenVersion);
+  const refreshToken = await signRefreshToken(row.id, freshRow.tokenVersion);
 
   return c.json({ token, refreshToken, user });
 });

@@ -1,5 +1,31 @@
 [
   {
+    "version": "0.6.0",
+    "date": "2026-09-20",
+    "changes": {
+      "added": {
+        "th": [
+          "ปรับโฉม Meowxel POS ใหม่ด้วยธีมพิกเซล โลโก้ และไอคอนแบบแมว",
+          "เพิ่มโหมดมืด พร้อมปุ่มสลับธีมและจดจำการตั้งค่าที่เลือกไว้",
+          "เพิ่มเครื่องมือให้ผู้ดูแลระบบจัดการเซสชันและปิดการใช้งานร้านได้จาก Platform Admin"
+        ],
+        "en": [
+          "A refreshed Meowxel POS look with a pixel theme, cat logo, and new app icons",
+          "Added dark mode with a theme switcher that remembers your choice",
+          "Platform Admin can now manage sessions and disable stores when needed"
+        ]
+      },
+      "fixed": {
+        "th": [],
+        "en": []
+      },
+      "improved": {
+        "th": [],
+        "en": []
+      }
+    }
+  },
+  {
     "version": "0.5.3",
     "date": "2026-09-20",
     "changes": {
