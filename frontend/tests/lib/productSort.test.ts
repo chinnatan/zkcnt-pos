@@ -53,6 +53,18 @@ describe("comparePosProducts", () => {
     // same price: Banana before กล้วย with en localeCompare
     expect(comparePosProducts(c, b, "priceDesc", "en")).not.toBe(0);
   });
+
+  test("bestSelling sorts by quantity then name", () => {
+    const sales = new Map([
+      [a.id, 2],
+      [b.id, 5],
+      [c.id, 5],
+    ]);
+
+    expect(comparePosProducts(a, b, "bestSelling", "en", sales)).toBeGreaterThan(0);
+    expect(comparePosProducts(b, c, "bestSelling", "en", sales)).not.toBe(0);
+    expect(comparePosProducts(a, product({ id: "4", name: "Apple", price: 1 }), "bestSelling", "en", sales)).toBeLessThan(0);
+  });
 });
 
 describe("sortPosProducts", () => {
@@ -123,5 +135,20 @@ describe("sortPosProducts", () => {
       isOutOfStock,
     });
     expect(products.map((p) => p.id)).toEqual(copy.map((p) => p.id));
+  });
+
+  test("sorts by best-selling quantity", () => {
+    const sorted = sortPosProducts(products, {
+      sort: "bestSelling",
+      stockFirst: false,
+      locale: "en",
+      isOutOfStock,
+      salesByProduct: new Map([
+        ["out", 1],
+        ["in1", 4],
+        ["in2", 2],
+      ]),
+    });
+    expect(sorted.map((p) => p.id)).toEqual(["in1", "in2", "out", "untracked"]);
   });
 });
