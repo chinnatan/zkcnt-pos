@@ -95,3 +95,8 @@
 - Light เป็นค่าเริ่มต้น; toggle อยู่ใน auth, POS และ dashboard/admin header และ persist ผ่าน `meowxel-theme`
 - Frontend build ผ่าน; frontend tests 49/49 ผ่าน; backend integration 33/33 ผ่าน
 - typecheck ยังพบ 10 errors เดิมใน `tests/integration/sync-engine.test.ts`; ไม่มี error ใหม่จาก theme work
+
+## Amendment: Pixel Logo Consistency
+- [x] เปลี่ยน logo หน้าปกติใน `Sidebar.vue` ให้ใช้ pixel font แบบเดียวกับหน้า POS
+- [x] เปลี่ยน logo หน้า Platform Admin ใน `layouts/admin.vue` ให้ใช้ pixel font แบบเดียวกับหน้า POS
+- [x] คงข้อความแบรนด์, link, accessibility และ business logic เดิม
