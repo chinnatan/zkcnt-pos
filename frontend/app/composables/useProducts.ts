@@ -126,6 +126,12 @@ export function useProducts() {
   const categories = ref<Category[]>([]);
   const isLoading = ref(false);
 
+  function sortCategories(records: Category[]): Category[] {
+    return [...records].sort(
+      (a, b) => a.sort_order - b.sort_order || a.name.localeCompare(b.name),
+    );
+  }
+
   async function fetchProducts() {
     if (!activeStoreId.value) return;
     isLoading.value = true;
@@ -161,21 +167,21 @@ export function useProducts() {
         const records = await $api.send<Category[]>(
           `/stores/${activeStoreId.value}/categories`,
         );
-        categories.value = records;
+        categories.value = sortCategories(records);
         await db.categories.bulkPut(records);
       } else {
         const local = await db.categories
           .where("store")
           .equals(activeStoreId.value)
           .toArray();
-        categories.value = local as Category[];
+        categories.value = sortCategories(local as Category[]);
       }
     } catch {
       const local = await db.categories
         .where("store")
         .equals(activeStoreId.value)
         .toArray();
-      categories.value = local as Category[];
+      categories.value = sortCategories(local as Category[]);
     }
   }
 

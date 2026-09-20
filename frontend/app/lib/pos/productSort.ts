@@ -5,7 +5,8 @@ export type PosProductSort =
   | "nameAsc"
   | "nameDesc"
   | "priceAsc"
-  | "priceDesc";
+  | "priceDesc"
+  | "bestSelling";
 
 export const POS_PRODUCT_SORT_OPTIONS: PosProductSort[] = [
   "default",
@@ -13,6 +14,7 @@ export const POS_PRODUCT_SORT_OPTIONS: PosProductSort[] = [
   "nameDesc",
   "priceAsc",
   "priceDesc",
+  "bestSelling",
 ];
 
 export function isPosProductSort(value: unknown): value is PosProductSort {
@@ -31,8 +33,14 @@ export function comparePosProducts(
   b: Product,
   sort: PosProductSort,
   locale: string,
+  salesByProduct: ReadonlyMap<string, number> = new Map(),
 ): number {
   switch (sort) {
+    case "bestSelling": {
+      const byQuantity =
+        (salesByProduct.get(b.id) ?? 0) - (salesByProduct.get(a.id) ?? 0);
+      return byQuantity !== 0 ? byQuantity : compareName(a, b, locale);
+    }
     case "nameDesc":
       return compareName(b, a, locale);
     case "priceAsc": {
@@ -55,15 +63,16 @@ export interface SortPosProductsOptions {
   stockFirst: boolean;
   locale: string;
   isOutOfStock: (product: Product) => boolean;
+  salesByProduct?: ReadonlyMap<string, number>;
 }
 
 export function sortPosProducts(
   products: Product[],
   options: SortPosProductsOptions,
 ): Product[] {
-  const { sort, stockFirst, locale, isOutOfStock } = options;
+  const { sort, stockFirst, locale, isOutOfStock, salesByProduct } = options;
   const compare = (a: Product, b: Product) =>
-    comparePosProducts(a, b, sort, locale);
+    comparePosProducts(a, b, sort, locale, salesByProduct);
 
   if (!stockFirst) {
     return [...products].sort(compare);

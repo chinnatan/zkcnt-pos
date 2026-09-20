@@ -1,5 +1,29 @@
 [
   {
+    "version": "0.5.3",
+    "date": "2026-09-20",
+    "changes": {
+      "added": {
+        "th": [
+          "แสดงหมวดหมู่ในหน้า POS ตามลำดับที่ตั้งไว้ ถูกต้องทั้งตอนออนไลน์และออฟไลน์",
+          "เพิ่มตัวเลือกเรียง “ขายดี” ในหน้า POS แสดงสินค้าที่ขายได้จำนวนมากกว่าขึ้นก่อน"
+        ],
+        "en": [
+          "POS categories now follow the order you set, correct both online and offline",
+          "Added a “Best selling” sort option in the POS — items with higher sold quantities appear first"
+        ]
+      },
+      "fixed": {
+        "th": [],
+        "en": []
+      },
+      "improved": {
+        "th": [],
+        "en": []
+      }
+    }
+  },
+  {
     "version": "0.5.2",
     "date": "2026-09-20",
     "changes": {

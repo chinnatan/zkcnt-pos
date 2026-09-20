@@ -1,6 +1,6 @@
 # zKCNT POS — PLAN ฟีเจอร์ที่ควรมีเพิ่ม (v0.6+)
 
-สถานะปัจจุบัน (v0.5.0): multi-tenant + offline-first ครบ, POS/สินค้า/สต็อก/โปรโมชั่น/รายงาน/void-refund/PromptPay QR/sync engine/support ticket/platform admin ใช้งานได้
+สถานะปัจจุบัน (v0.5.2 ปล่อยแล้ว; develop มีงานเพิ่มที่ยังไม่ออกเวอร์ชัน: POS เรียงหมวด/ขายดี, สรุปเลื่อน D1 backup): multi-tenant + offline-first ครบ, POS/สินค้า/สต็อก/โปรโมชั่น/รายงาน/void-refund/PromptPay QR/sync engine/support ticket/platform admin ใช้งานได้ + sync observability (Phase 4 เสร็จแล้ว)
 แหล่งที่มาของช่องว่าง: หน้าลูกค้าถูกปิด (`frontend/app/lib/features.ts:1`), จ่ายได้ครั้งละ 1 method (`orders.ts:323`) — บริบทใช้งานจริงคือออกบูธงาน art เป็นครั้งคราว ไม่ใช่หน้าร้านเปิดทุกวัน (ตัด cashier shift / Z-report ออกจากแผน)
 
 ## Business Goals
@@ -36,6 +36,7 @@
 - [ ] `suppliers` + `purchase_orders` + receive (เพิ่ม stock via inventory_transactions)
 - [ ] ปรับปรุงต้นทุนถัวเฉลี่ย (weighted average cost) ใน `products.cost`
 - [ ] รายงานกำไรขั้นต้น (ขาย−ทุน) ต่อสินค้า/หมวด ใน reports
+- [ ] สื่อสารของหมด vs ใกล้หมดให้ตรง — ทำไปแล้วบางส่วน: กำหนดเกณฑ์เตือนใน modal ปรับสต็อก (`docs/sub-plan-stock-threshold-input.md`), badge รวมลิสต์เดียวในหน้ารายงาน (`docs/sub-plan-reports-low-stock-label.md`), ค้นหา/กรองสถานะในหน้าสต็อก (`docs/sub-plan-inventory-search-filter.md`)
 - [ ] low stock → แจ้งเตือนผ่าน email (มี Resend อยู่แล้ว) แทนการดูในหน้าอย่างเดียว
 
 ### สินค้า unique per piece (งานต้นฉบับ/ชิ้นเดียว)
@@ -91,13 +92,40 @@
 - [x] backend แก้แค่ type union 3 จุด — `period` ใช้เลือก granularity เท่านั้น ไม่แตะ SQL/schema
 - [x] proof: `tests/lib/reportsPeriod.test.ts` + typecheck ทั้งสอง package
 
-### Know-how ที่ใช้ซ้ำได้ (จากทั้งสามไฟล์)
+### Sync observability (Phase 4 ทั้งหมด, `docs/sub-plan-sync-observability.md`)
+- [x] chip + modal สถานะ sync ทั้ง queue (pending/failed/retry) ใน Header (`components/layout/SyncStatus.vue`)
+- [x] `pullAll` เลิกทับเงียบ ๆ — local ใหม่กว่าอยู่ต่อ + log `syncConflicts` Dexie, แสดงใน modal เฉพาะ manager
+- [x] self-check เทียบยอด D1 vs Dexie: `GET /:storeId/sync/verify` + ปุ่ม "ตรวจความตรง" ใน modal เดียวกัน
+
+### ค้นหา + กรองในหน้าสต็อก (`docs/sub-plan-inventory-search-filter.md`)
+- [x] helper `stockStatusOf` ใน `lib/stock.ts` + search ชื่อ/SKU + dropdown สถานะ/หมวดหมู่ client-side จาก Dexie — UI-only ไม่แตะ backend; `tests/lib/stock.test.ts` ครอบ
+
+### หน้า Products เต็มพื้นที่ (`docs/sub-plan-products-full-width.md`)
+- [x] ลบ wrapper `max-w-7xl` ซ้ำ layout → patternเดียวกับหน้าอื่น; root cause padding การ์ดมือถือเกินแก้ที่ `UiMobileDataList` ตัวเดียว กระทบทุกหน้าไปทางเดียวกัน
+
+### ของหมดโชว์ "ใกล้หมด" ใน Reports (`docs/sub-plan-reports-low-stock-label.md`)
+- [x] สาเหตุ: filter `lowStock` = `qty <= threshold` รวมของหมดมาด้วย (design เดิมสองฝั่ง) → แก้ชั้น UI เป็นลิสต์เดียวพร้อม badge หมด/ใกล้หมด复用 `stockStatusOf`, ลบเซกชันขายดีซ้ำซ้อน
+
+### กำหนดเกณฑ์เตือนตอนปรับสต็อก (`docs/sub-plan-stock-threshold-input.md`)
+- [x] modal ปรับสต็อกมีช่อง "เกณฑ์เตือน" + POST `/inventory-transactions` รับ `low_stock_threshold` (สร้าง/แก้ใน 1 จุด), offline mirror ผ่าน syncQueue, เลิก hardcode default 10
+- [x] บั๊กที่เจอตอน manual: ปรับเฉพาะเกณฑ์ (delta=0) ถูก early-return ทิ้ง → guard ใหม่ `txQuantity === 0 && !thresholdChanged` + PATCH `/inventory/:id`; proof: `inventory-threshold.test.ts`
+- [ ] ค้าง: manual ซ้ำรอบสุดท้ายบน `task local` (เปลี่ยนเฉพาะเกณฑ์ → badge เปลี่ยนทันที + offline→sync แล้วค่าตรง)
+
+### POS เรียงหมวดตาม `sort_order` + sort "ขายดี" (`docs/sub-plan-pos-category-bestseller-filter.md`)
+- [x] frontend ล้วน ไม่แตะ schema/sync/API: `fetchCategories` sort ด้วย `sort_order` แล้ว `name` (ครอบทั้ง online + Dexie fallback), helper `productSales.ts` สร้าง qty map จาก `orders`(completed)+`orderItems` ใน Dexie → คำนวณ offline ได้
+- [x] เพิ่ม `"bestSelling"` ใน `POS_PRODUCT_SORT_OPTIONS`/`comparePosProducts` (qty DESC, tie name ASC) + option ใน dropdown และ key i18n th/en; proof: `tests/lib/productSort.test.ts` + `productSales.test.ts`
+- [ ] ค้าง: manual บน `task local` (ลำดับหมวดยังถูกต้องตอน offline, sort ขายดีตรงยอดจริง, ค่า sort ค้างใน localStorage)
+
+### Know-how ที่ใช้ซ้ำได้ (จากทุกไฟล์ sub-plan)
 1. sub-plan ทุกไฟล์มีโครงสร้าง: Branch → สรุปสาเหตุ/ข้อเท็จจริง (Phase 0) → Business Goals → ตาราง edge cases → Phase checklist → Proof → Appendix ผลสำรวจ
 2. bug fix ไล่จาก source of truth: grep ทุก caller ของ pattern ที่พังก่อนแก้ (เคสนี้ไม่มีหน้าอื่น sum จาก slice ซ้ำ)
 3. แก้ที่ชั้น helper + compound index เดิมพอ → ไม่ต้องแตะ Dexie schema / sync / migration
 4. UI-only + type union = ยอมรับข้ามชั้น backend ได้ แต่ต้อง sync type contract ทั้งสองฝั่ง
 5. ติ๊ก `[x]` พร้อมสาเหตุ/commit ในบรรทัด, ข้อที่รอ user ตรวจคง `[ ]` พร้อมหมายเหตุ (เช่น "รอ user ตรวจ")
-6. typecheck baseline: เก่า error = เดิม develop → record ตัวเลข baseline ไว้ใน proof ว่าไม่เพิ่ม
+6. typecheck baseline: เก่า error = เดิม develop → record ตัวเลข baseline ไว้ใน proof ว่าไม่เพิ่ม (ปัจจุบัน FE 11 / BE 8)
+7. งาน UI ซ้ำหลายหน้า ให้แก้ที่ shared component/helper ตัวเดียว (`UiMobileDataList`, `stockStatusOf`) แทน loop รายหน้า
+8. manual round แลก้พบบั๊กจริง (delta=0 early-return) → ซ้ำ: "รอ user ตรวจ" ต้องคง `[ ]` จนกว่าจะผ่านรอบใหม่
+9. ก่อนเขียนโค้ด backup/sync เอง ให้เช็กว่า platform มี native ให้ไหม (เคสนี้ D1 Time Travel ครอบคลุมพอ → เลื่อนงานทั้งชิ้น) — จดเป็น "เลื่อน + เงื่อนไขรื้อ" ไม่ใช่ลบทิ้ง
 
 ---
 
@@ -106,7 +134,8 @@
 - VAT 7% + CSV export มีใน reports แล้ว
 - refund/void ระดับทั้งออเดอร์มีแล้ว (`orders.ts:176`)
 - promotion engine, audit, feature flags, platform admin ครบ
-- automated testing ที่มีอยู่แล้ว: backend integration (auth/orders/sync/rbac/migrate/admin/support/purge), FE sync-engine + cart + promotions tests, E2E 5 specs, CI รัน tests + build + Playwright — ห้ามทำซ้ำใน Phase 7
+- automated testing ที่มีอยู่แล้ว: backend integration (auth/orders/sync/rbac/migrate/admin/support/purge), FE sync-engine + cart + promotions + dashboard + reportsPeriod + stock + productSort/productSales tests, E2E 5 specs, CI รัน tests + build + Playwright — ห้ามทำซ้ำใน Phase 7
+- D1 backup ลง R2: `backupD1ToR2()` ใน `backend/src/cron.ts` เขียนแค่ JSON placeholder (นับตาราง) → rollback ไม่ได้จริง **สรุปเลื่อน** (2026-09-20) ใช้ D1 Time Travel/automatic backup ของ Cloudflare แทน ดู `docs/sub-plan-d1-real-backup.md` — รื้อแผนเมื่อต้องการ restore เกิน window หรือ export ออกนอก CF; ข้อความใน `sub-plan-auto-deploy.md` Phase 4 ที่อ้าง "เชื่อ cron backup" จึงใช้ไม่ได้
 
 ## ลำดับที่แนะนำ
-Phase 1 → 4 → 2 → 5 → 3 → 6 (sync-provability คือสิ่งที่ทำให้เชื่อระบบตอน offline กลางงาน, customer ต้องเคลียร์งานค้างก่อน)
+Phase 1 → 2 → 5 → 3 → 6 (Phase 4 เสร็จแล้วใน v0.5.2 — sync-provability ผ่านไปแล้ว, customer ต้องเคลียร์งานค้างก่อน)

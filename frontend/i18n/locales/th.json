@@ -213,6 +213,7 @@
     "sortNameDesc": "ชื่อ ฮ-ก",
     "sortPriceAsc": "ราคา น้อย → มาก",
     "sortPriceDesc": "ราคา มาก → น้อย",
+    "sortBestSelling": "ขายดี",
     "stockFirst": "มีสต็อกขึ้นก่อน",
     "loadingProducts": "กำลังโหลดสินค้า...",
     "noProducts": "ไม่พบสินค้า",
