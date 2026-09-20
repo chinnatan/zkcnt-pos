@@ -22,6 +22,7 @@ export const users = sqliteTable("users", {
     .notNull()
     .default(false),
   isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
+  tokenVersion: integer("token_version").notNull().default(0),
   ...timestamps,
 });
 

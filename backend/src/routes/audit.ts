@@ -1,4 +1,4 @@
-import { and, count, desc, eq, gte, inArray, lte } from "drizzle-orm";
+import { and, count, desc, eq, gte, inArray, lte, notLike } from "drizzle-orm";
 import { Hono } from "hono";
 import { db } from "../db/client";
 import { auditEvents, orders, users } from "../db/schema";
@@ -20,7 +20,10 @@ function buildAuditFilters(
   storeId: string,
   query: Record<string, string | undefined>,
 ) {
-  const conditions = [eq(auditEvents.store, storeId)];
+  const conditions = [
+    eq(auditEvents.store, storeId),
+    notLike(auditEvents.action, "admin.%"),
+  ];
 
   if (query.since) {
     conditions.push(gte(auditEvents.created, query.since));

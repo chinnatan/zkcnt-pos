@@ -54,10 +54,18 @@
 - [ ] จำนวนเงินเป็นตัวอักษรภาษาไทยบนใบเสร็จ (มีสูตรเดียว, ไม่ต้องพึ่ง lib)
 - [ ] export ข้อมูลร้าน (CSV/JSON) สำหรับ backup + PDPA (ดึง/ลบข้อมูลลูกค้า)
 
-## Phase 6: Security & admin เล็กน้อย
-- [ ] หน้า session management (อุปกรณ์ที่ login อยู่, revoke) — `clientSessions` มีแล้ว
-- [ ] 2FA (TOTP) สำหรับ role owner
-- [ ] audit log viewer ฝั่ง store owner (ปัจจุบันมีเฉพาะ platform admin)
+## Phase 6: Security & admin (platform admin เป็นแกน)
+### ระดับ platform (ทำอะไรแล้วได้ผลจริง ไม่ใช่แค่เปลี่ยนธงในฐานข้อมูล)
+- [ ] Session revocation ที่มีอยู่จริง — ตอนนี้ `authMiddleware` ไม่แตะ DB (`backend/src/middleware/auth.ts:11`) และ access token อายุ 7 วัน (`backend/src/lib/jwt.ts:17`), refresh 30 วัน → `PATCH /admin/users/:id {is_active:false}` (`routes/admin.ts:132`) กว่าจะบังคับได้ในทางปฏิบัติคือรอ refresh; เพิ่ม `tokenVersion` บน users + เช็กใน authMiddleware ตัวเดียว แล้วให้ `clientSessions` มี revoke จริง (ใช้ต่อทั้งหน้า admin devices และหน้า store ด้านล่าง)
+- [ ] ปิดร้านแล้วร้านต้องหยุดขาย — `requireStoreMember` เช็กแค่ `storeMembers.isActive` ไม่เคยเช็ก `stores.isActive` (`middleware/store-access.ts:15-27`) → ปุ่ม deactivate ของ platform admin ยังไม่มีผลกับ API/sync; แก้ใน middleware ตัวเดียว ครอบทุก store route
+- [ ] ตั้ง/ถอด platform admin ผ่าน UI — เส้นทางเดียวคือ env `platformAdminEmail` ตรงกัน (`lib/platform-admin.ts:7-21`), `PATCH /admin/users/:id` รับแค่ `is_active` → เพิ่ม admin คนที่สองทุกวันนี้ต้องรัน SQL เองและไม่ทิ้ง audit; เพิ่ม `is_platform_admin` + `logAuditEvent` + กันถอดแอดมินคนสุดท้าย
+- [ ] 2FA (TOTP) + rate limit ที่ login ฝั่ง platform admin ก่อน role owner — `requirePlatformAdmin` พิสูจน์ด้วย HS256 ตัวเดียวและ `/api/auth/login` ไม่มีการจำกัดความถี่; ทำ TOTP + throttle ที่นี่ก่อนแล้ว reuse คอลัมน์/lib เดิมลง owner
+- [ ] per-store sync drill-down ใน `pages/admin/stores/[id].vue` — Phase 4 ทำ `GET /:storeId/sync/verify` ไว้สำหรับ owner เท่านั้น ขณะที่ `pendingSyncCount` เก็บใน `clientSessions` แล้วและ `services/ops.service.ts` มี query `>= 10` อยู่ → เพิ่มปุ่ม "ตรวจความตรงแทนร้าน" (support ticket ถามหน้านี้เป็นหลัก)
+- [ ] feature flag registry ชุดเดียว — รายการ flag hardcode ใน `pages/admin/stores/[id].vue:110` (มีแค่ promotions/reports/offline_sync) แยกจาก `lib/feature-flags.ts` และ `lib/features.ts:1` → รวมเป็น registry (key + default + label) เพื่อให้ Phase 2 เปิด `customers_enabled` แบบ per-store ได้
+### ระดับ store
+- [ ] หน้า session management (อุปกรณ์ที่ login อยู่, revoke) — `clientSessions` มีข้อมูลแล้ว แต่ไม่มี revoke endpoint เลย → ใช้ `tokenVersion` จากข้อ platform ข้างบนเป็นตัวบังคับ
+- [ ] 2FA (TOTP) สำหรับ role owner (reuse จากข้อ platform)
+- [ ] audit log viewer ฝั่ง store owner (ปัจจุบันมีเฉพาะ platform admin ที่ `/admin/audit`) — filter ต่อ store และกรอง action `admin.*` ออกจากสายตา owner
 
 ## Phase 7: Automated testing (setup ช่องว่างที่เหลือ)
 - [ ] Migration parity test: apply `src/db/migrate.ts` และ `backend/migrations/*.sql` ลง temp DB สองตัวแล้ว diff `.schema` ให้ fail เมื่อไม่ตรง (กัน drift ที่ AGENTS.md เตือน)
@@ -66,6 +74,7 @@
 - [ ] เก็บ coverage จาก `bun test --coverage` + vitest coverage สรุปผลใน CI (report อย่างเดียว ยังไม่ตั้ง threshold)
 - [ ] เพิ่ม lint gate (oxlint พอ, ไม่ต้อง configซับซ้อน) ทั้งสอง package + ใน CI — repo ยังไม่มี lint เลย
 - [ ] E2E smoke สำหรับ invariants หลัก: ขาย offline → กลับ online แล้วยอดตรงกัน (Dexie vs API)
+- [ ] integration test ครอบ invariants ใหม่ของ Phase 6: disabled user ถือ access token เดิม → 401, deactivated store เรียก API/sync → 403 (กันแก้ middleware แล้วเงียบ ๆ พังทีหลัง)
 
 ## Phase N: Review & Quality Assurance
 - [ ] ทุก entity ใหม่ครบ 5 ที่ตาม AGENTS.md (schema+migrate+SQL / route / Dexie / types / getTable+delta)
@@ -133,9 +142,10 @@
 - barcode: มี field + ค้นจาก search ใน POS (`pos.vue:376`) — สแกนเนอร์ USB-HID พิมพ์แล้ว enter ได้เลย ถ้าอยากได้ scan-mode dedicated ค่อยคิด Phase แยก
 - VAT 7% + CSV export มีใน reports แล้ว
 - refund/void ระดับทั้งออเดอร์มีแล้ว (`orders.ts:176`)
-- promotion engine, audit, feature flags, platform admin ครบ
+- promotion engine, audit, feature flags, platform admin (CRUD overview/stores/users/audit+CSV/health/devices/tickets/announcement/ops/config) ครบในระดับ "ดู/เปลี่ยนค่าได้" — ส่วนที่ยังไม่ทำงานจริง (revoke, deactivate, ตั้ง admin) ย้ายไป Phase 6
 - automated testing ที่มีอยู่แล้ว: backend integration (auth/orders/sync/rbac/migrate/admin/support/purge), FE sync-engine + cart + promotions + dashboard + reportsPeriod + stock + productSort/productSales tests, E2E 5 specs, CI รัน tests + build + Playwright — ห้ามทำซ้ำใน Phase 7
 - D1 backup ลง R2: `backupD1ToR2()` ใน `backend/src/cron.ts` เขียนแค่ JSON placeholder (นับตาราง) → rollback ไม่ได้จริง **สรุปเลื่อน** (2026-09-20) ใช้ D1 Time Travel/automatic backup ของ Cloudflare แทน ดู `docs/sub-plan-d1-real-backup.md` — รื้อแผนเมื่อต้องการ restore เกิน window หรือ export ออกนอก CF; ข้อความใน `sub-plan-auto-deploy.md` Phase 4 ที่อ้าง "เชื่อ cron backup" จึงใช้ไม่ได้
 
 ## ลำดับที่แนะนำ
 Phase 1 → 2 → 5 → 3 → 6 (Phase 4 เสร็จแล้วใน v0.5.2 — sync-provability ผ่านไปแล้ว, customer ต้องเคลียร์งานค้างก่อน)
+หมายเหตุ Phase 6: ข้อ `tokenVersion` + เช็ก `stores.isActive` ใน `requireStoreMember` เป็น prerequisite ของงาน revoke/ปิดร้านทุกข้อ — ทำสองบรรทัดนี้ก่อนแล้วที่เหลือต่อแถวได้ (แก้ middleware เดียว ครอบทั้ง API + sync)

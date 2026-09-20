@@ -18,6 +18,15 @@
           </svg>
         </NuxtLink>
         <NuxtLink
+          to="/settings/sessions"
+          class="flex items-center justify-between rounded-lg px-3 py-2 text-sm font-medium text-primary-700 hover:bg-primary-50"
+        >
+          <span>{{ t('settingsPage.sessions') }}</span>
+          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+          </svg>
+        </NuxtLink>
+        <NuxtLink
           v-if="isOwner"
           to="/settings/roles"
           class="flex items-center justify-between rounded-lg px-3 py-2 text-sm font-medium text-primary-700 hover:bg-primary-50"

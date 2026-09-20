@@ -528,6 +528,7 @@
     "inviteLinkCopyFailed": "ไม่สามารถคัดลอกลิงก์ได้",
     "confirmRemoveMember": "ลบสมาชิกคนนี้ออกจากทีม?",
     "auditLog": "ประวัติการทำรายการ",
+    "sessions": "เซสชันที่กำลังใช้งาน",
     "rolesAndPermissions": "บทบาทและสิทธิ์",
     "paymentSettings": "การชำระเงิน",
     "promptpayId": "PromptPay ID",
@@ -824,7 +825,9 @@
       "version": "เวอร์ชัน",
       "syncPending": "รอซิงก์",
       "lastSeen": "เห็นล่าสุด",
-      "empty": "ยังไม่มีข้อมูลอุปกรณ์"
+      "empty": "ยังไม่มีข้อมูลอุปกรณ์",
+      "revoke": "ยกเลิกเซสชัน",
+      "confirmRevoke": "ยกเลิกเซสชันทั้งหมดของผู้ใช้นี้หรือไม่?"
     },
     "system": {
       "apiStatus": "สถานะ API",
@@ -843,6 +846,7 @@
       "promotions": "เปิดใช้โปรโมชัน",
       "reports": "เปิดใช้รายงาน",
       "offlineSync": "เปิดใช้ offline sync",
+      "customers": "เปิดใช้ระบบลูกค้า",
       "disabled": "ฟีเจอร์นี้ถูกปิดสำหรับร้านของคุณ ติดต่อ support หากต้องการใช้งาน"
     },
     "tickets": {

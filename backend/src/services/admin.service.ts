@@ -570,10 +570,27 @@ export async function listClientSessions(options: {
   limit: number;
   offset: number;
   store?: string;
+  activeMembers?: boolean;
 }) {
   const conditions = [];
   if (options.store) {
     conditions.push(eq(clientSessions.store, options.store));
+  }
+  if (options.store && options.activeMembers) {
+    conditions.push(
+      inArray(
+        clientSessions.user,
+        db
+          .select({ id: storeMembers.user })
+          .from(storeMembers)
+          .where(
+            and(
+              eq(storeMembers.store, options.store),
+              eq(storeMembers.isActive, true),
+            ),
+          ),
+      ),
+    );
   }
   const where = conditions.length > 0 ? and(...conditions) : undefined;
 
@@ -628,9 +645,19 @@ export async function updateStoreActive(
 
 export async function updateUserActive(userId: string, isActive: boolean) {
   const now = nowIso();
+  const values = isActive
+    ? { isActive, updated: now }
+    : { isActive, tokenVersion: sql`${users.tokenVersion} + 1`, updated: now };
   await db
     .update(users)
-    .set({ isActive, updated: now })
+    .set(values)
+    .where(eq(users.id, userId));
+}
+
+export async function revokeUserSessions(userId: string) {
+  await db
+    .update(users)
+    .set({ tokenVersion: sql`${users.tokenVersion} + 1`, updated: nowIso() })
     .where(eq(users.id, userId));
 }
 

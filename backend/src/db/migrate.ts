@@ -333,6 +333,9 @@ function migratePlatformAdmin(db: Database) {
   if (!userCols.includes("is_active")) {
     db.exec("ALTER TABLE users ADD COLUMN is_active INTEGER NOT NULL DEFAULT 1");
   }
+  if (!userCols.includes("token_version")) {
+    db.exec("ALTER TABLE users ADD COLUMN token_version INTEGER NOT NULL DEFAULT 0");
+  }
 
   db.exec("CREATE INDEX IF NOT EXISTS idx_audit_created ON audit_events(created)");
 

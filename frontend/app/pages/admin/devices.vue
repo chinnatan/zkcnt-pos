@@ -13,6 +13,7 @@
               <th class="px-4 py-3">{{ t('admin.devices.version') }}</th>
               <th class="px-4 py-3">{{ t('admin.devices.syncPending') }}</th>
               <th class="px-4 py-3">{{ t('admin.devices.lastSeen') }}</th>
+              <th class="px-4 py-3">{{ t('common.actions') }}</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-border-warm">
@@ -40,6 +41,15 @@
                 </span>
               </td>
               <td class="px-4 py-3 text-ink-muted">{{ formatDate(session.last_seen_at) }}</td>
+              <td class="px-4 py-3">
+                <button
+                  type="button"
+                  class="rounded-lg border border-danger-200 px-3 py-1.5 text-xs font-medium text-danger-700 hover:bg-danger-50"
+                  @click="revoke(session.user)"
+                >
+                  {{ t('admin.devices.revoke') }}
+                </button>
+              </td>
             </tr>
           </tbody>
         </table>
@@ -56,10 +66,15 @@ definePageMeta({ middleware: ["auth", "platform-admin"], layout: "admin" });
 
 const { t } = useI18n();
 const { formatDate } = useFormat();
-const { listDevices } = usePlatformAdmin();
+const { listDevices, revokeUserSessions } = usePlatformAdmin();
 
 const sessions = ref<AdminClientSession[]>([]);
 const isLoading = ref(true);
+
+async function revoke(userId: string) {
+  if (!window.confirm(t('admin.devices.confirmRevoke'))) return;
+  await revokeUserSessions(userId);
+}
 
 onMounted(async () => {
   try {

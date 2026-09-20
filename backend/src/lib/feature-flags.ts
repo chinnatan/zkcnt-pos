@@ -2,24 +2,25 @@ import { createMiddleware } from "hono/factory";
 import { HTTPException } from "hono/http-exception";
 import { getStoreSettings } from "../middleware/store-access";
 
-export type StoreFeatureFlag =
-  | "promotions_enabled"
-  | "reports_enabled"
-  | "offline_sync_enabled";
+export const STORE_FEATURE_FLAGS = [
+  { key: "promotions_enabled", default: true, message: "Promotions are disabled for this store" },
+  { key: "reports_enabled", default: true, message: "Reports are disabled for this store" },
+  { key: "offline_sync_enabled", default: true, message: "Offline sync is disabled for this store" },
+  { key: "customers_enabled", default: false, message: "Customers are disabled for this store" },
+] as const;
 
-const FLAG_MESSAGES: Record<StoreFeatureFlag, string> = {
-  promotions_enabled: "Promotions are disabled for this store",
-  reports_enabled: "Reports are disabled for this store",
-  offline_sync_enabled: "Offline sync is disabled for this store",
-};
+export type StoreFeatureFlag = (typeof STORE_FEATURE_FLAGS)[number]["key"];
+
+function getFlag(flag: StoreFeatureFlag) {
+  return STORE_FEATURE_FLAGS.find((item) => item.key === flag)!;
+}
 
 export function isStoreFeatureEnabled(
   settings: Record<string, unknown>,
   flag: StoreFeatureFlag,
 ): boolean {
   const flags = settings.feature_flags as Record<string, boolean> | undefined;
-  if (!flags || !(flag in flags)) return true;
-  return flags[flag] !== false;
+  return flags?.[flag] ?? getFlag(flag).default;
 }
 
 export async function assertStoreFeatureEnabled(
@@ -28,7 +29,7 @@ export async function assertStoreFeatureEnabled(
 ): Promise<void> {
   const settings = await getStoreSettings(storeId);
   if (!isStoreFeatureEnabled(settings, flag)) {
-    throw new HTTPException(403, { message: FLAG_MESSAGES[flag] });
+    throw new HTTPException(403, { message: getFlag(flag).message });
   }
 }
 
