@@ -1,5 +1,27 @@
 [
   {
+    "version": "0.6.1",
+    "date": "2026-09-21",
+    "changes": {
+      "added": {
+        "th": [
+          "แดชบอร์ดแสดงจำนวนสินค้าไม่ซ้ำที่ขายแล้ววันนี้ เทียบกับสินค้าที่มีสต๊อก เช่น 12/73"
+        ],
+        "en": [
+          "The dashboard now shows unique products sold today compared with products in stock, such as 12/73"
+        ]
+      },
+      "fixed": {
+        "th": [],
+        "en": []
+      },
+      "improved": {
+        "th": [],
+        "en": []
+      }
+    }
+  },
+  {
     "version": "0.6.0",
     "date": "2026-09-20",
     "changes": {
