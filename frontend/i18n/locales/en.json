@@ -193,6 +193,7 @@
     "selectStore": "Select Store",
     "todaySales": "Today's Sales",
     "ordersToday": "Orders Today",
+    "soldToday": "Sold Today",
     "syncStatus": "Sync Status",
     "quickActions": "Quick Actions",
     "openPos": "Open POS Terminal",

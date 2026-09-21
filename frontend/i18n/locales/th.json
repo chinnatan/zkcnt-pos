@@ -192,6 +192,7 @@
     "selectStore": "เลือกร้าน",
     "todaySales": "ยอดขายวันนี้",
     "ordersToday": "ออเดอร์วันนี้",
+    "soldToday": "ขายแล้ววันนี้",
     "syncStatus": "สถานะซิงค์",
     "quickActions": "ทางลัด",
     "openPos": "เปิดเครื่อง POS",

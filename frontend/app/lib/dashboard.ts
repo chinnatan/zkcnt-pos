@@ -1,10 +1,12 @@
 import { db } from "~/lib/db";
 import { getBangkokStartOfDay } from "~/lib/timezone";
-import type { Order } from "~/lib/types";
+import type { Inventory, Order, OrderItem, Product } from "~/lib/types";
 
 export interface TodayStats {
   sales: number;
   count: number;
+  productsSoldToday: number;
+  productsInStock: number;
 }
 
 export async function getTodayStats(
@@ -21,13 +23,33 @@ export async function getTodayStats(
     .equals([storeId, "completed"])
     .toArray()) as Order[];
 
-  let sales = 0;
-  let count = 0;
-  for (const o of rows) {
-    if (o.created >= sinceIso && o.created < untilIso) {
-      sales += o.total;
-      count += 1;
-    }
-  }
-  return { sales, count };
+  const todayOrders = rows.filter((o) => o.created >= sinceIso && o.created < untilIso);
+  const orderIds = todayOrders.map((o) => o.id);
+  const [orderItems, products, inventory] = await Promise.all([
+    orderIds.length
+      ? db.orderItems.where("order").anyOf(orderIds).toArray()
+      : Promise.resolve([] as OrderItem[]),
+    db.products.where("store").equals(storeId).toArray(),
+    db.inventory.where("store").equals(storeId).toArray(),
+  ]);
+
+  const inventoryByProduct = new Map(
+    (inventory as Inventory[]).map((item) => [item.product, item.quantity]),
+  );
+  const soldProductIds = new Set(
+    (orderItems as OrderItem[]).map((item) => item.product),
+  );
+  const productsInStock = (products as Product[]).filter(
+    (product) =>
+      product.is_active &&
+      !product.deleted_at &&
+      (!product.track_inventory || (inventoryByProduct.get(product.id) ?? 0) > 0),
+  ).length;
+
+  return {
+    sales: todayOrders.reduce((sum, order) => sum + order.total, 0),
+    count: todayOrders.length,
+    productsSoldToday: soldProductIds.size,
+    productsInStock,
+  };
 }
