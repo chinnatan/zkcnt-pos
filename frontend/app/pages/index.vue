@@ -60,8 +60,8 @@
         <UiCraftCard variant="polaroid" padding="sm">
           <div class="flex items-center justify-between">
             <div>
-              <p class="text-sm text-ink-muted">{{ t('nav.products') }}</p>
-              <p class="mt-1 font-display text-2xl font-bold text-ink">{{ productCount }}</p>
+              <p class="text-sm text-ink-muted">{{ t('dashboard.soldToday') }}</p>
+              <p class="mt-1 font-display text-2xl font-bold text-ink">{{ productsSoldToday }}/{{ productsInStock }}</p>
             </div>
             <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-50">
               <svg class="h-5 w-5 text-primary-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -196,7 +196,6 @@
 </template>
 
 <script setup lang="ts">
-import { db } from "~/lib/db";
 import { getTodayStats } from "~/lib/dashboard";
 import { orderStatusBadge, paymentMethodBadge } from "~/lib/ui/statusColors";
 
@@ -213,7 +212,8 @@ const { currentRelease, hasUnread, markAsRead, localizedChanges } = useReleaseNo
 
 const todaySales = ref(0);
 const todayOrderCount = ref(0);
-const productCount = ref(0);
+const productsSoldToday = ref(0);
+const productsInStock = ref(0);
 
 function statusBadge(status: string) {
   return orderStatusBadge(status);
@@ -231,8 +231,8 @@ async function loadDashboardData() {
   const stats = await getTodayStats(activeStoreId.value);
   todaySales.value = stats.sales;
   todayOrderCount.value = stats.count;
-
-  productCount.value = await db.products.where("store").equals(activeStoreId.value).count();
+  productsSoldToday.value = stats.productsSoldToday;
+  productsInStock.value = stats.productsInStock;
 }
 
 onMounted(() => {
