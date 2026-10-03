@@ -997,9 +997,6 @@
     "closeHint": "Used to compute an accurate sell-through rate. Can be left blank.",
     "qtyLeft": "Left",
     "confirmClose": "Confirm close",
-    "settingsManage": "Booth management",
-    "settingsManageDesc": "Create events, booth fees and choose the products you bring",
-    "settingsManageButton": "Manage booths",
     "activeBooth": "Active booth",
     "activeBoothDesc": "Filters POS products to those in this booth",
     "noActiveBooth": "No booth (show all products)"

@@ -38,14 +38,7 @@
         </NuxtLink>
       </div>
 
-      <UiCraftCard v-if="isManager" variant="paper" padding="md" class="space-y-4">
-        <div class="flex items-center justify-between gap-4">
-          <div>
-            <h3 class="text-base font-semibold text-ink">{{ t('boothsPage.settingsManage') }}</h3>
-            <p class="text-sm text-ink-muted">{{ t('boothsPage.settingsManageDesc') }}</p>
-          </div>
-          <NuxtLink to="/booths" class="btn-primary shrink-0">{{ t('boothsPage.settingsManageButton') }}</NuxtLink>
-        </div>
+      <UiCraftCard v-if="isManager" variant="paper" padding="md">
         <div class="flex items-center justify-between gap-4">
           <div>
             <h3 class="text-base font-semibold text-ink">{{ t('boothsPage.activeBooth') }}</h3>

@@ -996,9 +996,6 @@
     "closeHint": "ใช้คำนวณอัตราการขายหมด (sell-through) ให้แม่นยำ เว้นว่างได้",
     "qtyLeft": "เหลือ",
     "confirmClose": "ยืนยันปิดบูธ",
-    "settingsManage": "การจัดการบูธ",
-    "settingsManageDesc": "สร้างงานที่ไปออกบูธ ค่าบูธ และเลือกสินค้าที่เอาไปขาย",
-    "settingsManageButton": "จัดการบูธ",
     "activeBooth": "บูธที่กำลังใช้งาน",
     "activeBoothDesc": "กรองสินค้าบนหน้าร้านตามสินค้าที่เข้าร่วมบูธนี้",
     "noActiveBooth": "ไม่ใช้งานบูธ (แสดงสินค้าทั้งหมด)"

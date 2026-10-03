@@ -1,10 +1,7 @@
 <template>
   <div class="space-y-6">
     <div>
-      <NuxtLink to="/settings" class="text-sm text-primary-600 hover:underline">
-        ← {{ t('settingsPage.title') }}
-      </NuxtLink>
-      <h2 class="mt-1 text-lg font-semibold text-ink">{{ t('boothsPage.title') }}</h2>
+      <h2 class="text-lg font-semibold text-ink">{{ t('boothsPage.title') }}</h2>
       <p class="text-sm text-ink-muted">{{ t('boothsPage.subtitle') }}</p>
     </div>
 
