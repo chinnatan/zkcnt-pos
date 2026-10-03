@@ -191,6 +191,7 @@ export function mapOrder(row: {
   orderNumber: string;
   clientId: string;
   customer: string | null;
+  booth?: string | null;
   cashier: string;
   subtotal: number;
   discountAmount: number;
@@ -219,6 +220,7 @@ export function mapOrder(row: {
     order_number: row.orderNumber,
     client_id: row.clientId,
     customer: row.customer ?? "",
+    booth: row.booth ?? "",
     cashier: row.cashier,
     subtotal: row.subtotal,
     discount_amount: row.discountAmount,
@@ -450,6 +452,62 @@ export function mapPromotionUsage(row: {
     order: row.order,
     customer: row.customer ?? "",
     discount_amount: row.discountAmount,
+    created: row.created,
+    updated: row.updated,
+  });
+}
+
+export function mapBooth(row: {
+  id: string;
+  store: string;
+  name: string;
+  location: string;
+  startDate: string;
+  endDate: string;
+  boothFee: number;
+  extraCosts: Array<{ name: string; amount: number }>;
+  image: string;
+  closedAt: string | null;
+  isActive: boolean;
+  deletedAt?: string | null;
+  created: string;
+  updated: string;
+}) {
+  return withMeta("booths", {
+    id: row.id,
+    store: row.store,
+    name: row.name,
+    location: row.location,
+    start_date: row.startDate,
+    end_date: row.endDate,
+    booth_fee: row.boothFee,
+    extra_costs: row.extraCosts,
+    image: row.image,
+    closed_at: row.closedAt ?? "",
+    is_active: row.isActive,
+    deleted_at: row.deletedAt ?? null,
+    created: row.created,
+    updated: row.updated,
+  });
+}
+
+export function mapBoothProduct(row: {
+  id: string;
+  booth: string;
+  product: string;
+  qtyBrought: number;
+  qtyLeft: number | null;
+  deletedAt?: string | null;
+  created: string;
+  updated: string;
+}) {
+  return withMeta("booth_products", {
+    id: row.id,
+    booth: row.booth,
+    product: row.product,
+    qty_brought: row.qtyBrought,
+    qty_left: row.qtyLeft,
+    deleted_at: row.deletedAt ?? null,
     created: row.created,
     updated: row.updated,
   });

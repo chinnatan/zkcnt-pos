@@ -119,6 +119,8 @@ export class SyncEngine {
       promotions: delta.promotions?.length ?? 0,
       promotion_targets: delta.promotion_targets?.length ?? 0,
       promotion_usages: delta.promotion_usages?.length ?? 0,
+      booths: delta.booths?.length ?? 0,
+      booth_products: delta.booth_products?.length ?? 0,
       orders: delta.orders?.length ?? 0,
       order_items: delta.order_items?.length ?? 0,
     };
@@ -153,6 +155,16 @@ export class SyncEngine {
     for (const productId of deletedProductIds) {
       await db.inventory.where("product").equals(productId).delete();
     }
+    await this.applyPull(
+      db.booths,
+      "booths",
+      (delta.booths ?? []) as SyncRecord[],
+    );
+    await this.applyPull(
+      db.boothProducts,
+      "booth_products",
+      (delta.booth_products ?? []) as SyncRecord[],
+    );
     await this.applyPull(
       db.customers,
       "customers",
@@ -512,6 +524,10 @@ export class SyncEngine {
         return db.promotionTargets;
       case "promotion_usages":
         return db.promotionUsages;
+      case "booths":
+        return db.booths;
+      case "booth_products":
+        return db.boothProducts;
       default:
         return null;
     }

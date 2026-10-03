@@ -161,6 +161,49 @@ export const customers = sqliteTable("customers", {
   ...timestamps,
 });
 
+export const booths = sqliteTable(
+  "booths",
+  {
+    id: text("id").primaryKey(),
+    store: text("store")
+      .notNull()
+      .references(() => stores.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    location: text("location").notNull().default(""),
+    startDate: text("start_date").notNull().default(""),
+    endDate: text("end_date").notNull().default(""),
+    boothFee: real("booth_fee").notNull().default(0),
+    extraCosts: text("extra_costs", { mode: "json" })
+      .$type<Array<{ name: string; amount: number }>>()
+      .notNull()
+      .default([]),
+    image: text("image").notNull().default(""),
+    closedAt: text("closed_at"),
+    isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
+    deletedAt: text("deleted_at"),
+    ...timestamps,
+  },
+  (t) => [index("idx_booths_store").on(t.store)],
+);
+
+export const boothProducts = sqliteTable(
+  "booth_products",
+  {
+    id: text("id").primaryKey(),
+    booth: text("booth")
+      .notNull()
+      .references(() => booths.id, { onDelete: "cascade" }),
+    product: text("product")
+      .notNull()
+      .references(() => products.id),
+    qtyBrought: real("qty_brought").notNull().default(0),
+    qtyLeft: real("qty_left"),
+    deletedAt: text("deleted_at"),
+    ...timestamps,
+  },
+  (t) => [uniqueIndex("idx_booth_products_booth_product").on(t.booth, t.product)],
+);
+
 export const orders = sqliteTable(
   "orders",
   {
@@ -171,6 +214,7 @@ export const orders = sqliteTable(
     orderNumber: text("order_number").notNull(),
     clientId: text("client_id").notNull(),
     customer: text("customer").references(() => customers.id),
+    booth: text("booth").references(() => booths.id),
     cashier: text("cashier")
       .notNull()
       .references(() => users.id),
@@ -502,6 +546,8 @@ export const schema = {
   categories,
   products,
   customers,
+  booths,
+  boothProducts,
   orders,
   orderItems,
   inventory,
