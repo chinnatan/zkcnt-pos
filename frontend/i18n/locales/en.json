@@ -981,6 +981,22 @@
     "purgeFailed": "Failed to clear sales history"
   },
   "boothsPage": {
+    "filter": {
+        "all": "All",
+        "selected": "Selected",
+        "unselected": "Not selected",
+        "outOfStock": "Out of stock"
+    },
+    "selectShown": "Select all shown",
+    "selectInStock": "Select only in stock",
+    "clearShown": "Clear shown",
+    "setAllQty": "Set same quantity",
+    "setAllQtyPrompt": "Quantity to bring for the selected, shown products (pcs)",
+    "bulkProgress": "Saving {done}/{total}",
+    "noStockTracking": "Stock not tracked",
+    "stockLeft": "Stock {n}",
+    "useAllStock": "Use all stock",
+    "overStock": "Quantity exceeds the stock on hand ({n})",
     "estProfit": "Est. profit if sold out",
     "unsaved": "You have unsaved changes",
     "discard": "Discard changes",
