@@ -91,9 +91,9 @@ Branch: `feat/booth-mode` (แตกจาก `develop` เมื่อ plan อ
 ### Addendum หลัง Phase 3 (feedback จาก user)
 
 - **เลือกบูธบนหน้า POS:** เพิ่ม dropdown ในแถบบูธบน POS และเอา dropdown ออกจากตั้งค่า; เปลี่ยนจากค่าระดับร้าน (`settings.active_booth_id`) เป็น **ต่อเครื่อง/ต่อร้านใน localStorage** (`pos_active_booth`) — เหตุผล: `updateStore` ใช้ได้เฉพาะ online + manager แต่แคชเชียร์ต้องสลับบูธได้ แม้ offline หน้างาน; ข้อสมมติข้อ 5 ใน Appendix จึงเปลี่ยน (แต่ละเครื่องเลือกบูธเอง)
-- **Date format:** ของเดิมไม่สอดคล้องกัน (th = `3/10/2569` ปี พ.ศ. ไม่เติม 0, en = `10/3/2026` เดือนนำหน้า) → ตั้งมาตรฐานเดียว `dd/MM/yyyy` (ปี ค.ศ., เขตเวลา Bangkok) และ `dd/MM/yyyy HH:mm:ss` (24 ชม.) ผ่าน `formatBangkokDate/DateTime/formatDateKey` ใน `lib/timezone.ts`; `useFormat.formatDate/formatDateShort` ใช้ตัวนี้ → ทุกหน้าที่เรียกผ่าน `useFormat` เปลี่ยนตามอัตโนมัติ; แก้ `SyncStatus`, หน้า/ panel release notes, รายการบูธ ให้ใช้ตัวเดียวกัน
+- **Date format:** ของเดิมไม่สอดคล้องกัน (th = `3/10/2569` ไม่เติม 0, en = `10/3/2026` เดือนนำหน้า) → ตั้งมาตรฐาน `dd/MM/yyyy` และ `dd/MM/yyyy HH:mm:ss` (24 ชม., เขตเวลา Bangkok) โดย **ภาษาไทยใช้ปี พ.ศ. เหมือนเดิม ภาษาอื่นใช้ ค.ศ.** ผ่าน `formatBangkokDate/DateTime/formatDateKey(…, locale)` ใน `lib/timezone.ts`; `useFormat` ส่ง locale ให้อัตโนมัติ → ทุกหน้าที่เรียกผ่าน `useFormat` เปลี่ยนตาม; แก้ `SyncStatus`, release notes, รายการบูธ ให้ใช้ตัวเดียวกัน
 - ยังคงเดิม: label แกนกราฟรายงาน (`formatBangkokDateShort` เช่น "3 ต.ค.") เพราะเป็นป้ายย่อบนกราฟ; `<input type="date"/datetime-local">` ของเบราว์เซอร์ แสดงตาม locale ของเบราว์เซอร์/OS บังคับรูปแบบไม่ได้
-- เทสต์: `tests/lib/dateFormat.test.ts` (ข้ามวันตาม Bangkok, zero-pad, date-key ไม่เลื่อนวัน); vitest 60/60
+- เทสต์: `tests/lib/dateFormat.test.ts` (ข้ามวันตาม Bangkok, zero-pad, พ.ศ./ค.ศ. ตาม locale, date-key ไม่เลื่อนวัน); vitest 61/61
 
 ## Phase 4: รายงานตามบูธ
 

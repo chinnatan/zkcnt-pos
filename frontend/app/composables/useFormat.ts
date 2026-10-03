@@ -18,12 +18,12 @@ export function useFormat() {
 
   function formatDate(date?: string | Date): string {
     if (!date) return "";
-    return formatBangkokDateTime(date);
+    return formatBangkokDateTime(date, locale.value);
   }
 
   function formatDateShort(date?: string | Date): string {
     if (!date) return "";
-    return formatBangkokDate(date);
+    return formatBangkokDate(date, locale.value);
   }
 
   function formatTime(date?: string | Date): string {
@@ -81,7 +81,7 @@ export function useFormat() {
     formatCurrency,
     formatDate,
     formatDateShort,
-    formatDateKey,
+    formatDateKey: (key?: string | null) => formatDateKey(key, locale.value),
     formatTime,
     formatAmount,
     toDatetimeLocalValue,
