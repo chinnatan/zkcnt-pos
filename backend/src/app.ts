@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
 import { getRuntimeConfig } from "./env";
 import { authRoutes } from "./routes/auth";
+import { boothRoutes } from "./routes/booths";
 import { catalogRoutes } from "./routes/catalog";
 import { customerRoutes } from "./routes/customers";
 import { promotionRoutes } from "./routes/promotions";
@@ -117,6 +118,7 @@ export function createApp() {
   app.route("/api/members", memberRoutes);
   app.route("/api/invites", inviteRoutes);
   app.route("/api/stores", catalogRoutes);
+  app.route("/api/stores", boothRoutes);
   app.route("/api/stores", customerRoutes);
   app.route("/api/stores", promotionRoutes);
   app.route("/api/stores", inventoryRoutes);

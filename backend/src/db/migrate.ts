@@ -275,6 +275,54 @@ export function runMigrate() {
   backfillOrderAuditEvents(db);
   migratePlatformAdmin(db);
   migrateSupportTickets(db);
+  migrateBooths(db);
+}
+
+function migrateBooths(db: Database) {
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS booths (
+      id TEXT PRIMARY KEY,
+      store TEXT NOT NULL REFERENCES stores(id) ON DELETE CASCADE,
+      name TEXT NOT NULL,
+      location TEXT NOT NULL DEFAULT '',
+      start_date TEXT NOT NULL DEFAULT '',
+      end_date TEXT NOT NULL DEFAULT '',
+      booth_fee REAL NOT NULL DEFAULT 0,
+      extra_costs TEXT NOT NULL DEFAULT '[]',
+      image TEXT NOT NULL DEFAULT '',
+      closed_at TEXT,
+      is_active INTEGER NOT NULL DEFAULT 1,
+      deleted_at TEXT,
+      created TEXT NOT NULL,
+      updated TEXT NOT NULL
+    )
+  `);
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS booth_products (
+      id TEXT PRIMARY KEY,
+      booth TEXT NOT NULL REFERENCES booths(id) ON DELETE CASCADE,
+      product TEXT NOT NULL REFERENCES products(id),
+      qty_brought REAL NOT NULL DEFAULT 0,
+      qty_left REAL,
+      deleted_at TEXT,
+      created TEXT NOT NULL,
+      updated TEXT NOT NULL
+    )
+  `);
+  db.exec("CREATE INDEX IF NOT EXISTS idx_booths_store ON booths(store)");
+  db.exec(
+    "CREATE UNIQUE INDEX IF NOT EXISTS idx_booth_products_booth_product ON booth_products(booth, product)",
+  );
+  db.exec("CREATE INDEX IF NOT EXISTS idx_booths_store_updated ON booths(store, updated)");
+
+  const orderCols = db
+    .query<{ name: string }, []>("PRAGMA table_info(orders)")
+    .all()
+    .map((c) => c.name);
+  if (!orderCols.includes("booth")) {
+    db.exec("ALTER TABLE orders ADD COLUMN booth TEXT REFERENCES booths(id)");
+  }
+  db.exec("CREATE INDEX IF NOT EXISTS idx_orders_booth ON orders(booth)");
 }
 
 function migrateSupportTickets(db: Database) {

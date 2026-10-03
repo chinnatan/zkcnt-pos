@@ -1,4 +1,4 @@
-import { and, eq, gte, inArray, lte } from "drizzle-orm";
+import { and, eq, gte, inArray, isNull, lte, or } from "drizzle-orm";
 import { db } from "../db/client";
 import {
   auditEvents,
@@ -130,19 +130,29 @@ export async function buildStoreReports(
   storeId: string,
   range: ReportPeriodRange,
   period: "today" | "last7" | "week" | "month" | "custom",
+  /** undefined/"" = all orders, "none" = orders without a booth, otherwise a booth id */
+  booth?: string,
 ) {
   const previousRange = getPreviousPeriodRange(range);
+
+  const boothFilter = !booth
+    ? undefined
+    : booth === "none"
+      ? or(isNull(orders.booth), eq(orders.booth, ""))
+      : eq(orders.booth, booth);
 
   const periodFilter = and(
     eq(orders.store, storeId),
     gte(orders.created, range.since),
     lte(orders.created, range.until),
+    boothFilter,
   );
 
   const prevFilter = and(
     eq(orders.store, storeId),
     gte(orders.created, previousRange.since),
     lte(orders.created, previousRange.until),
+    boothFilter,
   );
 
   const [

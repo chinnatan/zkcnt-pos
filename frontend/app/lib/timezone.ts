@@ -86,3 +86,39 @@ export function formatBangkokDateShort(date: Date | string, locale: string): str
     timeZone: BANGKOK_TZ,
   });
 }
+
+/**
+ * App-wide display format: dd/MM/yyyy in Asia/Bangkok.
+ * Thai (`th`) shows the Buddhist-era year (พ.ศ.); every other locale shows the Gregorian year.
+ */
+export function formatBangkokDate(date: Date | string, locale = "en"): string {
+  const p = new Intl.DateTimeFormat(locale === "th" ? "th-TH-u-ca-buddhist" : "en-GB", {
+    timeZone: BANGKOK_TZ,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(new Date(date));
+  const get = (type: Intl.DateTimeFormatPartTypes) =>
+    p.find((x) => x.type === type)?.value ?? "";
+  return `${get("day")}/${get("month")}/${get("year")}`;
+}
+
+/** dd/MM/yyyy HH:mm:ss (24h, Asia/Bangkok); year per locale as in `formatBangkokDate` */
+export function formatBangkokDateTime(date: Date | string, locale = "en"): string {
+  const time = new Intl.DateTimeFormat("en-GB", {
+    timeZone: BANGKOK_TZ,
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hourCycle: "h23",
+  }).format(new Date(date));
+  return `${formatBangkokDate(date, locale)} ${time}`;
+}
+
+/** "YYYY-MM-DD" (date-only value, e.g. `<input type="date">`) → dd/MM/yyyy; no timezone shift. */
+export function formatDateKey(key?: string | null, locale = "en"): string {
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(key ?? "");
+  if (!m) return "";
+  const year = locale === "th" ? Number(m[1]) + 543 : m[1];
+  return `${m[3]}/${m[2]}/${year}`;
+}

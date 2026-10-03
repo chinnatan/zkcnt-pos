@@ -7,6 +7,8 @@ import type {
   Customer,
   Order,
   OrderItem,
+  Booth,
+  BoothProduct,
   Inventory,
   Promotion,
   PromotionTarget,
@@ -25,6 +27,8 @@ export class PosDatabase extends Dexie {
   customers!: Table<Customer>;
   orders!: Table<Order>;
   orderItems!: Table<OrderItem>;
+  booths!: Table<Booth>;
+  boothProducts!: Table<BoothProduct>;
   inventory!: Table<Inventory>;
   promotions!: Table<Promotion>;
   promotionTargets!: Table<PromotionTarget>;
@@ -69,6 +73,12 @@ export class PosDatabase extends Dexie {
 
     this.version(7).stores({
       syncConflicts: '++id, store, collection, record_id, created',
+    });
+
+    this.version(8).stores({
+      booths: 'id, store, [store+is_active], start_date',
+      boothProducts: 'id, booth, [booth+product], product',
+      orders: 'id, store, [store+status], client_id, order_number, cashier, created, booth',
     });
   }
 }

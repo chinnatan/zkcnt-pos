@@ -9,13 +9,14 @@ import type { SyncVerifyCollection } from "../api/client";
 export async function computeLocalVerify(
   storeId: string,
 ): Promise<Record<string, SyncVerifyCollection>> {
-  const [categories, products, customers, inventory, promotions] =
+  const [categories, products, customers, inventory, promotions, booths] =
     await Promise.all([
       db.categories.where("store").equals(storeId).count(),
       db.products.where("store").equals(storeId).count(),
       db.customers.where("store").equals(storeId).count(),
       db.inventory.where("store").equals(storeId).count(),
       db.promotions.where("store").equals(storeId).count(),
+      db.booths.where("store").equals(storeId).count(),
     ]);
 
   const localOrders = await db.orders
@@ -40,5 +41,6 @@ export async function computeLocalVerify(
     promotions: { count: promotions },
     orders: { count: syncedOrders.length, completed_total: completedTotal },
     order_items: { count: orderItemCount },
+    booths: { count: booths },
   };
 }

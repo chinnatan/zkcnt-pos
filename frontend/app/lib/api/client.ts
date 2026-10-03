@@ -32,6 +32,8 @@ export interface SyncDelta {
   orders: Record<string, unknown>[];
   order_items: Record<string, unknown>[];
   inventory_transactions: Record<string, unknown>[];
+  booths?: Record<string, unknown>[];
+  booth_products?: Record<string, unknown>[];
 }
 
 export interface SyncVerifyCollection {
@@ -345,6 +347,13 @@ export class ApiClient {
     });
   }
 
+  async uploadBoothImage(storeId: string, boothId: string, form: FormData) {
+    return this.send(`/stores/${storeId}/booths/${boothId}/image`, {
+      method: "POST",
+      body: form,
+    });
+  }
+
   async uploadStoreLogo(storeId: string, form: FormData) {
     return this.send(`/stores/${storeId}/logo`, {
       method: "POST",
@@ -376,6 +385,8 @@ export class ApiClient {
       customers: `/stores/${storeId}/customers`,
       promotions: `/stores/${storeId}/promotions`,
       promotion_targets: `/stores/${storeId}/promotion-targets`,
+      booths: `/stores/${storeId}/booths`,
+      booth_products: `/stores/${storeId}/booth-products`,
       inventory: `/stores/${storeId}/inventory`,
       orders: `/stores/${storeId}/orders`,
       order_items: `/stores/${storeId}/order-items`,

@@ -65,9 +65,13 @@ export async function hasQueuedOrderCreate(
   );
 }
 
+// booths go before orders (orders reference them); booth_products go last
+// (they reference products created in the same offline session).
 const COLLECTION_SYNC_PRIORITY: Record<string, number> = {
+  booths: -1,
   orders: 0,
   order_items: 1,
+  booth_products: 3,
 };
 
 export function sortSyncQueue(items: SyncQueueItem[]): SyncQueueItem[] {
