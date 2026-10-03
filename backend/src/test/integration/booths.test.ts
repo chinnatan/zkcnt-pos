@@ -93,3 +93,33 @@ describe("booths", () => {
     expect(delta.json.orders[0]?.booth).toBe(booth.json.id);
   });
 });
+
+describe("reports booth filter", () => {
+  test("filters period orders by booth / none / all", async () => {
+    const { token } = await registerUser({ email: "booth4@test.com" });
+    const store = await createStore(token, { slug: "booth4-store" });
+    const base = `/api/stores/${store.id}`;
+    const booth = await post(token, `${base}/booths`, { name: "Fair" });
+
+    const make = (extra: Record<string, unknown>, total: number) =>
+      post(token, `${base}/orders`, {
+        order: { total, subtotal: total, payment_method: "cash", ...extra },
+        items: [],
+      });
+    await make({ booth: booth.json.id }, 100);
+    await make({}, 40);
+
+    const since = encodeURIComponent("2000-01-01T00:00:00.000Z");
+    const sales = async (q: string) =>
+      (
+        await jsonRequest<{ summary: { totalSales: number } }>(
+          `${base}/reports?since=${since}&period=custom${q}`,
+          { headers: authHeaders(token) },
+        )
+      ).json.summary.totalSales;
+
+    expect(await sales("")).toBe(140);
+    expect(await sales(`&booth=${booth.json.id}`)).toBe(100);
+    expect(await sales("&booth=none")).toBe(40);
+  });
+});

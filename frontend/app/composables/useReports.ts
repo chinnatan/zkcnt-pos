@@ -22,7 +22,8 @@ export type ReportTab =
   | "customers"
   | "cashiers"
   | "promotions"
-  | "orders";
+  | "orders"
+  | "booths";
 
 export type OrderStatusFilter = "" | "completed" | "voided" | "refunded";
 
@@ -37,6 +38,8 @@ export function useReports() {
   const { datetimeLocalToIso } = useFormat();
 
   const period = ref<ReportPeriod>("last7");
+  /** "" = all, "none" = orders without a booth, otherwise a booth id */
+  const boothFilter = ref("");
   const customSince = ref("");
   const customUntil = ref("");
   const data = ref<ReportsData | null>(null);
@@ -78,7 +81,17 @@ export function useReports() {
       promotions,
       promotionUsages,
     ] = await Promise.all([
-      db.orders.where("store").equals(storeId).toArray(),
+      db.orders
+        .where("store")
+        .equals(storeId)
+        .filter((o) =>
+          !boothFilter.value
+            ? true
+            : boothFilter.value === "none"
+              ? !o.booth
+              : o.booth === boothFilter.value,
+        )
+        .toArray(),
       db.orderItems.toArray(),
       db.products.where("store").equals(storeId).toArray(),
       db.categories.where("store").equals(storeId).toArray(),
@@ -210,6 +223,7 @@ export function useReports() {
           until: range.value.until,
           period: period.value,
         });
+        if (boothFilter.value) params.set("booth", boothFilter.value);
 
         const result = await $api.send<ReportsData>(
           `/stores/${activeStoreId.value}/reports?${params.toString()}`,
@@ -241,6 +255,7 @@ export function useReports() {
         until: range.value.until,
         period: period.value,
       });
+      if (boothFilter.value) params.set("booth", boothFilter.value);
       const baseUrl = resolveApiBaseUrl(config.public.apiUrl as string);
       const token = $api.token;
       if (!token) return;
@@ -337,7 +352,7 @@ export function useReports() {
     return `${sign}${pct.toFixed(1)}%`;
   }
 
-  watch([period, customSince, customUntil], () => {
+  watch([period, customSince, customUntil, boothFilter], () => {
     loadReports();
   });
 
@@ -349,6 +364,7 @@ export function useReports() {
 
   return {
     period,
+    boothFilter,
     customSince,
     customUntil,
     data,
