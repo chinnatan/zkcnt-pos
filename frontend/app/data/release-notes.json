@@ -1,5 +1,49 @@
 [
   {
+    "version": "0.7.0",
+    "date": "2026-10-03",
+    "changes": {
+      "added": {
+        "th": [
+          "โหมดบูธ: เพิ่มงานที่ไปออกบูธ (ชื่อ สถานที่ วันที่ ค่าบูธ ค่าใช้จ่ายอื่น และรูป) ระบบดึงสินค้าที่มีสต๊อกเข้าบูธให้อัตโนมัติ เลือกสินค้าเป็นรายตัวหรือทั้งหมวดได้",
+          "ดูต้นทุนต่อชิ้นที่รวมค่าบูธเฉลี่ยเข้ากับต้นทุนผลิต พร้อมกำไรต่อชิ้นของแต่ละสินค้า",
+          "หน้าบูธแบบปฏิทิน: เห็นงานทั้งปีเป็นแถบสี ลากเลือกวันเพื่อสร้างบูธใหม่ และตั้งวันเริ่มสัปดาห์ได้",
+          "เลือกบูธบนหน้า POS สินค้าจะแสดงเฉพาะของบูธนั้น พร้อมแถบบอกว่าขายคุ้มทุนหรือยัง",
+          "รายงานตามบูธ: กรองรายงานตามบูธ ดูกำไรจริงของแต่ละงาน อัตราขายหมด และคำแนะนำว่าควรผลิตอะไรเพิ่มหรือลด",
+          "คัดลอกบูธเดิมไปงานใหม่ ปิดบูธพร้อมกรอกจำนวนที่เหลือ และเปิดบูธอีกครั้งได้"
+        ],
+        "en": [
+          "Booth mode: add the events you sell at (name, location, dates, booth fee, other costs and a photo). Products with stock are added automatically, and you can pick products one by one or by category",
+          "See the cost per piece, combining the average booth fee with production cost, and the profit per piece for each product",
+          "Calendar view for booths: see the whole year as colored bars, drag across days to create a booth, and choose which day the week starts on",
+          "Pick a booth on the POS screen to show only that booth's products, with a bar showing whether you have broken even",
+          "Booth reports: filter reports by booth, see the real profit of each event, sell-through rate, and advice on what to make more or less of",
+          "Duplicate a booth for a new event, close a booth with the leftover counts, and reopen it if needed"
+        ]
+      },
+      "fixed": {
+        "th": [
+          "รีโหลดหน้ารายงานแล้วข้อมูลไม่แสดง และข้อผิดพลาดของกราฟในหน้ารายงาน"
+        ],
+        "en": [
+          "Reports showed no data after reloading the page, and a chart error on the reports page"
+        ]
+      },
+      "improved": {
+        "th": [
+          "เลือกสินค้าเข้าบูธได้เร็วขึ้น: กรอง เลือกทั้งหมด และเตือนเมื่อจำนวนที่นำไปเกินสต๊อก",
+          "วันที่ทั้งแอปแสดงรูปแบบเดียวกัน (วัน/เดือน/ปี) ภาษาไทยใช้ปี พ.ศ.",
+          "หน้าบูธใช้งานบนมือถือได้ลื่นขึ้น"
+        ],
+        "en": [
+          "Adding products to a booth is faster: filters, select all, and a warning when the quantity exceeds stock",
+          "Dates now use one format across the app (day/month/year), with the Buddhist-era year in Thai",
+          "The booth pages work better on phones"
+        ]
+      }
+    }
+  },
+  {
     "version": "0.6.1",
     "date": "2026-09-21",
     "changes": {
