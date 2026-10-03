@@ -87,6 +87,14 @@
                       >
                         {{ t('boothsPage.useAtPos') }}
                       </button>
+                      <button
+                        type="button"
+                        class="font-medium text-primary-700 hover:underline"
+                        :data-testid="`booth-copy-${b.id}`"
+                        @click.stop="openDuplicate(b)"
+                      >
+                        {{ t('boothsPage.duplicate') }}
+                      </button>
                       <button type="button" class="text-danger-600 hover:underline" @click.stop="remove(b)">
                         {{ t('common.delete') }}
                       </button>
@@ -103,7 +111,7 @@
         <button type="button" class="text-sm text-primary-600 hover:underline" @click="go(null)">
           ← {{ t('boothsPage.back') }}
         </button>
-        <BoothDetail ref="detail" :key="selectedId" :booth-id="selectedId" class="min-w-0" />
+        <BoothDetail ref="detail" :key="selectedId" :booth-id="selectedId" class="min-w-0" @duplicate="openDuplicate(booths.find((b) => b.id === selectedId) ?? null)" />
       </div>
       <div
         v-else-if="view === 'list'"
@@ -112,6 +120,14 @@
         {{ t('boothsPage.emptyDetail') }}
       </div>
     </div>
+
+    <BoothDuplicateModal
+      :show="showDuplicate"
+      :source="duplicateSource"
+      :week-start="weekStart"
+      @close="showDuplicate = false"
+      @created="onDuplicated"
+    />
 
     <BoothCreateModal
       :show="showCreate"
@@ -145,6 +161,8 @@ const selectedId = ref<string | null>(null);
 const detail = ref<{ dirty: boolean } | null>(null);
 const detailWrap = ref<HTMLElement | null>(null);
 const showCreate = ref(false);
+const showDuplicate = ref(false);
+const duplicateSource = ref<Booth | null>(null);
 const createRange = ref<DateRange | undefined>();
 
 onMounted(fetchBooths);
@@ -183,6 +201,17 @@ function openCreate(range?: DateRange) {
 
 async function onCreated(id: string) {
   showCreate.value = false;
+  await go(id);
+}
+
+function openDuplicate(booth: Booth | null) {
+  if (!booth) return;
+  duplicateSource.value = booth;
+  showDuplicate.value = true;
+}
+
+async function onDuplicated(id: string) {
+  showDuplicate.value = false;
   await go(id);
 }
 

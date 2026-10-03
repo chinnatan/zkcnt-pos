@@ -16,8 +16,14 @@
         <button v-if="!booth.closed_at" type="button" class="btn-secondary" data-testid="booth-use-at-pos" @click="useAtPos">
           {{ t('boothsPage.useAtPos') }}
         </button>
+        <button type="button" class="btn-secondary" data-testid="booth-duplicate-btn" @click="emit('duplicate')">
+          {{ t('boothsPage.duplicate') }}
+        </button>
         <button v-if="!booth.closed_at" type="button" class="btn-secondary" data-testid="booth-close-btn" @click="showClose = true">
           {{ t('boothsPage.closeBooth') }}
+        </button>
+        <button v-else type="button" class="btn-secondary" data-testid="booth-reopen-btn" @click="reopen">
+          {{ t('boothsPage.reopen') }}
         </button>
       </div>
     </div>
@@ -112,13 +118,14 @@ import { getBangkokDateKey } from "~/lib/timezone";
 import type { BoothProduct, Category, Product } from "~/lib/types";
 
 const props = defineProps<{ boothId: string }>();
+const emit = defineEmits<{ duplicate: [] }>();
 
 const { t } = useI18n();
 const { confirm } = useDialog();
 const { activeStoreId } = useStore();
 const { formatCurrency, formatDateKey } = useFormat();
 const { weekStart } = useCalendarPrefs();
-const { booths, updateBooth, listBoothProducts } = useBooths();
+const { booths, updateBooth, listBoothProducts, reopenBooth } = useBooths();
 const { select: selectActiveBooth } = useActiveBooth();
 
 const booth = computed(() => booths.value.find((b) => b.id === props.boothId));
@@ -202,6 +209,12 @@ async function save() {
 
 async function onClosed() {
   showClose.value = false;
+  await reloadRows();
+}
+
+async function reopen() {
+  if (!(await confirm(t("boothsPage.reopenConfirm")))) return;
+  await reopenBooth(props.boothId);
   await reloadRows();
 }
 

@@ -981,6 +981,14 @@
     "purgeFailed": "Failed to clear sales history"
   },
   "boothsPage": {
+    "duplicate": "Duplicate",
+    "duplicateTitle": "Duplicate booth",
+    "duplicateHint": "Copies location, fee, extra costs and products with quantities — pick the new event dates",
+    "duplicateSubmit": "Duplicate booth",
+    "copyName": "{name} (copy)",
+    "reopen": "Reopen booth",
+    "reopenConfirm": "Reopen this booth? The leftover counts entered at close will be cleared.",
+    "previewSold": "Sold (pcs)",
     "filter": {
         "all": "All",
         "selected": "Selected",

@@ -107,6 +107,36 @@ export function useBooths() {
     return record;
   }
 
+  /** New booth with the source's location, fees, extra costs and product list (+ quantities). */
+  async function duplicateBooth(
+    sourceId: string,
+    overrides: { name: string; start_date: string; end_date: string },
+  ) {
+    const source = await db.booths.get(sourceId);
+    if (!source) throw new Error("Booth not found");
+    const rows = await listBoothProducts(sourceId);
+    return createBooth(
+      {
+        name: overrides.name,
+        location: source.location,
+        start_date: overrides.start_date,
+        end_date: overrides.end_date,
+        booth_fee: source.booth_fee,
+        extra_costs: source.extra_costs.map((c) => ({ ...c })),
+      },
+      rows.map((r) => ({ product: r.product, qty_brought: r.qty_brought })),
+    );
+  }
+
+  /** Re-open a closed booth: clears `closed_at` and the leftover counts entered at close. */
+  async function reopenBooth(id: string) {
+    const rows = await listBoothProducts(id);
+    for (const r of rows) {
+      if (r.qty_left !== null) await updateBoothProduct(r.id, { qty_left: null });
+    }
+    await updateBooth(id, { closed_at: "" });
+  }
+
   async function updateBooth(id: string, patch: Partial<BoothInput>) {
     const existing = await db.booths.get(id);
     if (!existing) throw new Error("Booth not found");
@@ -175,6 +205,8 @@ export function useBooths() {
     booths,
     fetchBooths,
     createBooth,
+    duplicateBooth,
+    reopenBooth,
     updateBooth,
     deleteBooth,
     listBoothProducts,
