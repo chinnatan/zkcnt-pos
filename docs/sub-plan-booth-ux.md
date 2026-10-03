@@ -138,11 +138,23 @@ Branch: `feat/booth-ux` (แตกจาก `feat/booth-mode` เพราะต
 
 ## Phase 6: Review & Quality Assurance
 
-- [ ] อ่าน `.cursor/rules/*.mdc` ก่อนแก้ template (ไม่มี `<style>` block, modal ผ่าน Teleport, form modal ไม่ปิดเมื่อคลิก backdrop, craft-card variants)
-- [ ] เพิ่ม key i18n th/en (แทรกแบบ text — `en.json` มี key ซ้ำเดิม ห้าม rewrite ด้วย JSON dump) และใช้ตัวฟอร์แมตวันที่กลาง
-- [ ] เพิ่ม/ปรับ E2E ใน `frontend/e2e/specs/` (สร้างบูธจากปฏิทิน, เลือกช่วงวันด้วย picker, คัดลอกบูธ, ปิด/เปิดบูธ) assert ที่ `data-testid`/CSS class
-- [ ] ตรวจหน้าจริงด้วย Playwright + screenshot (desktop 1440 และมือถือ 390) ตรวจว่าไม่มีล้นขอบจอและ console สะอาด
-- [ ] รัน `bun run typecheck` + `task test` (backend + frontend) และ Playwright เต็มชุด; อัปเดตไฟล์ plan นี้ (ติ๊ก `[x]` + บันทึกผล)
+- [x] อ่าน `.cursor/rules/*.mdc` ก่อนแก้ template (ไม่มี `<style>` block, modal ผ่าน Teleport, form modal ไม่ปิดเมื่อคลิก backdrop, craft-card variants)
+- [x] เพิ่ม key i18n th/en (แทรกแบบ text — `en.json` มี key ซ้ำเดิม ห้าม rewrite ด้วย JSON dump) และใช้ตัวฟอร์แมตวันที่กลาง
+- [x] เพิ่ม/ปรับ E2E ใน `frontend/e2e/specs/` (สร้างบูธจากปฏิทิน, เลือกช่วงวันด้วย picker, คัดลอกบูธ, ปิด/เปิดบูธ) assert ที่ `data-testid`/CSS class
+- [x] ตรวจหน้าจริงด้วย Playwright + screenshot (desktop 1440 และมือถือ 390) ตรวจว่าไม่มีล้นขอบจอและ console สะอาด
+- [x] รัน `bun run typecheck` + `task test` (backend + frontend) และ Playwright เต็มชุด; อัปเดตไฟล์ plan นี้ (ติ๊ก `[x]` + บันทึกผล)
+
+### บันทึกผล Phase 6
+
+- กฎ UI (`.cursor/rules`): ไม่มี `<style>` block ในไฟล์ที่เพิ่ม/แก้, modal ผ่าน `UiCraftModal` (Teleport) และ date picker ผ่าน `Teleport`, modal ฟอร์มทั้งสาม (สร้าง/คัดลอก/ปิดบูธ) ไม่ปิดเมื่อคลิก backdrop, ใช้ craft card + class ของ theme
+- i18n th/en แทรกแบบ text (ตรวจแล้วไม่มี key ซ้ำใน `boothsPage` ทั้งสองไฟล์)
+- E2E ใหม่ `frontend/e2e/specs/booth-ux.spec.ts` (2 เคส): สร้างบูธผ่าน modal + เลือกช่วงวัน → แก้ไขแล้วแถบ "ยังไม่บันทึก" ขึ้น/หายหลังบันทึก → สินค้าที่ดึงอัตโนมัติ + ชิปกรอง "เลือกแล้ว" + แถบสรุปตามค่าบูธ → คัดลอกบูธแล้วสินค้าตามมาครบ → ปิดบูธ (มี preview) → เปิดอีกครั้ง; และวันเริ่มสัปดาห์/มุมมองคงอยู่หลังรีโหลด (assert ที่ `data-testid`); เพิ่ม `data-testid="dialog-confirm"` ใน `AppDialog.vue`
+- ผล: Playwright เต็มชุด **8 ผ่าน / 2 ล้ม** — 2 ที่ล้มคือ `pos-stock-block` และ `orders-void-rbac` ซึ่งล้มเหมือนเดิมบน commit ก่อนเริ่มงานบูธ (ยืนยันแล้วใน Phase 5 ของแผนบูธ) ไม่เกี่ยวกับงานนี้; `bun test` backend ผ่านทั้งหมด, vitest 82/82; ไม่มี typecheck error ใหม่
+- ตรวจหน้าจริงด้วย Playwright + screenshot ตลอดงาน (desktop 1440 / มือถือ 390): ปฏิทิน, modal เลือกวัน (พ.ศ.), รายการแบ่งกลุ่ม, แท็บ/แถบสรุป sticky/แถบยังไม่บันทึก, picker สินค้า (30 รายการ), modal ปิดบูธพร้อม preview, modal คัดลอก; console สะอาดทุกรอบ, มือถือไม่ล้นขอบจอ
+- ที่ยังไม่ได้ทำ/ข้อจำกัด: ช่อง `<input type="date">` ที่อื่นในแอป (โปรโมชัน ฯลฯ) ยังแสดงปีตาม locale เบราว์เซอร์; ตารางปฏิทินบนมือถือเส้นขอบขวาชิดขอบการ์ดมาก; ไม่มี E2E สำหรับ "ตั้งจำนวนเท่ากันทั้งหมด" (กล่อง prompt) และการลากเลือกวันบนปฏิทิน (ครอบคลุมด้วย unit test ของ `selectionToRange`/`nextRange`)
+- ไม่เกี่ยวกับงานนี้ แต่พบ/ทำระหว่างทาง: การรัน `nuxt dev` (port 3100) + `nuxt build` ในโฟลเดอร์ `frontend/` ใช้ `.nuxt`/Vite cache ร่วมกับ dev server ของ user (port 4000) และผมลบ `.nuxt/cache` + `node_modules/.cache/vite` หนึ่งครั้ง — ถ้า dev server ของคุณแสดงอาการแปลก ให้รีเฟรช/รีสตาร์ต
+
+
 
 ## Appendix
 
