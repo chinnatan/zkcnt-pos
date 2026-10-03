@@ -130,11 +130,22 @@ Branch: `feat/booth-mode` (แตกจาก `develop` เมื่อ plan อ
 
 ## Phase 5: Review & Quality Assurance
 
-- [ ] เทสต์ unit `lib/booths/cost.ts` และ `lib/reports/booth.ts` (voided/refunded ไม่นับ, ค่าบูธ 0, qty_brought 0 ไม่หารศูนย์)
-- [ ] เทสต์ backend integration: booths/booth_products CRUD, order ผูก booth ข้าม store ไม่ได้, sync push/pull
-- [ ] E2E: สร้างบูธ → เลือกใน settings → ขายใน POS ที่กรองสินค้า → เห็นในรายงาน (assert CSS class; `visit("/")` ก่อน `/pos`)
-- [ ] รัน `bun run typecheck` (backend + frontend) + `task test` และทดสอบ migration `task cf:db:migrate:local`
-- [ ] อัปเดตไฟล์ plan นี้ (ติ๊ก `[x]` + บันทึกผล) และเพิ่ม release note ตามขั้นตอน release
+- [x] เทสต์ unit `lib/booths/cost.ts` และ `lib/reports/booth.ts` (voided/refunded ไม่นับ, ค่าบูธ 0, qty_brought 0 ไม่หารศูนย์)
+- [x] เทสต์ backend integration: booths/booth_products CRUD, order ผูก booth ข้าม store ไม่ได้, sync push/pull
+- [x] E2E: สร้างบูธ → เลือกใน settings → ขายใน POS ที่กรองสินค้า → เห็นในรายงาน (assert CSS class; `visit("/")` ก่อน `/pos`)
+- [x] รัน `bun run typecheck` (backend + frontend) + `task test` และทดสอบ migration `task cf:db:migrate:local`
+- [x] อัปเดตไฟล์ plan นี้ (ติ๊ก `[x]` + บันทึกผล) และเพิ่ม release note ตามขั้นตอน release
+
+### บันทึกผล Phase 5
+
+- unit: `booth-cost.test.ts` (cost/seed/วัน/isBoothEnded/break-even), `boothReport.test.ts` (กำไรจริง, sell-through, advice เฉพาะบูธที่ปิด, หมวดหมู่), `dateFormat.test.ts`
+- backend integration `booths.test.ts` (6 เคส): CRUD/revive/sync delta/soft delete, ห้ามอ้างบูธข้าม store, order ติดบูธ, ตัวกรองรายงาน, สิทธิ์ cashier (อ่านได้ เขียน 403)
+- E2E ใหม่ `frontend/e2e/specs/booth-mode.spec.ts`: ไม่เลือกบูธ = เห็นสินค้าทั้งหมด → เลือกบูธแล้วกรองสินค้า → ขายสำเร็จ → ออเดอร์ติดบูธ (เช็กผ่าน `GET /reports?booth=`) และเลือกบูธค้างหลังรีโหลด/ล้างได้; 2/2 ผ่าน (assert ที่ `#pos-booth` + `data-testid` ไม่ใช่ข้อความแปล)
+- ผลรวม: `bun test` 54/54, vitest 66/66, Playwright เต็มชุด 6 ผ่าน / 2 ล้ม — **2 ที่ล้มคือ `pos-stock-block` และ `orders-void-rbac` ล้มเหมือนเดิมบน commit ก่อนเริ่มงาน (`918e5e5`) ด้วย (เทียบด้วย worktree แยก) ไม่เกี่ยวกับบูธ**: `pos-stock-block` คลิกการ์ดสินค้าที่ปุ่ม `disabled` จึง timeout; `orders-void-rbac` ล้มตอน `registerExtraUser`
+- typecheck: backend/frontend ไม่มี error ใหม่ในไฟล์ที่แก้ (error เดิมใน `executor.ts`, `orders.ts` batch, `store-transaction-purge`, `support.test.ts`, `tests/integration/sync-engine.test.ts`)
+- migration: `0009_booths.sql` apply ต่อจาก 0001–0008 บนตาราง SQLite ผ่าน (`orders.booth` + ตารางใหม่ + index); `wrangler d1 migrations apply --local` บน D1 เปล่า **ล้มที่ `0004_add_get_discount_type.sql` (duplicate column) ซึ่งเป็นปัญหาเดิม** — `0001_init.sql` มีคอลัมน์นี้อยู่แล้ว จึง bootstrap D1 ใหม่จาก migration ทั้งหมดไม่ได้ (prod ที่ apply 0004 ไปแล้วไม่กระทบ); ยังไม่ได้ apply 0009 ผ่าน wrangler จริง
+- Release note: ไม่แตะ `VERSION`/ไม่สร้าง tag (ขั้นตอน release เป็นของ user: เพิ่ม `VERSION` → `task release-notes` → tag); release notes สร้างจาก commit message ภาษาไทยของ branch นี้อัตโนมัติ
+- เก็บกวาด: worktree/สคริปต์/ข้อมูลทดสอบชั่วคราวถูกลบ; `frontend/test-results/` ที่ถูก track ใน git ถูกคืนค่าไม่ให้เปลี่ยน
 
 ## Phase ถัดไป (นอก scope รอบนี้)
 

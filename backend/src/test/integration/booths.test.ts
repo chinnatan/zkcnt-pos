@@ -90,7 +90,7 @@ describe("booths", () => {
     const delta = await jsonRequest<{ orders: Array<{ booth: string }> }>(`${base}/sync`, {
       headers: authHeaders(token),
     });
-    expect(delta.json.orders[0]?.booth).toBe(booth.json.id);
+    expect(delta.json.orders[0]?.booth).toBe(String(booth.json.id));
   });
 });
 
@@ -121,5 +121,38 @@ describe("reports booth filter", () => {
     expect(await sales("")).toBe(140);
     expect(await sales(`&booth=${booth.json.id}`)).toBe(100);
     expect(await sales("&booth=none")).toBe(40);
+  });
+});
+
+describe("booth permissions", () => {
+  test("cashier can read booths but not create or edit them", async () => {
+    const owner = await registerUser({ email: "booth5-owner@test.com" });
+    const cashier = await registerUser({ email: "booth5-cashier@test.com" });
+    const store = await createStore(owner.token, { slug: "booth5-store" });
+    const base = `/api/stores/${store.id}`;
+
+    const added = await jsonRequest("/api/members/add-by-email", {
+      method: "POST",
+      headers: authHeaders(owner.token),
+      body: JSON.stringify({ storeId: store.id, email: cashier.email, role: "cashier" }),
+    });
+    expect(added.res.status).toBe(200);
+
+    const booth = await post(owner.token, `${base}/booths`, { name: "Fair" });
+    expect(booth.res.status).toBe(201);
+
+    const list = await jsonRequest<unknown[]>(`${base}/booths`, {
+      headers: authHeaders(cashier.token),
+    });
+    expect(list.res.status).toBe(200);
+    expect(list.json.length).toBe(1);
+
+    expect((await post(cashier.token, `${base}/booths`, { name: "Nope" })).res.status).toBe(403);
+    expect(
+      (await post(cashier.token, `${base}/booths/${booth.json.id}`, { name: "x" }, "PATCH")).res.status,
+    ).toBe(403);
+    expect(
+      (await post(cashier.token, `${base}/booths/${booth.json.id}`, {}, "DELETE")).res.status,
+    ).toBe(403);
   });
 });
