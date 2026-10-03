@@ -981,6 +981,20 @@
     "purgeFailed": "Failed to clear sales history"
   },
   "boothsPage": {
+    "calPrev": "Previous",
+    "calNext": "Next",
+    "calToday": "Today",
+    "weekStart": "Week starts on",
+    "calHint": "Click a bar to open a booth · click or drag empty days to create a new booth",
+    "pickerPlaceholder": "Select dates",
+    "pickerClear": "Clear dates",
+    "pickerDone": "Done",
+    "status": {
+        "ongoing": "Ongoing",
+        "upcoming": "Upcoming",
+        "ended": "Ended (not closed yet)",
+        "closed": "Closed"
+    },
     "title": "Booth management",
     "subtitle": "Manage the events you sell at, booth fees and the products you bring",
     "managerOnly": "Managers and owners only",

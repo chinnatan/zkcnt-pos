@@ -17,25 +17,36 @@ Branch: `feat/booth-ux` (แตกจาก `feat/booth-mode` เพราะต
 
 ### เลือก library (spike สั้น ๆ ก่อนลงมือ)
 
-- [ ] ลอง `v-calendar` (v3, Vue 3) ใน scratch: ตรวจว่า (ก) แสดงปี พ.ศ. ในหัวเดือน/ชื่อวันด้วย locale `th-TH-u-ca-buddhist` ได้ (ข) โหมดเลือกช่วงวัน (ค) แถบหลายวันของบูธผ่าน `attributes` (ง) ตั้งวันเริ่มสัปดาห์ได้ (`first-day-of-week`) (จ) ขนาด bundle เพิ่มกี่ KB และธีมเข้ากับ craft style/dark mode โดยไม่ต้องมี `<style>` block
-- [ ] ถ้า `v-calendar` ไม่ผ่านข้อ (ก) หรือ (ค) ให้ลอง `@fullcalendar/vue3` (daygrid + interaction) สำหรับปฏิทิน และ `@vuepic/vue-datepicker` สำหรับ picker; สรุปตัวเลือกพร้อมเหตุผลใน Appendix ก่อนติดตั้งจริง
-- [ ] ติดตั้งด้วย `bun add` (ห้าม npm) และ import CSS ของ library ผ่าน `nuxt.config`/`main.css` ปรับสีด้วย CSS variables
+- [x] ลอง `v-calendar` (v3, Vue 3) ใน scratch: ตรวจว่า (ก) แสดงปี พ.ศ. ในหัวเดือน/ชื่อวันด้วย locale `th-TH-u-ca-buddhist` ได้ (ข) โหมดเลือกช่วงวัน (ค) แถบหลายวันของบูธผ่าน `attributes` (ง) ตั้งวันเริ่มสัปดาห์ได้ (`first-day-of-week`) (จ) ขนาด bundle เพิ่มกี่ KB และธีมเข้ากับ craft style/dark mode โดยไม่ต้องมี `<style>` block
+- [x] ถ้า `v-calendar` ไม่ผ่านข้อ (ก) หรือ (ค) ให้ลอง `@fullcalendar/vue3` (daygrid + interaction) สำหรับปฏิทิน และ `@vuepic/vue-datepicker` สำหรับ picker; สรุปตัวเลือกพร้อมเหตุผลใน Appendix ก่อนติดตั้งจริง
+- [x] ติดตั้งด้วย `bun add` (ห้าม npm) และ import CSS ของ library ผ่าน `nuxt.config`/`main.css` ปรับสีด้วย CSS variables
 
 ### Logic (pure)
 
-- [ ] สร้าง `frontend/app/composables/useCalendarPrefs.ts`: มุมมอง (ปฏิทิน/รายการ) และวันเริ่มสัปดาห์ (อาทิตย์/จันทร์/…; ค่าเริ่มต้นอาทิตย์) เก็บใน localStorage ต่อเครื่อง
-- [ ] สร้าง `frontend/app/lib/booths/calendar.ts`: แปลงบูธ → รูปแบบที่ library ต้องการ, ใช้คีย์ `YYYY-MM-DD` เทียบวัน (ไม่ใช้ `Date` ตรง ๆ กันเขตเวลาเลื่อนวัน), จัดสีตามสถานะ
-- [ ] เพิ่ม `boothStatus(booth, today)` → `upcoming | ongoing | ended | closed` ใช้ร่วมทั้งปฏิทิน รายการ และ badge (ต่อยอด `isBoothEnded`)
+- [x] สร้าง `frontend/app/composables/useCalendarPrefs.ts`: มุมมอง (ปฏิทิน/รายการ) และวันเริ่มสัปดาห์ (อาทิตย์/จันทร์/…; ค่าเริ่มต้นอาทิตย์) เก็บใน localStorage ต่อเครื่อง
+- [x] สร้าง `frontend/app/lib/booths/calendar.ts`: แปลงบูธ → รูปแบบที่ library ต้องการ, ใช้คีย์ `YYYY-MM-DD` เทียบวัน (ไม่ใช้ `Date` ตรง ๆ กันเขตเวลาเลื่อนวัน), จัดสีตามสถานะ
+- [x] เพิ่ม `boothStatus(booth, today)` → `upcoming | ongoing | ended | closed` ใช้ร่วมทั้งปฏิทิน รายการ และ badge (ต่อยอด `isBoothEnded`)
 
 ### Components
 
-- [ ] `components/booth/BoothCalendar.vue`: ปฏิทินเดือน + ปุ่มก่อนหน้า/ถัดไป/วันนี้ + ตัวเลือก "เริ่มสัปดาห์วัน…", แถบบูธสีตามสถานะ (บูธซ้อนวันกันได้), คลิกแถบ = เลือกบูธ, เลือกช่วงวันว่าง = ส่ง event `create-range` (start,end)
-- [ ] `components/booth/DateRangePicker.vue`: popover ปฏิทินเลือกวันเริ่ม–จบ (คลิกสองครั้ง) ใช้วันเริ่มสัปดาห์ตาม `useCalendarPrefs`, แสดงค่า `dd/MM/yyyy` ตามภาษา (พ.ศ. ไทย / ค.ศ. อื่น) ผ่าน `formatDateKey`, ปุ่มล้างค่า, ปิดด้วย Esc/คลิกนอก
-- [ ] ปฏิทินและ picker ทำงานด้วยคีย์บอร์ดได้ (ลูกศรเลื่อนวัน, Enter เลือก) และมี `aria-label`
+- [x] `components/booth/BoothCalendar.vue`: ปฏิทินเดือน + ปุ่มก่อนหน้า/ถัดไป/วันนี้ + ตัวเลือก "เริ่มสัปดาห์วัน…", แถบบูธสีตามสถานะ (บูธซ้อนวันกันได้), คลิกแถบ = เลือกบูธ, เลือกช่วงวันว่าง = ส่ง event `create-range` (start,end)
+- [x] `components/booth/DateRangePicker.vue`: popover ปฏิทินเลือกวันเริ่ม–จบ (คลิกสองครั้ง) ใช้วันเริ่มสัปดาห์ตาม `useCalendarPrefs`, แสดงค่า `dd/MM/yyyy` ตามภาษา (พ.ศ. ไทย / ค.ศ. อื่น) ผ่าน `formatDateKey`, ปุ่มล้างค่า, ปิดด้วย Esc/คลิกนอก
+- [x] ปฏิทินและ picker ทำงานด้วยคีย์บอร์ดได้ (ลูกศรเลื่อนวัน, Enter เลือก) และมี `aria-label`
 
 ### เทสต์
 
-- [ ] unit test `calendar.ts` + `useCalendarPrefs`: บูธข้ามเดือน/ปี, สถานะบูธตามวันนี้, ค่าเริ่มต้นและการจำค่าวันเริ่มสัปดาห์
+- [x] unit test `calendar.ts` + `useCalendarPrefs`: บูธข้ามเดือน/ปี, สถานะบูธตามวันนี้, ค่าเริ่มต้นและการจำค่าวันเริ่มสัปดาห์
+
+### บันทึกผล Phase 1 (spike + ส่วนที่ทำ)
+
+- **ผล spike** (หน้า dev ชั่วคราว + Playwright screenshot, ลบแล้ว):
+  - `v-calendar@3.1.2`: เดือน/วันไทยและวันเริ่มสัปดาห์ทำงาน แต่ **ปีขึ้นเป็น ค.ศ.** (ต้องแก้ด้วย slot และรายการเลือกปีใน popover ยังเป็น ค.ศ.) และ attribute แบบ `bar` เป็นแค่เส้นใต้วันที่ — **วาดแถบบูธที่มีชื่อข้ามหลายวัน/หลายสัปดาห์ไม่ได้** → ไม่ใช้ (ถอนแพ็กเกจแล้ว)
+  - `@fullcalendar` v6 (`core` + `vue3` + `daygrid` + `interaction`): **หัวเดือนเป็น พ.ศ. อัตโนมัติ** (`ตุลาคม 2569`), แถบมีชื่อข้ามสัปดาห์, หลายงานซ้อนวันได้ไม่ทับ, `firstDay` ตั้งวันเริ่มสัปดาห์ได้, `select` เลือกช่วงวันว่าง → **ใช้สำหรับมุมมองปฏิทิน**
+  - (หมายเหตุ: `core`/`vue3` ต้อง major เดียวกับ `daygrid`/`interaction` — v7 ของ core/vue3 ยังไม่มี daygrid/interaction v7 จึงปักที่ `^6.1.21` ทั้งสี่ตัว)
+- **date picker เขียนเอง** (`DateRangePicker.vue`, ~100 บรรทัด) แทน library เพราะ library ที่ลองไม่แสดง พ.ศ. และการเขียนเองคุมปี พ.ศ./ค.ศ. ตามภาษาและวันเริ่มสัปดาห์ได้ตรง ๆ ไม่ต้องเพิ่ม dependency ตัวที่สอง
+- `lib/booths/calendar.ts` (pure: `addDays`, `boothStatus`, `boothEvents`, `selectionToRange`, `nextRange`, `buildMonthGrid`, `weekdayOrder`), `composables/useCalendarPrefs.ts` (มุมมอง + วันเริ่มสัปดาห์ ต่อเครื่อง), `components/booth/BoothCalendar.vue` (หัวปฏิทินเอง: ก่อนหน้า/วันนี้/ถัดไป/ชื่อเดือน/เลือกวันเริ่มสัปดาห์ + legend สถานะ), `components/booth/DateRangePicker.vue` (popover, ลูกศรเลื่อนโฟกัสวัน/สัปดาห์, Esc ปิด, คลิกนอกปิด)
+- เทสต์: `tests/lib/booth-calendar.test.ts` 6 เคส; typecheck ไม่มี error ใหม่
+- **ยังไม่ได้ต่อเข้าหน้า** (Phase 2) จึงยังไม่ได้ตรวจ component ด้วยตา; ใช้ผ่าน `<LazyBoothCalendar>` เพื่อไม่ให้ FullCalendar อยู่ใน bundle หลัก
 
 ## Phase 2: โครงหน้า `/booths` ใหม่
 
@@ -111,7 +122,7 @@ Branch: `feat/booth-ux` (แตกจาก `feat/booth-mode` เพราะต
 
 ### ข้อสมมติ/การตัดสินใจที่ขอ user ยืนยัน
 
-1. **ใช้ library** (ตามที่ user อนุมัติ) — ตัวเลือกแรกคือ `v-calendar` ใช้ทั้งปฏิทินและ picker; ต้องตรวจให้ได้ว่าแสดงปี พ.ศ. ได้จริงก่อนตัดสินใจ (ผลค้นเว็บยืนยันไม่ได้ ต้องทดลองเอง จึงมี spike ใน Phase 1) ถ้าไม่ผ่าน มีตัวสำรองตามรายการใน Phase 1
+1. **ใช้ library** (ตามที่ user อนุมัติ) — ผล spike: ใช้ **FullCalendar v6** สำหรับมุมมองปฏิทิน (แสดง พ.ศ. ได้เอง + แถบมีชื่อ) และเขียน date picker เอง (ดูบันทึกผล Phase 1)
 2. **วันเริ่มสัปดาห์ตั้งค่าได้** ค่าเริ่มต้นอาทิตย์ — เก็บต่อเครื่องใน localStorage (เหมือนมุมมองปฏิทิน/รายการ และบูธที่เลือกบน POS) เปลี่ยนได้จากเมนูเล็กบนหัวปฏิทิน และมีผลกับ date picker ด้วย; ไม่ทำเป็นค่าระดับร้านเพราะต้องออนไลน์ + สิทธิ์ manager เท่านั้น
 3. **ค่าเริ่มต้นมุมมอง**: ปฏิทินบนจอใหญ่ / รายการบนมือถือ (ยืนยันแล้ว)
 4. **บูธซ้อนวันกันได้** (ยืนยันแล้ว) — ปฏิทินแสดงหลายแถบไม่ทับกัน ไม่ห้ามสร้าง
