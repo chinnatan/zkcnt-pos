@@ -415,7 +415,8 @@
     "boothLeft": "Left",
     "boothSellThrough": "Sell-through",
     "boothCategories": "Category summary across booths",
-    "boothCategoriesHint": "Use it to decide what to make next: sell-through ≥ 80% = make more, ≤ 30% = make less",
+    "boothCategoriesEmpty": "No closed booths yet — close a booth when the event ends to see this summary",
+    "boothCategoriesHint": "Closed booths only · use it to decide what to make next: sell-through ≥ 80% = make more, ≤ 30% = make less",
     "boothAdvice": {
         "produceMore": "Make more",
         "produceLess": "Make less"

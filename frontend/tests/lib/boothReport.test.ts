@@ -45,7 +45,7 @@ describe("booth report", () => {
   test("sell-through uses brought−left when closed, else sold; advice thresholds", () => {
     const r = buildBoothReport({
       ...base,
-      booths: [booth("x")],
+      booths: [booth("x", { closed_at: "2026-10-05" })],
       boothProducts: [bp("x", "a", 10, 1), bp("x", "b", 10), bp("x", "c", 10)],
       orders: [order("o1", "x", 100)],
       orderItems: [item("o1", "b", 2, 100)],
@@ -63,7 +63,7 @@ describe("booth report", () => {
     const r = buildBoothReport({
       ...base,
       products: [...base.products, product("d", "", 0)],
-      booths: [booth("x"), booth("y")],
+      booths: [booth("x", { closed_at: "z" }), booth("y", { closed_at: "z" })],
       boothProducts: [bp("x", "a", 10), bp("y", "b", 10), bp("y", "d", 5)],
       orders: [order("o1", "x", 100), order("o2", "y", 100)],
       orderItems: [item("o1", "a", 4, 100), item("o2", "b", 6, 100)],
@@ -83,5 +83,18 @@ describe("booth report", () => {
       orderItems: [item("o1", "a", 1, 100)],
     });
     expect(r.booths[0]!.products[0]!.sellThrough).toBeNull();
+  });
+
+  test("open booths give no advice and are left out of the category summary", () => {
+    const r = buildBoothReport({
+      ...base,
+      booths: [booth("x")],
+      boothProducts: [bp("x", "a", 10)],
+      orders: [order("o1", "x", 20)],
+      orderItems: [item("o1", "a", 1, 20)],
+    });
+    expect(r.booths[0]!.products[0]!.sellThrough).toBe(0.1);
+    expect(r.booths[0]!.products[0]!.advice).toBeNull();
+    expect(r.categories).toEqual([]);
   });
 });

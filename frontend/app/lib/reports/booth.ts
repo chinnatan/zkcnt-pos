@@ -135,7 +135,8 @@ export function buildBoothReport(input: BoothReportInput) {
       for (const r of rows.values()) {
         r.gone = r.left != null ? Math.max(0, r.brought - r.left) : r.sold;
         r.sellThrough = ratio(r.gone, r.brought);
-        r.advice = sellThroughAdvice(r.sellThrough);
+        // an open booth's numbers are still moving — only advise once it is closed
+        r.advice = booth.closed_at ? sellThroughAdvice(r.sellThrough) : null;
       }
 
       const fixedCost = totalBoothCost(booth);
@@ -160,7 +161,8 @@ export function buildBoothReport(input: BoothReportInput) {
 
   const categoryName = new Map(input.categories.map((c) => [c.id, c.name]));
   const byCategory = new Map<string, { sold: number; revenue: number; brought: number; gone: number }>();
-  for (const booth of booths) {
+  // category advice is for the next production run → closed booths only
+  for (const booth of booths.filter((b) => b.closed)) {
     for (const r of booth.products) {
       const acc = byCategory.get(r.categoryId) ?? { sold: 0, revenue: 0, brought: 0, gone: 0 };
       acc.sold += r.sold;

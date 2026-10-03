@@ -86,7 +86,10 @@
       <section>
         <h3 class="mb-1 text-sm font-semibold text-ink">{{ t('reportsPage.boothCategories') }}</h3>
         <p class="mb-3 text-xs text-ink-muted">{{ t('reportsPage.boothCategoriesHint') }}</p>
-        <div class="overflow-x-auto">
+        <p v-if="report.categories.length === 0" class="py-4 text-center text-sm text-ink-muted">
+          {{ t('reportsPage.boothCategoriesEmpty') }}
+        </p>
+        <div v-else class="overflow-x-auto">
           <table class="w-full text-sm">
             <thead>
               <tr class="border-b text-left text-ink-muted">

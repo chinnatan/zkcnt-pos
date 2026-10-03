@@ -114,6 +114,20 @@ Branch: `feat/booth-mode` (แตกจาก `develop` เมื่อ plan อ
 - เทสต์: `tests/lib/boothReport.test.ts` (4 เคส), backend `reports booth filter`; vitest 65/65, `bun test` ผ่าน
 - ยังไม่ได้ตรวจหน้ารายงานด้วยตาในเบราว์เซอร์
 
+### Addendum หลัง Phase 4 — ตรวจหน้าจริงด้วย Playwright (สคริปต์ชั่วคราว ลบแล้ว)
+
+รัน backend (`DATA_DIR=./data-e2e`, port 3001) + `nuxt preview` (port 3000) แยกจาก dev DB, seed ร้าน/หมวด/สินค้า/สต๊อก แล้วขับ UI: login → `/booths` (สร้าง, กรอก, ค่าใช้จ่ายเพิ่มเติม) → POS (เลือกบูธ, ขาย) → รายงาน (ช่องกรอง, แท็บบูธ) → ปิดบูธ → กลับ POS/รายงาน + มือถือ 390px
+
+พบและแก้:
+- `/booths` บนมือถือล้นขอบจอ (grid ไม่มี `grid-cols-1`/`min-w-0`) → แก้แล้ว วัด `scrollWidth = clientWidth = 390`
+- แท็บบูธแสดง "ผลิตน้อยลง" ให้บูธที่ยังไม่ปิด (ขายได้ 4% กลางงาน) ซึ่งเป็นคำแนะนำผิดเวลา → ป้ายแนะนำแสดงเฉพาะบูธที่ปิดแล้ว และสรุปหมวดหมู่นับเฉพาะบูธที่ปิด (มีข้อความ empty state)
+- หัวหน้าหน้า `/booths` บนมือถือตัดบรรทัดสามชั้น → ใช้ชื่อสั้น "บูธ"
+
+พบแต่ไม่ได้เกี่ยวกับงานนี้ (ไม่ได้แก้):
+- รีโหลดหน้า `/reports` ตรง ๆ แสดง "ไม่มีข้อมูล" เพราะ `loadReports` return เมื่อ `activeStoreId` ยังไม่พร้อมตอน mount (เข้าผ่านเมนูปกติได้) — โค้ดส่วนนี้ไม่ได้ถูกแก้ในงานนี้
+- console error `"bar" is not a registered controller` บนหน้ารายงาน (chart.js ใน `ReportsSalesChart`; ไฟล์ไม่เคยถูกแตะ)
+- ช่องวันที่ native (`type="date"`) แสดงปี ค.ศ. ตาม locale เบราว์เซอร์ ขณะที่รายการแสดง พ.ศ. ตามภาษาแอป
+
 ## Phase 5: Review & Quality Assurance
 
 - [ ] เทสต์ unit `lib/booths/cost.ts` และ `lib/reports/booth.ts` (voided/refunded ไม่นับ, ค่าบูธ 0, qty_brought 0 ไม่หารศูนย์)

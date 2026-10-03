@@ -9,8 +9,8 @@
       <p class="text-ink-muted">{{ t('boothsPage.managerOnly') }}</p>
     </div>
 
-    <div v-else class="grid gap-6 lg:grid-cols-[22rem_1fr]">
-      <div class="space-y-6">
+    <div v-else class="grid grid-cols-1 gap-6 lg:grid-cols-[22rem_1fr]">
+      <div class="min-w-0 space-y-6">
         <UiCraftCard variant="tag" padding="md">
           <form class="space-y-2" @submit.prevent="create">
             <label class="block text-sm font-medium text-ink">{{ t('boothsPage.createLabel') }}</label>
@@ -59,7 +59,7 @@
         </UiCraftCard>
       </div>
 
-      <BoothDetail v-if="selectedId" :key="selectedId" :booth-id="selectedId" />
+      <BoothDetail v-if="selectedId" :key="selectedId" :booth-id="selectedId" class="min-w-0" />
       <div v-else class="flex items-center justify-center rounded-xl border-2 border-dashed border-border-warm p-12 text-center text-sm text-ink-muted">
         {{ t('boothsPage.emptyDetail') }}
       </div>
