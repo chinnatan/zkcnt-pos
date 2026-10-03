@@ -45,7 +45,7 @@
               </div>
               <p v-if="b.location" class="text-xs text-ink-muted">{{ b.location }}</p>
               <p class="text-xs text-ink-muted">
-                {{ b.start_date || '—' }} – {{ b.end_date || '—' }}
+                {{ formatDateKey(b.start_date) || '—' }} – {{ formatDateKey(b.end_date) || '—' }}
                 <template v-if="boothDayCount(b.start_date, b.end_date)">
                   · {{ t('boothsPage.days', { n: boothDayCount(b.start_date, b.end_date) }) }}
                 </template>
@@ -75,8 +75,8 @@ import type { Booth } from "~/lib/types";
 definePageMeta({ middleware: "auth" });
 
 const { t } = useI18n();
-const { activeStore, activeStoreId, isManager, updateStore } = useStore();
-const { formatCurrency } = useFormat();
+const { activeStoreId, isManager } = useStore();
+const { formatCurrency, formatDateKey } = useFormat();
 const { confirm } = useDialog();
 const { booths, fetchBooths, createBooth, deleteBooth } = useBooths();
 
@@ -108,12 +108,6 @@ async function create() {
 async function remove(booth: Booth) {
   if (!(await confirm(t("boothsPage.confirmDelete", { name: booth.name })))) return;
   if (selectedId.value === booth.id) selectedId.value = null;
-  // clear it as the active booth so POS does not keep filtering on a deleted one
-  if (activeStore.value?.settings?.active_booth_id === booth.id) {
-    await updateStore(activeStore.value.id, {
-      settings: { ...activeStore.value.settings, active_booth_id: "" },
-    });
-  }
   await deleteBooth(booth.id);
 }
 </script>

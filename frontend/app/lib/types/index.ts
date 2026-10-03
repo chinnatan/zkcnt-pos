@@ -31,7 +31,6 @@ export interface StoreSettings {
   promptpay_id?: string;
   transaction_history_cleared_at?: string;
   feature_flags?: Record<string, boolean>;
-  active_booth_id?: string;
 }
 
 export interface Store extends BaseRecord {

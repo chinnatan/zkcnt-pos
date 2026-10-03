@@ -86,3 +86,34 @@ export function formatBangkokDateShort(date: Date | string, locale: string): str
     timeZone: BANGKOK_TZ,
   });
 }
+
+/** App-wide display format: dd/MM/yyyy (Gregorian year, Asia/Bangkok), same for th and en. */
+export function formatBangkokDate(date: Date | string): string {
+  const p = new Intl.DateTimeFormat("en-GB", {
+    timeZone: BANGKOK_TZ,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(new Date(date));
+  const get = (type: Intl.DateTimeFormatPartTypes) =>
+    p.find((x) => x.type === type)?.value ?? "";
+  return `${get("day")}/${get("month")}/${get("year")}`;
+}
+
+/** dd/MM/yyyy HH:mm:ss (24h, Asia/Bangkok) */
+export function formatBangkokDateTime(date: Date | string): string {
+  const time = new Intl.DateTimeFormat("en-GB", {
+    timeZone: BANGKOK_TZ,
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hourCycle: "h23",
+  }).format(new Date(date));
+  return `${formatBangkokDate(date)} ${time}`;
+}
+
+/** "YYYY-MM-DD" (date-only value, e.g. `<input type="date">`) → dd/MM/yyyy; no timezone shift. */
+export function formatDateKey(key?: string | null): string {
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(key ?? "");
+  return m ? `${m[3]}/${m[2]}/${m[1]}` : "";
+}

@@ -205,8 +205,8 @@
     "orderNumber": "เลขออเดอร์"
   },
   "pos": {
-    "boothActive": "บูธ: {name}",
-    "boothEnded": "บูธ \"{name}\" สิ้นสุด/ปิดแล้ว — กลับมาขายแบบปกติ (เปลี่ยนบูธที่ใช้งานได้ในตั้งค่า)",
+    "boothLabel": "บูธ",
+    "boothEnded": "บูธ \"{name}\" สิ้นสุด/ปิดแล้ว — ขายแบบปกติ เลือกบูธใหม่ได้ที่นี่",
     "boothBreakEvenShort": "คุ้มทุน {pct}% · ขาดอีก {amount}",
     "boothBreakEvenReached": "คุ้มทุนแล้ว 🎉",
     "productsTab": "สินค้า",
@@ -1001,7 +1001,6 @@
     "qtyLeft": "เหลือ",
     "confirmClose": "ยืนยันปิดบูธ",
     "activeBooth": "บูธที่กำลังใช้งาน",
-    "activeBoothDesc": "กรองสินค้าบนหน้าร้านตามสินค้าที่เข้าร่วมบูธนี้",
     "noActiveBooth": "ไม่ใช้งานบูธ (แสดงสินค้าทั้งหมด)"
   }
 }

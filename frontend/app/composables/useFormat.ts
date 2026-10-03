@@ -1,4 +1,10 @@
-import { bangkokWallTimeToUtc, getBangkokDateKey } from "~/lib/timezone";
+import {
+  bangkokWallTimeToUtc,
+  formatBangkokDate,
+  formatBangkokDateTime,
+  formatDateKey,
+  getBangkokDateKey,
+} from "~/lib/timezone";
 
 export function useFormat() {
   const { locale } = useI18n();
@@ -12,12 +18,12 @@ export function useFormat() {
 
   function formatDate(date?: string | Date): string {
     if (!date) return "";
-    return new Date(date).toLocaleString(localeTag.value, { timeZone });
+    return formatBangkokDateTime(date);
   }
 
   function formatDateShort(date?: string | Date): string {
     if (!date) return "";
-    return new Date(date).toLocaleDateString(localeTag.value, { timeZone });
+    return formatBangkokDate(date);
   }
 
   function formatTime(date?: string | Date): string {
@@ -75,6 +81,7 @@ export function useFormat() {
     formatCurrency,
     formatDate,
     formatDateShort,
+    formatDateKey,
     formatTime,
     formatAmount,
     toDatetimeLocalValue,

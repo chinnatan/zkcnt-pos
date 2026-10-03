@@ -142,6 +142,7 @@ import { getPendingItems } from "~/lib/sync/queue";
 import { computeLocalVerify } from "~/lib/sync/verify";
 
 const { t } = useI18n();
+const { formatDate } = useFormat();
 const { $api } = useNuxtApp();
 const { activeStoreId, isManager } = useStore();
 const { isOnline } = useOnlineStatus();
@@ -158,7 +159,7 @@ const verifyRows = ref<{ key: string; local: number; server: number }[]>([]);
 const verifyMatch = computed(() => verifyRows.value.every((r) => r.local === r.server));
 
 function formatTime(iso: string) {
-  return new Date(iso).toLocaleString("th-TH");
+  return formatDate(iso);
 }
 
 function formatNumber(n: number) {

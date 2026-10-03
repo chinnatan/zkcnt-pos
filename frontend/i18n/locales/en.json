@@ -206,8 +206,8 @@
     "orderNumber": "Order #"
   },
   "pos": {
-    "boothActive": "Booth: {name}",
-    "boothEnded": "Booth \"{name}\" has ended/closed — back to normal selling (change the active booth in Settings)",
+    "boothLabel": "Booth",
+    "boothEnded": "Booth \"{name}\" has ended/closed — selling normally; pick another booth here",
     "boothBreakEvenShort": "Break-even {pct}% · {amount} to go",
     "boothBreakEvenReached": "Break-even reached 🎉",
     "productsTab": "Products",
@@ -1002,7 +1002,6 @@
     "qtyLeft": "Left",
     "confirmClose": "Confirm close",
     "activeBooth": "Active booth",
-    "activeBoothDesc": "Filters POS products to those in this booth",
     "noActiveBooth": "No booth (show all products)"
   }
 }

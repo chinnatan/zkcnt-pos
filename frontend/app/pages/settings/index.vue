@@ -38,24 +38,6 @@
         </NuxtLink>
       </div>
 
-      <UiCraftCard v-if="isManager" variant="paper" padding="md">
-        <div class="flex items-center justify-between gap-4">
-          <div>
-            <h3 class="text-base font-semibold text-ink">{{ t('boothsPage.activeBooth') }}</h3>
-            <p class="text-sm text-ink-muted">{{ t('boothsPage.activeBoothDesc') }}</p>
-          </div>
-          <select
-            :value="activeStore.settings?.active_booth_id ?? ''"
-            :disabled="!isOnline || isSavingBooth"
-            class="input w-full max-w-xs"
-            @change="saveActiveBooth(($event.target as HTMLSelectElement).value)"
-          >
-            <option value="">{{ t('boothsPage.noActiveBooth') }}</option>
-            <option v-for="b in selectableBooths" :key="b.id" :value="b.id">{{ b.name }}</option>
-          </select>
-        </div>
-      </UiCraftCard>
-
       <UiCraftCard variant="paper" padding="md">
         <h3 class="mb-4 text-base font-semibold text-ink">{{ t('settingsPage.storeInfo') }}</h3>
 
@@ -372,8 +354,6 @@ const { t } = useI18n();
 const { roleLabel } = useLabels();
 const { activeStore, activeStoreId, isManager, isOwner, updateStore, uploadStoreLogo, removeStoreLogo } = useStore();
 const { getFileUrl } = useFileUrl();
-const { isOnline } = useOnlineStatus();
-const { booths, fetchBooths } = useBooths();
 const {
   storeMembers,
   pendingInvites,
@@ -397,27 +377,6 @@ const {
 } = useAppVersion();
 
 const isSaving = ref(false);
-const isSavingBooth = ref(false);
-// closed booths cannot be the active one, except the one currently selected
-const selectableBooths = computed(() =>
-  booths.value.filter(
-    (b) => !b.closed_at || b.id === activeStore.value?.settings?.active_booth_id,
-  ),
-);
-
-async function saveActiveBooth(boothId: string) {
-  if (!activeStoreId.value || !activeStore.value) return;
-  isSavingBooth.value = true;
-  try {
-    await updateStore(activeStoreId.value, {
-      settings: { ...activeStore.value.settings, active_booth_id: boothId },
-    });
-  } finally {
-    isSavingBooth.value = false;
-  }
-}
-
-onMounted(fetchBooths);
 const isSavingPayment = ref(false);
 const isUploadingLogo = ref(false);
 const logoInputRef = ref<HTMLInputElement | null>(null);

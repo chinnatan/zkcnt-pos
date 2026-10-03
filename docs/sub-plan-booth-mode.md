@@ -85,9 +85,15 @@ Branch: `feat/booth-mode` (แตกจาก `develop` เมื่อ plan อ
 - POS: กรองสินค้า + ซ่อนหมวดที่ไม่มีสินค้าของบูธ; booth ที่ไม่มีสินค้าจะเห็นหน้าว่าง (ตั้งใจ)
 - แถบคุ้มทุน: `ยอดขายบูธ ÷ (ค่าบูธ+ค่าใช้จ่ายเพิ่มเติม + ต้นทุนผลิตของที่ขาย)` อ่านจาก Dexie (offline ได้) รีเฟรชหลังชำระเงิน; นับเฉพาะ order `completed`
 - `useOrders.createOrder` ส่ง `booth` ทั้งเส้นทาง online และ offline queue
-- ยังเลือกบูธได้เฉพาะในตั้งค่า (ไม่ได้ทำตัวเลือกบนหน้า POS)
 - เทสต์: `booth-cost.test.ts` เพิ่ม `isBoothEnded`/`boothBreakEven`; backend เพิ่มเคส order ติด booth + sync delta; vitest 58/58
 - **ยังไม่ได้ตรวจ UI ใน POS ด้วยตา** และยังไม่มี E2E (อยู่ Phase 5)
+
+### Addendum หลัง Phase 3 (feedback จาก user)
+
+- **เลือกบูธบนหน้า POS:** เพิ่ม dropdown ในแถบบูธบน POS และเอา dropdown ออกจากตั้งค่า; เปลี่ยนจากค่าระดับร้าน (`settings.active_booth_id`) เป็น **ต่อเครื่อง/ต่อร้านใน localStorage** (`pos_active_booth`) — เหตุผล: `updateStore` ใช้ได้เฉพาะ online + manager แต่แคชเชียร์ต้องสลับบูธได้ แม้ offline หน้างาน; ข้อสมมติข้อ 5 ใน Appendix จึงเปลี่ยน (แต่ละเครื่องเลือกบูธเอง)
+- **Date format:** ของเดิมไม่สอดคล้องกัน (th = `3/10/2569` ปี พ.ศ. ไม่เติม 0, en = `10/3/2026` เดือนนำหน้า) → ตั้งมาตรฐานเดียว `dd/MM/yyyy` (ปี ค.ศ., เขตเวลา Bangkok) และ `dd/MM/yyyy HH:mm:ss` (24 ชม.) ผ่าน `formatBangkokDate/DateTime/formatDateKey` ใน `lib/timezone.ts`; `useFormat.formatDate/formatDateShort` ใช้ตัวนี้ → ทุกหน้าที่เรียกผ่าน `useFormat` เปลี่ยนตามอัตโนมัติ; แก้ `SyncStatus`, หน้า/ panel release notes, รายการบูธ ให้ใช้ตัวเดียวกัน
+- ยังคงเดิม: label แกนกราฟรายงาน (`formatBangkokDateShort` เช่น "3 ต.ค.") เพราะเป็นป้ายย่อบนกราฟ; `<input type="date"/datetime-local">` ของเบราว์เซอร์ แสดงตาม locale ของเบราว์เซอร์/OS บังคับรูปแบบไม่ได้
+- เทสต์: `tests/lib/dateFormat.test.ts` (ข้ามวันตาม Bangkok, zero-pad, date-key ไม่เลื่อนวัน); vitest 60/60
 
 ## Phase 4: รายงานตามบูธ
 
@@ -122,7 +128,7 @@ Branch: `feat/booth-mode` (แตกจาก `develop` เมื่อ plan อ
 2. **สต๊อก** ยังใช้ของร้านก้อนเดียว ไม่แยกสต๊อกต่อบูธ (`qty_brought` เป็นแค่ snapshot ตอนเลือกสินค้า ใช้คำนวณต้นทุนและ sell-through)
 3. **รายงานบูธ** (แท็บกำไรจริง/sell-through) คำนวณฝั่ง frontend จาก Dexie; ช่องกรองบูธบนรายงานเดิมต้องส่ง `booth` ให้ backend report ด้วย ยังไม่ทำ CSV export เฉพาะบูธ
 4. หมวดหมู่ที่ใช้เทียบ (สติ๊กเกอร์ชิ้น/แผ่น ฯลฯ) คือ `categories` เดิมของร้าน — ไม่สร้างแนวคิดประเภทสินค้าใหม่
-5. **บูธที่ใช้งานเป็นระดับร้าน** (ทุกเครื่องเห็นเหมือนกัน) ไม่ใช่ต่อเครื่อง; ไม่ทำระบบศิลปินหลายคนตามภาพตัวอย่าง (ร้านขายของตัวเอง)
+5. **บูธที่ใช้งานเลือกบนหน้า POS ต่อเครื่อง** (เก็บใน localStorage ต่อร้าน) ไม่ใช่ระดับร้าน; ไม่ทำระบบศิลปินหลายคนตามภาพตัวอย่าง (ร้านขายของตัวเอง)
 6. ออเดอร์เก่าก่อนมีฟีเจอร์ `booth = null` และไม่ปรากฏในรายงานบูธ
 
 ### อ้างอิงภาพตัวอย่าง
