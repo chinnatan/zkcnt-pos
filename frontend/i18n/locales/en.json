@@ -981,6 +981,17 @@
     "purgeFailed": "Failed to clear sales history"
   },
   "boothsPage": {
+    "estProfit": "Est. profit if sold out",
+    "unsaved": "You have unsaved changes",
+    "discard": "Discard changes",
+    "saved": "Saved",
+    "saveFailed": "Could not save, please try again",
+    "unsavedConfirm": "You have unsaved changes. Discard them and leave?",
+    "tab": {
+        "info": "Info",
+        "costs": "Costs",
+        "products": "Products"
+    },
     "newBooth": "New booth",
     "viewCalendar": "Calendar",
     "viewList": "List",

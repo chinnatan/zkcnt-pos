@@ -39,7 +39,7 @@
             :booths="booths"
             :week-start="weekStart"
             @update:week-start="setWeekStart"
-            @select-booth="selectedId = $event"
+            @select-booth="go($event)"
             @create-range="openCreate($event)"
           />
         </UiCraftCard>
@@ -60,7 +60,7 @@
                   class="cursor-pointer rounded-lg border p-3 transition-colors"
                   :class="selectedId === b.id ? 'border-primary-500 bg-primary-50' : 'border-border-warm hover:bg-surface'"
                   :data-testid="`booth-card-${b.id}`"
-                  @click="selectedId = b.id"
+                  @click="go(b.id)"
                 >
                   <div class="flex items-start justify-between gap-2">
                     <p class="font-medium text-ink">{{ b.name }}</p>
@@ -99,11 +99,11 @@
         </div>
       </section>
 
-      <div v-if="selectedId" class="min-w-0 space-y-3">
-        <button type="button" class="text-sm text-primary-600 hover:underline" @click="selectedId = null">
+      <div v-if="selectedId" ref="detailWrap" class="min-w-0 space-y-3">
+        <button type="button" class="text-sm text-primary-600 hover:underline" @click="go(null)">
           ← {{ t('boothsPage.back') }}
         </button>
-        <BoothDetail :key="selectedId" :booth-id="selectedId" class="min-w-0" />
+        <BoothDetail ref="detail" :key="selectedId" :booth-id="selectedId" class="min-w-0" />
       </div>
       <div
         v-else-if="view === 'list'"
@@ -142,6 +142,8 @@ const { select: selectActiveBooth } = useActiveBooth();
 
 const views = ["calendar", "list"] as const;
 const selectedId = ref<string | null>(null);
+const detail = ref<{ dirty: boolean } | null>(null);
+const detailWrap = ref<HTMLElement | null>(null);
 const showCreate = ref(false);
 const createRange = ref<DateRange | undefined>();
 
@@ -158,9 +160,20 @@ const groups = computed(() => {
 });
 
 // switching view also leaves the detail (on phones the detail replaces the list/calendar)
-function switchView(v: BoothView) {
-  selectedId.value = null;
+async function switchView(v: BoothView) {
+  if (!(await go(null))) return;
   setView(v);
+}
+
+// change the open booth, asking first when the current one has unsaved edits
+async function go(id: string | null): Promise<boolean> {
+  if (id !== selectedId.value && detail.value?.dirty && !(await confirm(t("boothsPage.unsavedConfirm")))) {
+    return false;
+  }
+  selectedId.value = id;
+  // in calendar view the detail sits below the calendar — bring it into view
+  if (id) nextTick(() => detailWrap.value?.scrollIntoView({ behavior: "smooth", block: "start" }));
+  return true;
 }
 
 function openCreate(range?: DateRange) {
@@ -168,9 +181,9 @@ function openCreate(range?: DateRange) {
   showCreate.value = true;
 }
 
-function onCreated(id: string) {
+async function onCreated(id: string) {
   showCreate.value = false;
-  selectedId.value = id;
+  await go(id);
 }
 
 function useAtPos(booth: Booth) {

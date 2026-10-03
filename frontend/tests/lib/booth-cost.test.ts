@@ -3,6 +3,7 @@ import {
   boothBreakEven,
   boothCostPerPiece,
   boothDayCount,
+  estimatedProfitIfSoldOut,
   isBoothEnded,
   productEconomics,
   seedBoothProducts,
@@ -69,5 +70,20 @@ describe("booth cost", () => {
     expect(boothBreakEven({ revenue: 500, cogs: 300, fixedCost: 700 })).toEqual({ pct: 50, shortfall: 500, reached: false });
     expect(boothBreakEven({ revenue: 1200, cogs: 300, fixedCost: 700 }).reached).toBe(true);
     expect(boothBreakEven({ revenue: 0, cogs: 0, fixedCost: 0 }).pct).toBe(0);
+  });
+
+  test("estimated profit if everything sells out", () => {
+    const products = [
+      { id: "a", price: 50, cost: 20 },
+      { id: "b", price: 100, cost: 40 },
+    ];
+    const rows = [
+      { product: "a", qty_brought: 10 },
+      { product: "b", qty_brought: 5 },
+      { product: "gone", qty_brought: 99 },
+    ];
+    // margins: 10×30 + 5×60 = 600, minus booth cost 2000
+    expect(estimatedProfitIfSoldOut(booth, rows, products)).toBe(600 - 2000);
+    expect(estimatedProfitIfSoldOut({ booth_fee: 0, extra_costs: [] }, [], products)).toBe(0);
   });
 });

@@ -61,3 +61,17 @@ export function boothBreakEven(input: { revenue: number; cogs: number; fixedCost
   const pct = need > 0 ? (input.revenue / need) * 100 : 0;
   return { pct, shortfall: Math.max(0, need - input.revenue), reached: need > 0 && input.revenue >= need };
 }
+
+/** กำไรรวมโดยประมาณถ้าขายหมดทุกชิ้น = Σ (ราคาขาย − ต้นทุนผลิต) × จำนวนที่นำไป − ต้นทุนบูธรวม */
+export function estimatedProfitIfSoldOut(
+  booth: BoothCosts,
+  rows: Array<Pick<BoothProduct, "product" | "qty_brought">>,
+  products: Array<Pick<Product, "id" | "price" | "cost">>,
+): number {
+  const byId = new Map(products.map((p) => [p.id, p]));
+  const margin = rows.reduce((sum, r) => {
+    const p = byId.get(r.product);
+    return sum + (p ? (p.price - (p.cost || 0)) * (r.qty_brought || 0) : 0);
+  }, 0);
+  return margin - totalBoothCost(booth);
+}

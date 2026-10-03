@@ -77,6 +77,7 @@ const options = computed(() => ({
   height: "auto" as const,
   headerToolbar: false as const,
   fixedWeekCount: false,
+  stickyHeaderDates: false,
   dayHeaderContent: (arg: { date: Date }) => weekdayShort(arg.date.getDay()),
   dayMaxEvents: 3,
   moreLinkContent: (arg: { num: number }) => `+${arg.num}`,
