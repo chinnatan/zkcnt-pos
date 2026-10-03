@@ -64,7 +64,7 @@
               {{ t('pos.allCategories') }}
             </button>
             <button
-              v-for="cat in categories"
+              v-for="cat in visibleCategories"
               :key="cat.id"
               class="pos-cat-pill"
               :class="selectedCategory === cat.id ? 'pos-cat-pill--active' : ''"
@@ -72,6 +72,40 @@
             >
               {{ cat.name }}
             </button>
+          </div>
+        </div>
+
+        <!-- Booth selector + status -->
+        <div
+          v-if="selectableBooths.length > 0 || boothStatus !== 'none'"
+          class="mx-3 mt-3 rounded-lg px-3 py-2 text-sm min-[480px]:mx-4"
+          :class="boothStatus === 'ended' ? 'bg-warning-50 text-warning-700' : boothStatus === 'active' ? 'bg-primary-50 text-primary-800' : 'bg-surface text-ink-muted'"
+        >
+          <div class="flex flex-wrap items-center gap-2">
+            <label for="pos-booth" class="font-medium">{{ t('pos.boothLabel') }}</label>
+            <select
+              id="pos-booth"
+              :value="selectedBoothId"
+              class="pos-sort w-auto min-w-0 max-w-[16rem]"
+              @change="selectBooth(($event.target as HTMLSelectElement).value)"
+            >
+              <option value="">{{ t('boothsPage.noActiveBooth') }}</option>
+              <option v-for="b in selectableBooths" :key="b.id" :value="b.id">{{ b.name }}</option>
+            </select>
+            <span v-if="boothStatus === 'ended'" class="text-xs">
+              {{ t('pos.boothEnded', { name: configuredBooth?.name ?? '' }) }}
+            </span>
+            <span v-else-if="breakEven" class="ml-auto text-xs">
+              {{ breakEven.reached
+                ? t('pos.boothBreakEvenReached')
+                : t('pos.boothBreakEvenShort', { pct: Math.floor(breakEven.pct), amount: formatCurrency(breakEven.shortfall) }) }}
+            </span>
+          </div>
+          <div v-if="boothStatus === 'active' && breakEven" class="mt-1 h-1.5 overflow-hidden rounded-full bg-primary-100">
+            <div
+              class="h-full rounded-full bg-primary-500 transition-all"
+              :style="{ width: `${Math.min(100, breakEven.pct)}%` }"
+            />
           </div>
         </div>
 
@@ -286,7 +320,7 @@
 </template>
 
 <script setup lang="ts">
-import type { Product } from "~/lib/types";
+import type { Category, Product } from "~/lib/types";
 import { createLogger } from "~/lib/logger";
 import { sortPosProducts } from "~/lib/pos/productSort";
 import { fetchProductSales } from "~/lib/pos/productSales";
@@ -331,6 +365,17 @@ const { alert } = useDialog();
 const { activeStore, activeStoreId } = useStore();
 const { generateQrDataUrl, resolvePromptPayId } = usePromptPayQr();
 const { productSort, stockFirst } = usePosProductListPrefs();
+const {
+  status: boothStatus,
+  booth: activeBooth,
+  configured: configuredBooth,
+  selectableBooths,
+  selectedId: selectedBoothId,
+  select: selectBooth,
+  productIds: boothProductIds,
+  breakEven,
+  refreshStats: refreshBoothStats,
+} = useActiveBooth();
 
 const showMobileCart = ref(false);
 const searchQuery = ref("");
@@ -356,6 +401,10 @@ const resolvedPromptPayId = computed(() =>
 const filteredProducts = computed(() => {
   let result = products.value.filter((p: Product) => p.is_active !== false);
 
+  if (boothProductIds.value) {
+    result = result.filter((p: Product) => boothProductIds.value!.has(p.id));
+  }
+
   if (selectedCategory.value) {
     result = result.filter(
       (p: Product) => p.category === selectedCategory.value
@@ -379,6 +428,17 @@ const filteredProducts = computed(() => {
     isOutOfStock,
     salesByProduct: salesByProduct.value,
   });
+});
+
+// in booth mode only show categories that still have a visible product
+const visibleCategories = computed(() => {
+  if (!boothProductIds.value) return categories.value;
+  const used = new Set(
+    products.value
+      .filter((p: Product) => p.is_active !== false && boothProductIds.value!.has(p.id))
+      .map((p: Product) => p.category),
+  );
+  return categories.value.filter((c: Category) => used.has(c.id));
 });
 
 const canCheckout = computed(() => {
@@ -529,6 +589,7 @@ async function completeCheckout() {
       change_amount:
         paymentMethod.value === "cash" ? changeAmount.value : 0,
       customer: selectedCustomerId.value || undefined,
+      booth: activeBooth.value?.id,
       note: cartNote.value || undefined,
       coupon_code: appliedCouponCode.value || undefined,
       applied_promotions: appliedPromotions.value,
@@ -541,6 +602,7 @@ async function completeCheckout() {
     showSuccessModal.value = true;
     await fetchInventory();
     await refreshProductSales(activeStoreId.value);
+    await refreshBoothStats();
   } catch (err) {
     logger.error("Checkout failed:", err);
     if (err instanceof InsufficientStockError) {

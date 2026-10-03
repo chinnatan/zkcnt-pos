@@ -228,6 +228,7 @@ export function useOrders() {
     payment_received: number;
     change_amount: number;
     customer?: string;
+    booth?: string;
     note?: string;
     coupon_code?: string;
     applied_promotions?: Array<{
@@ -250,6 +251,7 @@ export function useOrders() {
       order_number: orderNumber,
       client_id: clientId,
       customer: orderData.customer || "",
+      booth: orderData.booth || "",
       cashier: authUser.value.id,
       subtotal: orderData.subtotal,
       discount_amount: orderData.discount_amount,

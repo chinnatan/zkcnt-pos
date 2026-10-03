@@ -6,7 +6,7 @@
           {{ t("releaseNotes.whatsNew") }}
           <span class="text-primary-600">v{{ release.version }}</span>
         </p>
-        <p class="mt-0.5 text-xs text-ink-muted">{{ formatDate(release.date) }}</p>
+        <p class="mt-0.5 text-xs text-ink-muted">{{ formatDateKey(release.date) }}</p>
       </div>
       <slot name="actions" />
     </div>
@@ -78,7 +78,8 @@ const emit = defineEmits<{
   dismiss: [];
 }>();
 
-const { t, locale } = useI18n();
+const { t } = useI18n();
+const { formatDateKey } = useFormat();
 
 const visibleTypes = computed(() =>
   RELEASE_CHANGE_TYPES.filter((type) => props.changes[type].length > 0),
@@ -90,11 +91,4 @@ function badgeClass(type: ReleaseChangeType): string {
   return "text-primary-700";
 }
 
-function formatDate(date: string): string {
-  return new Date(`${date}T00:00:00`).toLocaleDateString(locale.value === "th" ? "th-TH" : "en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-}
 </script>

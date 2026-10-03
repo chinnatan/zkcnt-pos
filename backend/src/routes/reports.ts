@@ -34,7 +34,12 @@ reportRoutes.get(
       return c.json({ message: "since query parameter is required" }, 400);
     }
 
-    const data = await buildStoreReports(storeId, { since, until }, period);
+    const data = await buildStoreReports(
+      storeId,
+      { since, until },
+      period,
+      c.req.query("booth") || undefined,
+    );
     return c.json(data);
   },
 );
@@ -59,7 +64,12 @@ reportRoutes.get(
       return c.json({ message: "since query parameter is required" }, 400);
     }
 
-    const data = await buildStoreReports(storeId, { since, until }, period);
+    const data = await buildStoreReports(
+      storeId,
+      { since, until },
+      period,
+      c.req.query("booth") || undefined,
+    );
     const csv = reportsDataToCsv(data);
 
     return new Response(csv, {

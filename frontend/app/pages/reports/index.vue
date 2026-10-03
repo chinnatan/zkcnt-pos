@@ -30,6 +30,16 @@
             class="w-full rounded-lg border border-border-warm px-3 py-2.5 text-sm focus:border-primary-500 focus:outline-none sm:w-auto"
           />
         </template>
+        <select
+          v-if="booths.length > 0"
+          v-model="boothFilter"
+          :aria-label="t('reportsPage.boothFilter')"
+          class="w-full rounded-lg border border-border-warm px-3 py-2.5 text-sm focus:border-primary-500 focus:outline-none sm:w-auto"
+        >
+          <option value="">{{ t('reportsPage.boothFilterAll') }}</option>
+          <option value="none">{{ t('reportsPage.boothFilterNone') }}</option>
+          <option v-for="b in booths" :key="b.id" :value="b.id">{{ b.name }}</option>
+        </select>
         <button
           type="button"
           class="w-full rounded-lg border border-border-warm px-3 py-2.5 text-sm font-medium text-ink hover:bg-surface sm:w-auto"
@@ -326,8 +336,10 @@
         </div>
 
         <div class="p-5">
+          <ReportsBoothReportPanel v-if="activeTab === 'booths'" />
+
           <!-- Products tab -->
-          <div v-if="activeTab === 'products'">
+          <div v-else-if="activeTab === 'products'">
             <div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div class="flex flex-wrap gap-2">
                 <button
@@ -959,8 +971,10 @@ const { t, locale } = useI18n();
 const reportsEnabled = useStoreFeatureEnabled("reports_enabled");
 const { formatCurrency, formatDateShort, toDatetimeLocalValue } = useFormat();
 const { paymentLabel, statusLabel, stockStatusLabel } = useLabels();
+const { booths, fetchBooths } = useBooths();
 const {
   period,
+  boothFilter,
   customSince,
   customUntil,
   data,
@@ -1014,6 +1028,7 @@ const tabs = computed(() =>
     { id: "customers" as const, label: t("reportsPage.tabCustomers") },
     { id: "cashiers" as const, label: t("reportsPage.tabCashiers") },
     { id: "promotions" as const, label: t("reportsPage.tabPromotions") },
+    { id: "booths" as const, label: t("reportsPage.tabBooths") },
   ].filter((tab) => customersEnabled || tab.id !== "customers"),
 );
 
@@ -1039,6 +1054,7 @@ function dayOfWeekPct(total: number): number {
 }
 
 onMounted(async () => {
+  void fetchBooths();
   const now = new Date();
   const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
   customSince.value = toDatetimeLocalValue(weekAgo);

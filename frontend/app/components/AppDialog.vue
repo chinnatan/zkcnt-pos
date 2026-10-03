@@ -77,6 +77,7 @@
                 type="button"
                 class="btn-primary"
                 :class="state.variant === 'danger' ? 'bg-danger-500 hover:bg-danger-700' : ''"
+                data-testid="dialog-confirm"
                 @click="onConfirm"
               >
                 {{ confirmLabel }}

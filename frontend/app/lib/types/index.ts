@@ -111,6 +111,35 @@ export interface Customer extends BaseRecord {
   deleted_at?: string | null;
 }
 
+// ─── Booth ───────────────────────────────────────────────────────────────────
+
+export interface BoothExtraCost {
+  name: string;
+  amount: number;
+}
+
+export interface Booth extends BaseRecord {
+  store: string;
+  name: string;
+  location: string;
+  start_date: string;
+  end_date: string;
+  booth_fee: number;
+  extra_costs: BoothExtraCost[];
+  image: string;
+  closed_at: string;
+  is_active: boolean;
+  deleted_at?: string | null;
+}
+
+export interface BoothProduct extends BaseRecord {
+  booth: string;
+  product: string;
+  qty_brought: number;
+  qty_left: number | null;
+  deleted_at?: string | null;
+}
+
 // ─── Order ───────────────────────────────────────────────────────────────────
 
 export interface Order extends BaseRecord {
@@ -118,6 +147,7 @@ export interface Order extends BaseRecord {
   order_number: string;
   client_id: string;
   customer: string;
+  booth?: string;
   cashier: string;
   subtotal: number;
   discount_amount: number;

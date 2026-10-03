@@ -4,6 +4,7 @@ import { HTTPException } from "hono/http-exception";
 import { db } from "../db/client";
 import { isD1Runtime, runBatch, withTransaction } from "../db/executor";
 import {
+  booths,
   inventory,
   inventoryTransactions,
   orderItems,
@@ -319,6 +320,21 @@ orderRoutes.post(
       return c.json(mapOrder(existingByClient[0]), 200);
     }
 
+    let boothId: string | null = null;
+    if (orderData.booth) {
+      const boothRows = await db
+        .select({ id: booths.id })
+        .from(booths)
+        .where(
+          and(eq(booths.id, String(orderData.booth)), eq(booths.store, storeId)),
+        )
+        .limit(1);
+      if (!boothRows[0]) {
+        throw new HTTPException(400, { message: "invalid_booth" });
+      }
+      boothId = boothRows[0].id;
+    }
+
     const total = Number(orderData.total ?? 0);
     const paymentMethod =
       (orderData.payment_method as "cash" | "qr") ?? "cash";
@@ -401,6 +417,7 @@ orderRoutes.post(
       orderNumber,
       clientId,
       customer: orderData.customer ? String(orderData.customer) : null,
+      booth: boothId,
       cashier: String(orderData.cashier ?? userId),
       subtotal: Number(orderData.subtotal ?? 0),
       discountAmount: Number(orderData.discount_amount ?? 0),

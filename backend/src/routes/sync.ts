@@ -3,6 +3,8 @@ import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
 import { db } from "../db/client";
 import {
+  boothProducts,
+  booths,
   categories,
   customers,
   inventory,
@@ -17,6 +19,8 @@ import {
   stores,
 } from "../db/schema";
 import {
+  mapBooth,
+  mapBoothProduct,
   mapCategory,
   mapCustomer,
   mapInventory,
@@ -67,6 +71,8 @@ syncRoutes.get(
       orderRows,
       itemRows,
       txRows,
+      boothRows,
+      boothProductRows,
     ] = await Promise.all([
       db
         .select()
@@ -136,6 +142,17 @@ syncRoutes.get(
             gt(inventoryTransactions.updated, since),
           ),
         ),
+      db
+        .select()
+        .from(booths)
+        .where(and(eq(booths.store, storeId), gt(booths.updated, since))),
+      db
+        .select({ row: boothProducts })
+        .from(boothProducts)
+        .innerJoin(booths, eq(booths.id, boothProducts.booth))
+        .where(
+          and(eq(booths.store, storeId), gt(boothProducts.updated, since)),
+        ),
     ]);
 
     const storeOrderIds = new Set(orderRows.map((o) => o.id));
@@ -160,7 +177,8 @@ syncRoutes.get(
         `customers=${custRows.length} inventory=${invRows.length} ` +
         `promotions=${promoRows.length} promotion_targets=${filteredTargets.length} ` +
         `promotion_usages=${usageRows.length} orders=${orderRows.length} ` +
-        `order_items=${filteredItems.length} inventory_transactions=${txRows.length}`,
+        `order_items=${filteredItems.length} inventory_transactions=${txRows.length} ` +
+        `booths=${boothRows.length} booth_products=${boothProductRows.length}`,
     );
 
     return c.json({
@@ -176,6 +194,8 @@ syncRoutes.get(
       orders: orderRows.map(mapOrder),
       order_items: filteredItems.map(mapOrderItem),
       inventory_transactions: txRows.map(mapInventoryTransaction),
+      booths: boothRows.map(mapBooth),
+      booth_products: boothProductRows.map((r) => mapBoothProduct(r.row)),
     });
   },
 );
@@ -202,6 +222,7 @@ syncRoutes.get(
       promoRows,
       orderRows,
       itemRows,
+      boothCountRows,
     ] = await Promise.all([
       db
         .select({ c: count() })
@@ -235,6 +256,10 @@ syncRoutes.get(
         .select({ c: count() })
         .from(orderItems)
         .where(inArray(orderItems.order, storeOrderIds)),
+      db
+        .select({ c: count() })
+        .from(booths)
+        .where(and(eq(booths.store, storeId), isNull(booths.deletedAt))),
     ]);
 
     logger.debug(`sync verify storeId=${storeId}`);
@@ -252,6 +277,7 @@ syncRoutes.get(
           completed_total: orderRows[0]?.completedTotal ?? 0,
         },
         order_items: { count: itemRows[0]?.c ?? 0 },
+        booths: { count: boothCountRows[0]?.c ?? 0 },
       },
     });
   },
@@ -267,6 +293,8 @@ const COLLECTION_HANDLERS: Record<
   customers: { table: "customers", storeField: "store" },
   promotions: { table: "promotions", storeField: "store" },
   promotion_targets: { table: "promotionTargets" },
+  booths: { table: "booths", storeField: "store" },
+  booth_products: { table: "boothProducts" },
   inventory: { table: "inventory", storeField: "store" },
   orders: { table: "orders", storeField: "store" },
   order_items: { table: "orderItems" },

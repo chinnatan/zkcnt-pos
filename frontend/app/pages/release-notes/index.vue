@@ -26,7 +26,7 @@
         >
           <div>
             <p class="font-semibold text-ink">v{{ release.version }}</p>
-            <p class="text-xs text-ink-muted">{{ formatDate(release.date) }}</p>
+            <p class="text-xs text-ink-muted">{{ formatDateKey(release.date) }}</p>
           </div>
           <svg
             class="h-5 w-5 shrink-0 text-ink-muted transition-transform"
@@ -54,7 +54,8 @@
 <script setup lang="ts">
 definePageMeta({ middleware: "auth" });
 
-const { t, locale } = useI18n();
+const { t } = useI18n();
+const { formatDateKey } = useFormat();
 const { displayVersion } = useAppVersion();
 const { allReleases, localizedChanges, currentRelease, markAsRead } = useReleaseNotes();
 
@@ -64,13 +65,6 @@ function toggle(version: string) {
   expanded[version] = !expanded[version];
 }
 
-function formatDate(date: string): string {
-  return new Date(`${date}T00:00:00`).toLocaleDateString(locale.value === "th" ? "th-TH" : "en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-}
 
 onMounted(() => {
   if (currentRelease.value) {
