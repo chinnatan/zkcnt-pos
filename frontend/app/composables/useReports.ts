@@ -352,6 +352,11 @@ export function useReports() {
     return `${sign}${pct.toFixed(1)}%`;
   }
 
+  // a hard reload mounts the page before the active store is restored
+  watch(activeStoreId, (id, prev) => {
+    if (id && id !== prev) loadReports();
+  });
+
   watch([period, customSince, customUntil, boothFilter], () => {
     loadReports();
   });

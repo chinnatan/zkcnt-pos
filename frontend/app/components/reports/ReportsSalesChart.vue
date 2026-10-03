@@ -6,6 +6,7 @@
 
 <script setup lang="ts">
 import {
+  BarController,
   BarElement,
   CategoryScale,
   Chart as ChartJS,
@@ -23,6 +24,7 @@ import type { ReportTimeSeriesPoint } from "~/lib/types/reports";
 ChartJS.register(
   CategoryScale,
   LinearScale,
+  BarController,
   BarElement,
   LineElement,
   PointElement,

@@ -123,10 +123,10 @@ Branch: `feat/booth-mode` (แตกจาก `develop` เมื่อ plan อ
 - แท็บบูธแสดง "ผลิตน้อยลง" ให้บูธที่ยังไม่ปิด (ขายได้ 4% กลางงาน) ซึ่งเป็นคำแนะนำผิดเวลา → ป้ายแนะนำแสดงเฉพาะบูธที่ปิดแล้ว และสรุปหมวดหมู่นับเฉพาะบูธที่ปิด (มีข้อความ empty state)
 - หัวหน้าหน้า `/booths` บนมือถือตัดบรรทัดสามชั้น → ใช้ชื่อสั้น "บูธ"
 
-พบแต่ไม่ได้เกี่ยวกับงานนี้ (ไม่ได้แก้):
-- รีโหลดหน้า `/reports` ตรง ๆ แสดง "ไม่มีข้อมูล" เพราะ `loadReports` return เมื่อ `activeStoreId` ยังไม่พร้อมตอน mount (เข้าผ่านเมนูปกติได้) — โค้ดส่วนนี้ไม่ได้ถูกแก้ในงานนี้
-- console error `"bar" is not a registered controller` บนหน้ารายงาน (chart.js ใน `ReportsSalesChart`; ไฟล์ไม่เคยถูกแตะ)
-- ช่องวันที่ native (`type="date"`) แสดงปี ค.ศ. ตาม locale เบราว์เซอร์ ขณะที่รายการแสดง พ.ศ. ตามภาษาแอป
+พบแต่ไม่ได้เกี่ยวกับงานนี้ (**แก้แล้วตามคำขอ** ยกเว้นข้อวันที่ native):
+- รีโหลดหน้า `/reports` ตรง ๆ แสดง "ไม่มีข้อมูล" เพราะ `loadReports` return เมื่อ `activeStoreId` ยังไม่พร้อมตอน mount (เข้าผ่านเมนูปกติได้) → แก้: `useReports` watch `activeStoreId` แล้วโหลดเมื่อร้านพร้อม; ยืนยันด้วยเบราว์เซอร์ว่ารีโหลดตรง ๆ แสดงข้อมูล
+- console error `"bar" is not a registered controller` บนหน้ารายงาน → แก้: ลงทะเบียน `BarController` ใน `ReportsSalesChart` (กราฟ bar+line ขาด controller); ยืนยันว่า console สะอาด
+- (ยังไม่แก้ — ต้องทำ date picker เอง) ช่องวันที่ native (`type="date"`) แสดงปี ค.ศ. ตาม locale เบราว์เซอร์ ขณะที่รายการแสดง พ.ศ. ตามภาษาแอป
 
 ## Phase 5: Review & Quality Assurance
 
