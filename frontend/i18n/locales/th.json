@@ -205,6 +205,10 @@
     "orderNumber": "เลขออเดอร์"
   },
   "pos": {
+    "boothActive": "บูธ: {name}",
+    "boothEnded": "บูธ \"{name}\" สิ้นสุด/ปิดแล้ว — กลับมาขายแบบปกติ (เปลี่ยนบูธที่ใช้งานได้ในตั้งค่า)",
+    "boothBreakEvenShort": "คุ้มทุน {pct}% · ขาดอีก {amount}",
+    "boothBreakEvenReached": "คุ้มทุนแล้ว 🎉",
     "productsTab": "สินค้า",
     "cartTab": "ตะกร้า ({count})",
     "viewCart": "ดูตะกร้า",

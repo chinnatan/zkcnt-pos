@@ -73,4 +73,23 @@ describe("booths", () => {
     });
     expect(res.res.status).toBe(400);
   });
+
+  test("order with own-store booth is tagged and returned in sync delta", async () => {
+    const { token } = await registerUser({ email: "booth3@test.com" });
+    const store = await createStore(token, { slug: "booth3-store" });
+    const base = `/api/stores/${store.id}`;
+    const booth = await post(token, `${base}/booths`, { name: "Fair" });
+
+    const res = await post(token, `${base}/orders`, {
+      order: { booth: booth.json.id, total: 0, payment_method: "cash" },
+      items: [],
+    });
+    expect(res.res.status).toBe(201);
+    expect(res.json.booth).toBe(booth.json.id);
+
+    const delta = await jsonRequest<{ orders: Array<{ booth: string }> }>(`${base}/sync`, {
+      headers: authHeaders(token),
+    });
+    expect(delta.json.orders[0]?.booth).toBe(booth.json.id);
+  });
 });

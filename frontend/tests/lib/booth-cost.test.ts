@@ -1,7 +1,9 @@
 import { describe, expect, test } from "vitest";
 import {
+  boothBreakEven,
   boothCostPerPiece,
   boothDayCount,
+  isBoothEnded,
   productEconomics,
   seedBoothProducts,
   totalBoothCost,
@@ -52,5 +54,20 @@ describe("booth cost", () => {
     expect(boothDayCount("2026-10-03", "2026-10-03")).toBe(1);
     expect(boothDayCount("2026-10-04", "2026-10-03")).toBe(0);
     expect(boothDayCount("", "2026-10-03")).toBe(0);
+  });
+
+  test("booth ends when closed, deleted or past end date; not before start", () => {
+    const b = { closed_at: "", end_date: "2026-10-04", deleted_at: null };
+    expect(isBoothEnded(b, "2026-10-04")).toBe(false);
+    expect(isBoothEnded(b, "2026-10-05")).toBe(true);
+    expect(isBoothEnded(b, "2026-09-01")).toBe(false);
+    expect(isBoothEnded({ ...b, closed_at: "x" }, "2026-10-03")).toBe(true);
+    expect(isBoothEnded({ ...b, end_date: "" }, "2030-01-01")).toBe(false);
+  });
+
+  test("break-even percent and shortfall", () => {
+    expect(boothBreakEven({ revenue: 500, cogs: 300, fixedCost: 700 })).toEqual({ pct: 50, shortfall: 500, reached: false });
+    expect(boothBreakEven({ revenue: 1200, cogs: 300, fixedCost: 700 }).reached).toBe(true);
+    expect(boothBreakEven({ revenue: 0, cogs: 0, fixedCost: 0 }).pct).toBe(0);
   });
 });

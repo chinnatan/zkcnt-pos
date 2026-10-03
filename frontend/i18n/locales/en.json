@@ -206,6 +206,10 @@
     "orderNumber": "Order #"
   },
   "pos": {
+    "boothActive": "Booth: {name}",
+    "boothEnded": "Booth \"{name}\" has ended/closed — back to normal selling (change the active booth in Settings)",
+    "boothBreakEvenShort": "Break-even {pct}% · {amount} to go",
+    "boothBreakEvenReached": "Break-even reached 🎉",
     "productsTab": "Products",
     "cartTab": "Cart ({count})",
     "viewCart": "View cart",

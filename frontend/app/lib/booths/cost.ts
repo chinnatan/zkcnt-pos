@@ -45,3 +45,19 @@ export function boothDayCount(start: string, end: string): number {
   const diff = (Date.parse(`${end}T00:00:00Z`) - Date.parse(`${start}T00:00:00Z`)) / 86_400_000;
   return Number.isFinite(diff) && diff >= 0 ? diff + 1 : 0;
 }
+
+/** บูธปิดแล้ว หรือวันนี้ (YYYY-MM-DD) พ้นวันจบงาน — ก่อนวันเริ่มยังถือว่าใช้ได้ (ตั้งค่าล่วงหน้า/ซ้อมขาย) */
+export function isBoothEnded(
+  booth: Pick<Booth, "closed_at" | "end_date" | "deleted_at">,
+  today: string,
+): boolean {
+  if (booth.deleted_at || booth.closed_at) return true;
+  return !!booth.end_date && today > booth.end_date;
+}
+
+/** จุดคุ้มทุน: 100% = ยอดขายเท่ากับ (ต้นทุนบูธรวม + ต้นทุนผลิตของที่ขายไป) */
+export function boothBreakEven(input: { revenue: number; cogs: number; fixedCost: number }) {
+  const need = input.fixedCost + input.cogs;
+  const pct = need > 0 ? (input.revenue / need) * 100 : 0;
+  return { pct, shortfall: Math.max(0, need - input.revenue), reached: need > 0 && input.revenue >= need };
+}
