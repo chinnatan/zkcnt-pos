@@ -347,6 +347,13 @@ export class ApiClient {
     });
   }
 
+  async uploadBoothImage(storeId: string, boothId: string, form: FormData) {
+    return this.send(`/stores/${storeId}/booths/${boothId}/image`, {
+      method: "POST",
+      body: form,
+    });
+  }
+
   async uploadStoreLogo(storeId: string, form: FormData) {
     return this.send(`/stores/${storeId}/logo`, {
       method: "POST",

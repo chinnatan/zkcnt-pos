@@ -38,7 +38,7 @@ Branch: `feat/booth-mode` (แตกจาก `develop` เมื่อ plan อ
 - `queue.ts`: ลำดับ sync `booths` (-1) ก่อน `orders` (0) เพราะ order อ้าง booth; `booth_products` ไปท้ายสุด
 - `sync/verify` ทั้งสองฝั่งนับ `booths` เพิ่ม; `purge-transactional` ไม่ต้องแก้ (booths เป็น config ไม่ใช่ transactional)
 - การอัปโหลดรูปบูธตอน offline (file queue) **ยังไม่ทำ** — route รูปมีแล้ว จะต่อ UI ใน Phase 2 แบบ online-only ก่อน
-- เทสต์: เพิ่ม `backend/src/test/integration/booths.test.ts` (CRUD, revive, sync delta, soft delete, ห้ามอ้างบูธข้าม store); `bun test` ผ่าน 52/52, `vitest` ผ่าน 51/51; apply `0009_booths.sql` ต่อจาก migration เดิมบน SQLite ผ่าน
+- เทสต์: เพิ่ม `backend/src/test/integration/booths.test.ts` (CRUD, revive, sync delta, soft delete, ห้ามอ้างบูธข้าม store); `bun test` ผ่าน 51/51, `vitest` ผ่าน 51/51; apply `0009_booths.sql` ต่อจาก migration เดิมบน SQLite ผ่าน
 - typecheck: ไม่มี error ใหม่ในไฟล์ที่แก้ (error เดิมใน `executor.ts`, `orders.ts` batch, `store-transaction-purge`, `support.test.ts`, `tests/integration/sync-engine.test.ts` มีอยู่ก่อนแล้ว)
 - ยังไม่ได้รัน `task cf:db:migrate:local` (ต้องใช้ wrangler)
 
@@ -46,18 +46,30 @@ Branch: `feat/booth-mode` (แตกจาก `develop` เมื่อ plan อ
 
 ### ตั้งค่า (อ้างอิงภาพตัวอย่าง)
 
-- [ ] เพิ่มการ์ด "การจัดการบูธ" (ปุ่มไป `/booths`) และการ์ด "บูธที่กำลังใช้งาน" (dropdown: ไม่ใช้งานบูธ + รายการบูธ) ใน `pages/settings/index.vue` บันทึกลง `store.settings.active_booth_id` (default ว่าง)
+- [x] เพิ่มการ์ด "การจัดการบูธ" (ปุ่มไป `/booths`) และการ์ด "บูธที่กำลังใช้งาน" (dropdown: ไม่ใช้งานบูธ + รายการบูธ) ใน `pages/settings/index.vue` บันทึกลง `store.settings.active_booth_id` (default ว่าง)
 
 ### หน้า `/booths` (layout 2 ฝั่ง)
 
-- [ ] ฝั่งซ้าย: ช่องพิมพ์ชื่อ + ปุ่ม + สร้างบูธทันที, รายการบูธ (ชื่อ, ช่วงวันที่ + จำนวนวัน, ค่าบูธ, ปุ่มลบ)
-- [ ] ฝั่งขวา: ฟอร์มแก้ไขบูธ (ชื่อ, สถานที่, วันเริ่ม–จบ, ค่าบูธ, รูป); ยังไม่เลือกบูธแสดง empty state
-- [ ] เมื่อสร้างบูธ → ดึงสินค้า active ที่มีสต๊อก (`inventory.quantity > 0`) ใส่ `booth_products` พร้อม snapshot `qty_brought`
-- [ ] ฝั่งขวา: รายการสินค้ามี checkbox + ช่องค้นหา + toggle ทั้งหมวดหมู่ (เลือกรายตัวหรือทั้งหมวด) และแก้ `qty_brought` ได้
-- [ ] สรุปต้นทุน: `ค่าบูธเฉลี่ย/ชิ้น = booth_fee ÷ Σ qty_brought` แสดงต่อสินค้า: ต้นทุนผลิต + ค่าบูธเฉลี่ย = ต้นทุนรวม/ชิ้น และกำไร/ชิ้น; คำนวณใหม่เมื่อเลือกสินค้าเปลี่ยน
-- [ ] ส่วน "ค่าใช้จ่ายเพิ่มเติม" ในฟอร์มบูธ (เพิ่ม/ลบแถว ชื่อ + จำนวนเงิน); ค่าเฉลี่ยต่อชิ้นใช้ (ค่าบูธ + ค่าใช้จ่ายเพิ่มเติม) ÷ Σ `qty_brought`
-- [ ] ปุ่ม "ปิดบูธ": modal กรอก `qty_left` ต่อสินค้า แล้วตั้ง `closed_at` (ไม่ปรากฏเป็นตัวเลือกบูธที่ใช้งานอีก)
-- [ ] ฟังก์ชันคำนวณเป็น pure function ใน `frontend/app/lib/booths/cost.ts`
+- [x] ฝั่งซ้าย: ช่องพิมพ์ชื่อ + ปุ่ม + สร้างบูธทันที, รายการบูธ (ชื่อ, ช่วงวันที่ + จำนวนวัน, ค่าบูธ, ปุ่มลบ)
+- [x] ฝั่งขวา: ฟอร์มแก้ไขบูธ (ชื่อ, สถานที่, วันเริ่ม–จบ, ค่าบูธ, รูป); ยังไม่เลือกบูธแสดง empty state
+- [x] เมื่อสร้างบูธ → ดึงสินค้า active ที่มีสต๊อก (`inventory.quantity > 0`) ใส่ `booth_products` พร้อม snapshot `qty_brought`
+- [x] ฝั่งขวา: รายการสินค้ามี checkbox + ช่องค้นหา + toggle ทั้งหมวดหมู่ (เลือกรายตัวหรือทั้งหมวด) และแก้ `qty_brought` ได้
+- [x] สรุปต้นทุน: `ค่าบูธเฉลี่ย/ชิ้น = booth_fee ÷ Σ qty_brought` แสดงต่อสินค้า: ต้นทุนผลิต + ค่าบูธเฉลี่ย = ต้นทุนรวม/ชิ้น และกำไร/ชิ้น; คำนวณใหม่เมื่อเลือกสินค้าเปลี่ยน
+- [x] ส่วน "ค่าใช้จ่ายเพิ่มเติม" ในฟอร์มบูธ (เพิ่ม/ลบแถว ชื่อ + จำนวนเงิน); ค่าเฉลี่ยต่อชิ้นใช้ (ค่าบูธ + ค่าใช้จ่ายเพิ่มเติม) ÷ Σ `qty_brought`
+- [x] ปุ่ม "ปิดบูธ": modal กรอก `qty_left` ต่อสินค้า แล้วตั้ง `closed_at` (ไม่ปรากฏเป็นตัวเลือกบูธที่ใช้งานอีก)
+- [x] ฟังก์ชันคำนวณเป็น pure function ใน `frontend/app/lib/booths/cost.ts`
+
+### บันทึกผล Phase 2
+
+- เส้นทางเข้า: ปุ่ม "จัดการบูธ" ในหน้าตั้งค่า → `/booths` (ไม่เพิ่มเมนู sidebar ตามภาพตัวอย่าง); เฉพาะ manager/owner
+- ฟอร์มแก้บูธเป็น panel ฝั่งขวา (ไม่ใช่ modal) ตาม layout ภาพตัวอย่าง; มี modal เดียวคือ "ปิดบูธ" (ไม่ปิดเมื่อคลิก backdrop)
+- เลือกสินค้าใน `components/booth/BoothDetail.vue`; จำนวนเริ่มต้นเมื่อติ๊กเองคือสต๊อกปัจจุบัน (อย่างน้อย 1)
+- ลบบูธที่เป็น `active_booth_id` อยู่ → เคลียร์ค่าใน settings ให้ก่อน
+- dropdown "บูธที่กำลังใช้งาน" และอัปโหลดรูปบูธใช้ได้เฉพาะตอน online (`updateStore` เป็น API-only อยู่แล้ว); บูธที่ปิดแล้วไม่อยู่ในตัวเลือก
+- เพิ่ม `lib/booths/cost.ts` (`totalBoothCost`, `boothCostPerPiece`, `productEconomics`, `seedBoothProducts`, `boothDayCount`) + `tests/lib/booth-cost.test.ts`
+- i18n: เพิ่ม `boothsPage.*` และ `nav.booths` ทั้ง th/en (แทรกแบบ text — `en.json` เดิมมี key ซ้ำ ห้าม rewrite ด้วย JSON dump)
+- ผล: vitest 56/56, `bun test` 51/51, ไม่มี typecheck error ในไฟล์ที่แก้
+- **ยังไม่ได้ตรวจด้วยตาในเบราว์เซอร์** (ตรวจแค่ typecheck + unit test)
 
 ## Phase 3: หน้าแคชเชียร์ตามบูธ
 
