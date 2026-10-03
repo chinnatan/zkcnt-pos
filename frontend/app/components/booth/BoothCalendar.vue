@@ -61,6 +61,14 @@ const weekdayName = (day: number) =>
     timeZone: "UTC",
   }).format(Date.UTC(2026, 0, 4 + day)); // 4 Jan 2026 is a Sunday
 
+// compact header so seven columns fit on a phone: Thai has no abbreviated
+// weekday in Intl, so use the narrow form ("จ"); English uses "Mon"
+const weekdayShort = (day: number) =>
+  new Intl.DateTimeFormat(locale.value === "th" ? "th-TH" : "en-GB", {
+    weekday: locale.value === "th" ? "narrow" : "short",
+    timeZone: "UTC",
+  }).format(Date.UTC(2026, 0, 4 + day));
+
 const options = computed(() => ({
   plugins: [dayGridPlugin, interactionPlugin],
   initialView: "dayGridMonth",
@@ -69,7 +77,9 @@ const options = computed(() => ({
   height: "auto" as const,
   headerToolbar: false as const,
   fixedWeekCount: false,
+  dayHeaderContent: (arg: { date: Date }) => weekdayShort(arg.date.getDay()),
   dayMaxEvents: 3,
+  moreLinkContent: (arg: { num: number }) => `+${arg.num}`,
   selectable: true,
   events: boothEvents(props.booths, getBangkokDateKey()),
   datesSet: (arg: DatesSetArg) => {

@@ -1,6 +1,7 @@
 <template>
   <div ref="root" class="relative">
     <button
+      ref="trigger"
       type="button"
       class="input flex w-full items-center justify-between gap-2 text-left"
       data-testid="date-range-trigger"
@@ -11,9 +12,13 @@
       <span aria-hidden="true">📅</span>
     </button>
 
+    <!-- teleported + fixed so modals/overflow containers never clip it -->
+    <Teleport to="body">
     <div
       v-if="open"
-      class="absolute left-0 z-30 mt-1 w-72 rounded-lg border border-border-warm bg-paper p-3 shadow-lg"
+      ref="popover"
+      class="fixed z-[70] w-72 rounded-lg border border-border-warm bg-paper p-3 shadow-lg"
+      :style="{ top: `${pos.top}px`, left: `${pos.left}px` }"
       role="dialog"
       data-testid="date-range-popover"
       @keydown.esc.stop="open = false"
@@ -45,6 +50,7 @@
         <button type="button" class="btn-primary" @click="open = false">{{ t('boothsPage.pickerDone') }}</button>
       </div>
     </div>
+    </Teleport>
   </div>
 </template>
 
@@ -61,6 +67,9 @@ const { formatDateKey } = useFormat();
 const weekStart = computed(() => props.weekStart ?? 0);
 const open = ref(false);
 const root = ref<HTMLElement | null>(null);
+const trigger = ref<HTMLElement | null>(null);
+const popover = ref<HTMLElement | null>(null);
+const pos = reactive({ top: 0, left: 0 });
 const view = reactive({ year: 0, month: 0 });
 const today = getBangkokDateKey();
 
@@ -91,8 +100,23 @@ function syncView(key: string) {
   view.month = m!;
 }
 
+const POPOVER_W = 288; // w-72
+const POPOVER_H = 380;
+
+function place() {
+  const rect = trigger.value?.getBoundingClientRect();
+  if (!rect) return;
+  const below = rect.bottom + 4;
+  const fitsBelow = below + POPOVER_H <= window.innerHeight;
+  pos.top = Math.max(8, fitsBelow ? below : rect.top - POPOVER_H - 4);
+  pos.left = Math.max(8, Math.min(rect.left, window.innerWidth - POPOVER_W - 8));
+}
+
 function toggle() {
-  if (!open.value) syncView(props.modelValue.start);
+  if (!open.value) {
+    syncView(props.modelValue.start);
+    place();
+  }
   open.value = !open.value;
 }
 
@@ -133,13 +157,22 @@ function onGridKey(event: KeyboardEvent) {
   const target = addDays(current, step);
   const [y, m] = target.split("-").map(Number);
   if (y !== view.year || m !== view.month) syncView(target);
-  nextTick(() => root.value?.querySelector<HTMLElement>(`[data-day="${target}"]`)?.focus());
+  nextTick(() => popover.value?.querySelector<HTMLElement>(`[data-day="${target}"]`)?.focus());
 }
 
 function onOutside(event: MouseEvent) {
-  if (open.value && root.value && !root.value.contains(event.target as Node)) open.value = false;
+  const target = event.target as Node;
+  if (open.value && !root.value?.contains(target) && !popover.value?.contains(target)) open.value = false;
 }
 
-onMounted(() => document.addEventListener("mousedown", onOutside));
-onBeforeUnmount(() => document.removeEventListener("mousedown", onOutside));
+const close = () => (open.value = false);
+
+onMounted(() => {
+  document.addEventListener("mousedown", onOutside);
+  window.addEventListener("resize", close);
+});
+onBeforeUnmount(() => {
+  document.removeEventListener("mousedown", onOutside);
+  window.removeEventListener("resize", close);
+});
 </script>

@@ -980,6 +980,21 @@
     "purgeFailed": "เคลียร์ประวัติไม่สำเร็จ"
   },
   "boothsPage": {
+    "newBooth": "บูธใหม่",
+    "viewCalendar": "ปฏิทิน",
+    "viewList": "รายการ",
+    "useAtPos": "ใช้ที่ POS",
+    "back": "กลับ",
+    "createTitle": "สร้างบูธใหม่",
+    "createSubmit": "สร้างบูธ",
+    "createSeedHint": "ระบบจะดึงสินค้าที่มีสต๊อกเข้าบูธให้อัตโนมัติ แก้ไขได้ภายหลัง",
+    "dates": "ช่วงวันที่",
+    "group": {
+        "ongoing": "กำลังจัด",
+        "upcoming": "กำลังจะมาถึง",
+        "ended": "จบแล้ว (ยังไม่ปิดบูธ)",
+        "closed": "ปิดบูธแล้ว"
+    },
     "calPrev": "ก่อนหน้า",
     "calNext": "ถัดไป",
     "calToday": "วันนี้",

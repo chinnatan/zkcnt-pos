@@ -981,6 +981,21 @@
     "purgeFailed": "Failed to clear sales history"
   },
   "boothsPage": {
+    "newBooth": "New booth",
+    "viewCalendar": "Calendar",
+    "viewList": "List",
+    "useAtPos": "Use at POS",
+    "back": "Back",
+    "createTitle": "Create booth",
+    "createSubmit": "Create booth",
+    "createSeedHint": "Products with stock are added automatically and can be changed later",
+    "dates": "Dates",
+    "group": {
+        "ongoing": "Ongoing",
+        "upcoming": "Upcoming",
+        "ended": "Ended (not closed yet)",
+        "closed": "Closed"
+    },
     "calPrev": "Previous",
     "calNext": "Next",
     "calToday": "Today",

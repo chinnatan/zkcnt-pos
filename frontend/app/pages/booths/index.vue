@@ -1,75 +1,133 @@
 <template>
   <div class="space-y-6">
-    <div>
-      <h2 class="text-lg font-semibold text-ink">{{ t('boothsPage.title') }}</h2>
-      <p class="text-sm text-ink-muted">{{ t('boothsPage.subtitle') }}</p>
+    <div class="flex flex-wrap items-start justify-between gap-3">
+      <div>
+        <h2 class="text-lg font-semibold text-ink">{{ t('boothsPage.title') }}</h2>
+        <p class="text-sm text-ink-muted">{{ t('boothsPage.subtitle') }}</p>
+      </div>
+      <div v-if="isManager" class="flex items-center gap-2">
+        <div class="flex overflow-hidden rounded-lg border border-border-warm" role="group">
+          <button
+            v-for="v in views"
+            :key="v"
+            type="button"
+            class="px-3 py-2 text-sm"
+            :class="view === v ? 'bg-primary-600 text-white' : 'text-ink-muted hover:bg-surface'"
+            :data-testid="`booth-view-${v}`"
+            @click="switchView(v)"
+          >
+            {{ t(v === 'calendar' ? 'boothsPage.viewCalendar' : 'boothsPage.viewList') }}
+          </button>
+        </div>
+        <button type="button" class="btn-primary" data-testid="booth-new-btn" @click="openCreate()">
+          + {{ t('boothsPage.newBooth') }}
+        </button>
+      </div>
     </div>
 
     <div v-if="!isManager" class="rounded-xl bg-paper p-8 text-center shadow-sm">
       <p class="text-ink-muted">{{ t('boothsPage.managerOnly') }}</p>
     </div>
 
-    <div v-else class="grid grid-cols-1 gap-6 lg:grid-cols-[22rem_1fr]">
-      <div class="min-w-0 space-y-6">
-        <UiCraftCard variant="tag" padding="md">
-          <form class="space-y-2" @submit.prevent="create">
-            <label class="block text-sm font-medium text-ink">{{ t('boothsPage.createLabel') }}</label>
-            <div class="flex gap-2">
-              <input v-model="newName" type="text" class="input min-w-0 flex-1" :placeholder="t('boothsPage.createPlaceholder')" />
-              <button type="submit" class="btn-primary" :disabled="!newName.trim() || isCreating" :aria-label="t('common.add')">+</button>
-            </div>
-          </form>
+    <div
+      v-else
+      :class="view === 'list' ? 'grid grid-cols-1 gap-6 lg:grid-cols-[22rem_minmax(0,1fr)]' : 'space-y-6'"
+    >
+      <section :class="selectedId ? 'hidden min-w-0 lg:block' : 'min-w-0'">
+        <UiCraftCard v-if="view === 'calendar'" variant="paper" padding="md">
+          <LazyBoothCalendar
+            :booths="booths"
+            :week-start="weekStart"
+            @update:week-start="setWeekStart"
+            @select-booth="selectedId = $event"
+            @create-range="openCreate($event)"
+          />
         </UiCraftCard>
 
-        <UiCraftCard variant="paper" padding="md">
-          <h3 class="mb-3 text-sm font-semibold text-ink">{{ t('boothsPage.listTitle') }}</h3>
-          <p v-if="booths.length === 0" class="py-4 text-center text-sm text-ink-muted">{{ t('boothsPage.empty') }}</p>
-          <ul class="space-y-2">
-            <li
-              v-for="b in booths"
-              :key="b.id"
-              class="cursor-pointer rounded-lg border p-3 transition-colors"
-              :class="selectedId === b.id ? 'border-primary-500 bg-primary-50' : 'border-border-warm hover:bg-surface'"
-              @click="selectedId = b.id"
-            >
-              <div class="flex items-start justify-between gap-2">
-                <p class="font-medium text-ink">{{ b.name }}</p>
-                <button
-                  type="button"
-                  class="text-danger-600"
-                  :aria-label="t('common.delete')"
-                  @click.stop="remove(b)"
+        <div v-else class="space-y-4">
+          <p v-if="booths.length === 0" class="rounded-xl bg-paper p-6 text-center text-sm text-ink-muted shadow-sm">
+            {{ t('boothsPage.empty') }}
+          </p>
+          <template v-for="group in groups" :key="group.status">
+            <details v-if="group.items.length" :open="group.status !== 'closed'" class="rounded-xl bg-paper p-3 shadow-sm">
+              <summary class="cursor-pointer text-sm font-semibold text-ink">
+                {{ t(`boothsPage.group.${group.status}`) }} ({{ group.items.length }})
+              </summary>
+              <ul class="mt-3 space-y-2">
+                <li
+                  v-for="b in group.items"
+                  :key="b.id"
+                  class="cursor-pointer rounded-lg border p-3 transition-colors"
+                  :class="selectedId === b.id ? 'border-primary-500 bg-primary-50' : 'border-border-warm hover:bg-surface'"
+                  :data-testid="`booth-card-${b.id}`"
+                  @click="selectedId = b.id"
                 >
-                  🗑
-                </button>
-              </div>
-              <p v-if="b.location" class="text-xs text-ink-muted">{{ b.location }}</p>
-              <p class="text-xs text-ink-muted">
-                {{ formatDateKey(b.start_date) || '—' }} – {{ formatDateKey(b.end_date) || '—' }}
-                <template v-if="boothDayCount(b.start_date, b.end_date)">
-                  · {{ t('boothsPage.days', { n: boothDayCount(b.start_date, b.end_date) }) }}
-                </template>
-              </p>
-              <p class="mt-1 text-xs">
-                <span class="text-ink-muted">{{ t('boothsPage.fee') }}</span> {{ formatCurrency(b.booth_fee) }}
-                <span v-if="b.closed_at" class="badge ml-2">{{ t('boothsPage.closed') }}</span>
-              </p>
-            </li>
-          </ul>
-        </UiCraftCard>
-      </div>
+                  <div class="flex items-start justify-between gap-2">
+                    <p class="font-medium text-ink">{{ b.name }}</p>
+                    <span class="badge shrink-0">{{ t(`boothsPage.status.${group.status}`) }}</span>
+                  </div>
+                  <p v-if="b.location" class="text-xs text-ink-muted">{{ b.location }}</p>
+                  <p class="text-xs text-ink-muted">
+                    {{ formatDateKey(b.start_date) || '—' }} – {{ formatDateKey(b.end_date) || '—' }}
+                    <template v-if="boothDayCount(b.start_date, b.end_date)">
+                      · {{ t('boothsPage.days', { n: boothDayCount(b.start_date, b.end_date) }) }}
+                    </template>
+                  </p>
+                  <div class="mt-2 flex flex-wrap items-center justify-between gap-2">
+                    <span class="text-xs">
+                      <span class="text-ink-muted">{{ t('boothsPage.fee') }}</span> {{ formatCurrency(b.booth_fee) }}
+                    </span>
+                    <span class="flex gap-3 text-xs">
+                      <button
+                        v-if="group.status !== 'closed'"
+                        type="button"
+                        class="font-medium text-primary-700 hover:underline"
+                        :data-testid="`booth-use-pos-${b.id}`"
+                        @click.stop="useAtPos(b)"
+                      >
+                        {{ t('boothsPage.useAtPos') }}
+                      </button>
+                      <button type="button" class="text-danger-600 hover:underline" @click.stop="remove(b)">
+                        {{ t('common.delete') }}
+                      </button>
+                    </span>
+                  </div>
+                </li>
+              </ul>
+            </details>
+          </template>
+        </div>
+      </section>
 
-      <BoothDetail v-if="selectedId" :key="selectedId" :booth-id="selectedId" class="min-w-0" />
-      <div v-else class="flex items-center justify-center rounded-xl border-2 border-dashed border-border-warm p-12 text-center text-sm text-ink-muted">
+      <div v-if="selectedId" class="min-w-0 space-y-3">
+        <button type="button" class="text-sm text-primary-600 hover:underline" @click="selectedId = null">
+          ← {{ t('boothsPage.back') }}
+        </button>
+        <BoothDetail :key="selectedId" :booth-id="selectedId" class="min-w-0" />
+      </div>
+      <div
+        v-else-if="view === 'list'"
+        class="hidden items-center justify-center rounded-xl border-2 border-dashed border-border-warm p-12 text-center text-sm text-ink-muted lg:flex"
+      >
         {{ t('boothsPage.emptyDetail') }}
       </div>
     </div>
+
+    <BoothCreateModal
+      :show="showCreate"
+      :initial-range="createRange"
+      :week-start="weekStart"
+      @close="showCreate = false"
+      @created="onCreated"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { db } from "~/lib/db";
-import { boothDayCount, seedBoothProducts } from "~/lib/booths/cost";
+import { boothStatus, type BoothStatus, type DateRange } from "~/lib/booths/calendar";
+import type { BoothView } from "~/composables/useCalendarPrefs";
+import { boothDayCount } from "~/lib/booths/cost";
+import { getBangkokDateKey } from "~/lib/timezone";
 import type { Booth } from "~/lib/types";
 
 definePageMeta({ middleware: "auth" });
@@ -78,31 +136,46 @@ const { t } = useI18n();
 const { activeStoreId, isManager } = useStore();
 const { formatCurrency, formatDateKey } = useFormat();
 const { confirm } = useDialog();
-const { booths, fetchBooths, createBooth, deleteBooth } = useBooths();
+const { booths, fetchBooths, deleteBooth } = useBooths();
+const { view, weekStart, setView, setWeekStart } = useCalendarPrefs();
+const { select: selectActiveBooth } = useActiveBooth();
 
-const newName = ref("");
-const isCreating = ref(false);
+const views = ["calendar", "list"] as const;
 const selectedId = ref<string | null>(null);
+const showCreate = ref(false);
+const createRange = ref<DateRange | undefined>();
 
 onMounted(fetchBooths);
 watch(activeStoreId, fetchBooths);
 
-async function create() {
-  const name = newName.value.trim();
-  const storeId = activeStoreId.value;
-  if (!name || !storeId) return;
-  isCreating.value = true;
-  try {
-    const [products, inventory] = await Promise.all([
-      db.products.where("store").equals(storeId).toArray(),
-      db.inventory.where("store").equals(storeId).toArray(),
-    ]);
-    const booth = await createBooth({ name }, seedBoothProducts(products, inventory));
-    newName.value = "";
-    selectedId.value = booth.id;
-  } finally {
-    isCreating.value = false;
-  }
+const groups = computed(() => {
+  const today = getBangkokDateKey();
+  const order: BoothStatus[] = ["ongoing", "upcoming", "ended", "closed"];
+  return order.map((status) => ({
+    status,
+    items: booths.value.filter((b) => boothStatus(b, today) === status),
+  }));
+});
+
+// switching view also leaves the detail (on phones the detail replaces the list/calendar)
+function switchView(v: BoothView) {
+  selectedId.value = null;
+  setView(v);
+}
+
+function openCreate(range?: DateRange) {
+  createRange.value = range;
+  showCreate.value = true;
+}
+
+function onCreated(id: string) {
+  showCreate.value = false;
+  selectedId.value = id;
+}
+
+function useAtPos(booth: Booth) {
+  selectActiveBooth(booth.id);
+  navigateTo("/pos");
 }
 
 async function remove(booth: Booth) {
