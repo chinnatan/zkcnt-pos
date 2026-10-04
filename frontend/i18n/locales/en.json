@@ -1001,6 +1001,7 @@
     "setAllQty": "Set same quantity",
     "setAllQtyPrompt": "Quantity to bring for the selected, shown products (pcs)",
     "bulkProgress": "Saving {done}/{total}",
+    "bulkFailed": "{n} item(s) could not be saved. The list shows what was actually saved.",
     "noStockTracking": "Stock not tracked",
     "stockLeft": "Stock {n}",
     "useAllStock": "Use all stock",

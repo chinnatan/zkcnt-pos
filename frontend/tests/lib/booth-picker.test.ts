@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { exceedsStock, filterProducts, groupByCategory, selectionState, stockOf } from "~/lib/booths/picker";
+import { exceedsStock, filterProducts, groupByCategory, selectedCount, selectionState, stockOf } from "~/lib/booths/picker";
 import type { Product } from "~/lib/types";
 
 const p = (id: string, extra: Partial<Product> = {}) =>
@@ -41,5 +41,30 @@ describe("booth product picker helpers", () => {
     expect(exceedsStock(6, 5)).toBe(true);
     expect(exceedsStock(5, 5)).toBe(false);
     expect(exceedsStock(999, null)).toBe(false);
+  });
+
+  test("products whose category no longer exists land in the uncategorized group", () => {
+    const orphan = p("x", { category: "deleted-cat" });
+    const groups = groupByCategory([p("a"), orphan], [{ id: "c1", name: "Stickers" }], "None");
+    const shownIds = groups.flatMap((g) => g.products.map((x) => x.id));
+    expect(shownIds.sort()).toEqual(["a", "x"]);
+    expect(groups.at(-1)!.name).toBe("None");
+  });
+
+  test("selectedCount counts only products that are listed", () => {
+    const listed = [p("a"), p("b")];
+    // "z" belongs to a deactivated / deleted product, not in the list
+    expect(selectedCount(listed, new Set(["a", "z"]))).toBe(1);
+  });
+
+  test("large mixed catalog: every product is reachable through some group", () => {
+    const cats = [{ id: "c1", name: "A" }, { id: "c2", name: "B" }];
+    const many = Array.from({ length: 60 }, (_, i) =>
+      p(`p${i}`, { category: ["c1", "c2", "", "gone"][i % 4]!, track_inventory: i % 5 !== 0 }),
+    );
+    const groups = groupByCategory(many, cats, "None");
+    expect(groups.flatMap((g) => g.products)).toHaveLength(60);
+    const all = new Set(many.map((x) => x.id));
+    expect(groups.every((g) => selectionState(g.products, all) === "all")).toBe(true);
   });
 });

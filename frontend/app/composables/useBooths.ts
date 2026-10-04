@@ -75,7 +75,7 @@ export function useBooths() {
       collection,
       action,
       record_id: record.id,
-      data: action === "delete" ? {} : payload,
+      data: payload,
       store: activeStoreId.value!,
     });
   }
@@ -159,8 +159,20 @@ export function useBooths() {
         const records = await $api.send<BoothProduct[]>(
           path(`booth-products?booth=${encodeURIComponent(boothId)}`),
         );
-        await db.boothProducts.where("booth").equals(boothId).delete();
-        await db.boothProducts.bulkPut(records);
+        // rows with changes still waiting to sync are newer than the server copy: keep them as-is
+        await db.transaction("rw", db.boothProducts, db.syncQueue, async () => {
+          const waiting = await db.syncQueue
+            .where("status")
+            .anyOf(["pending", "error", "in_flight"])
+            .filter((i) => i.collection === "booth_products")
+            .toArray();
+          const waitingIds = new Set(waiting.map((i) => i.record_id));
+          const stale = (await db.boothProducts.where("booth").equals(boothId).primaryKeys()).filter(
+            (id) => !waitingIds.has(id),
+          );
+          await db.boothProducts.bulkDelete(stale);
+          await db.boothProducts.bulkPut(records.filter((r) => !waitingIds.has(r.id)));
+        });
       } catch {
         // use local copy
       }
@@ -172,9 +184,25 @@ export function useBooths() {
 
   async function addBoothProduct(boothId: string, productId: string, qtyBrought: number) {
     const existing = await db.boothProducts.where("[booth+product]").equals([boothId, productId]).first();
+    // removed while offline: the server still has that row, so re-adding must reuse its id
+    const removedId = existing
+      ? undefined
+      : (
+          await db.syncQueue
+            .where("status")
+            .anyOf(["pending", "error", "in_flight"])
+            .filter(
+              (i) =>
+                i.collection === "booth_products" &&
+                i.action === "delete" &&
+                i.data?.booth === boothId &&
+                i.data?.product === productId,
+            )
+            .last()
+        )?.record_id;
     const now = new Date().toISOString();
     const record: BoothProduct = {
-      id: existing?.id ?? newId(),
+      id: existing?.id ?? removedId ?? newId(),
       booth: boothId,
       product: productId,
       qty_brought: qtyBrought,
@@ -198,7 +226,7 @@ export function useBooths() {
 
   async function removeBoothProduct(id: string) {
     const existing = await db.boothProducts.get(id);
-    if (existing) await save("booth_products", "delete", existing, {});
+    if (existing) await save("booth_products", "delete", existing, { booth: existing.booth, product: existing.product });
   }
 
   return {

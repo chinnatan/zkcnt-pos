@@ -162,8 +162,11 @@ function resetForm() {
   saveError.value = "";
 }
 
+let reloadSeq = 0;
 async function reloadRows() {
-  rows.value = await listBoothProducts(props.boothId);
+  const seq = ++reloadSeq;
+  const next = await listBoothProducts(props.boothId);
+  if (seq === reloadSeq) rows.value = next; // an older, slower reload must not overwrite a newer one
 }
 
 async function load() {

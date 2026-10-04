@@ -1,5 +1,33 @@
 [
   {
+    "version": "0.7.1",
+    "date": "2026-10-04",
+    "changes": {
+      "added": {
+        "th": [],
+        "en": []
+      },
+      "fixed": {
+        "th": [
+          "เลือกสินค้าเข้าบูธแล้ว \"เลือกทั้งหมด\" ไม่ขึ้นครบ หรือกด \"ล้าง\" แล้วยังติ๊กค้าง และตัวเลขที่เลือกไม่ตรงกับรายการที่เห็น",
+          "สินค้าที่อยู่ในหมวดที่ถูกลบไปแล้วหายจากหน้าเลือกสินค้าของบูธ",
+          "ถ้าบันทึกบางรายการไม่สำเร็จ ระบบจะทำรายการที่เหลือต่อและแจ้งจำนวนที่ไม่สำเร็จ",
+          "เลือกสินค้าเข้าบูธตอนออฟไลน์แล้วสินค้าหายหรือซ้ำหลังกลับมาออนไลน์"
+        ],
+        "en": [
+          "Adding products to a booth: \"select all\" did not tick everything, \"clear\" left boxes ticked, and the selected count did not match the list",
+          "Products in a deleted category disappeared from the booth product picker",
+          "If some items fail to save, the rest are still processed and you are told how many failed",
+          "Products picked for a booth while offline could vanish or duplicate after reconnecting"
+        ]
+      },
+      "improved": {
+        "th": [],
+        "en": []
+      }
+    }
+  },
+  {
     "version": "0.7.0",
     "date": "2026-10-03",
     "changes": {
