@@ -2,8 +2,8 @@
   <section class="space-y-3">
     <div>
       <h4 class="text-sm font-semibold text-ink">{{ t('boothsPage.products') }}</h4>
-      <p class="text-xs text-ink-muted">
-        {{ t('boothsPage.productsHint') }} · {{ t('boothsPage.selectedCount', { n: rows.length }) }}
+      <p class="text-xs text-ink-muted" data-testid="booth-selected-summary">
+        {{ t('boothsPage.productsHint') }} · {{ t('boothsPage.selectedCount', { n: selectedCount(products, selectedIds) }) }}
       </p>
     </div>
 
@@ -27,10 +27,10 @@
       <button type="button" class="btn-secondary" :disabled="busy !== null || !shown.length" data-testid="booth-select-shown" @click="selectShown">
         {{ t('boothsPage.selectShown') }}
       </button>
-      <button type="button" class="btn-secondary" :disabled="busy !== null || !shown.length" @click="selectShownInStock">
+      <button type="button" class="btn-secondary" :disabled="busy !== null || !inStockToAdd.length" @click="selectShownInStock">
         {{ t('boothsPage.selectInStock') }}
       </button>
-      <button type="button" class="btn-secondary" :disabled="busy !== null || !shown.length" @click="clearShown">
+      <button type="button" class="btn-secondary" :disabled="busy !== null || !shown.length" data-testid="booth-clear-shown" @click="clearShown">
         {{ t('boothsPage.clearShown') }}
       </button>
       <button type="button" class="btn-secondary" :disabled="busy !== null || !shownSelected.length" @click="setAllQty">
@@ -46,7 +46,7 @@
     </div>
 
     <p v-if="groups.length === 0" class="py-4 text-center text-sm text-ink-muted">{{ t('boothsPage.noProducts') }}</p>
-    <div class="space-y-3">
+    <div :key="renderKey" class="space-y-3">
       <div v-for="group in groups" :key="group.id">
         <div class="mb-1 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-ink-muted">
           <input
@@ -122,6 +122,7 @@ import {
   exceedsStock,
   filterProducts,
   groupByCategory,
+  selectedCount,
   selectionState,
   stockOf,
   type PickerFilter,
@@ -140,13 +141,15 @@ const emit = defineEmits<{ changed: [] }>();
 
 const { t } = useI18n();
 const { formatCurrency } = useFormat();
-const { prompt } = useDialog();
+const { prompt, alert } = useDialog();
 const { addBoothProduct, updateBoothProduct, removeBoothProduct } = useBooths();
 
 const filters: PickerFilter[] = ["all", "selected", "unselected", "outOfStock"];
 const search = ref("");
 const filter = ref<PickerFilter>("all");
 const collapsed = ref(new Set<string>());
+// bumped after every bulk run so checkboxes are rebuilt from data, not from what the DOM toggled to
+const renderKey = ref(0);
 const busy = ref<{ done: number; total: number } | null>(null);
 
 const selected = computed(() => new Map(props.rows.map((r) => [r.product, r])));
@@ -163,6 +166,9 @@ const shown = computed(() =>
   }),
 );
 const shownSelected = computed(() => shown.value.filter((p) => selectedIds.value.has(p.id)));
+const inStockToAdd = computed(() =>
+  shown.value.filter((p) => !selectedIds.value.has(p.id) && (stockOf(p, props.stock) ?? 0) > 0),
+);
 const groups = computed(() => groupByCategory(shown.value, props.categories, t("boothsPage.uncategorized")));
 
 function toggleCollapse(id: string) {
@@ -172,23 +178,33 @@ function toggleCollapse(id: string) {
   collapsed.value = next;
 }
 
-/** Runs the calls one after another with a progress bar; one refresh at the end. */
+/** Runs the calls one after another with a progress bar; a failing call does not stop the rest. One refresh at the end. */
 async function runBulk(jobs: Array<() => Promise<unknown>>) {
   if (!jobs.length) return;
   busy.value = { done: 0, total: jobs.length };
+  let failed = 0;
   try {
     for (const job of jobs) {
-      await job();
+      try {
+        await job();
+      } catch {
+        failed++;
+      }
       busy.value = { done: busy.value.done + 1, total: jobs.length };
     }
   } finally {
     busy.value = null;
+    renderKey.value++;
     emit("changed");
   }
+  if (failed) await alert(t("boothsPage.bulkFailed", { n: failed }));
 }
 
 const add = (p: Product) => () => addBoothProduct(props.boothId, p.id, defaultQty(p));
-const remove = (p: Product) => () => removeBoothProduct(selected.value.get(p.id)!.id);
+const remove = (p: Product) => () => {
+  const bp = selected.value.get(p.id);
+  return bp ? removeBoothProduct(bp.id) : Promise.resolve();
+};
 
 const toggleProduct = (p: Product, checked: boolean) => {
   const has = selectedIds.value.has(p.id);
@@ -201,15 +217,19 @@ const toggleCategory = (list: Product[], checked: boolean) =>
       .map((p) => (checked ? add(p) : remove(p))),
   );
 const selectShown = () => runBulk(shown.value.filter((p) => !selectedIds.value.has(p.id)).map(add));
-const selectShownInStock = () =>
-  runBulk(shown.value.filter((p) => !selectedIds.value.has(p.id) && (stockOf(p, props.stock) ?? 0) > 0).map(add));
+const selectShownInStock = () => runBulk(inStockToAdd.value.map(add));
 const clearShown = () => runBulk(shownSelected.value.map(remove));
 
 async function setAllQty() {
   const answer = await prompt(t("boothsPage.setAllQtyPrompt"), { defaultValue: "1" });
   const qty = Number(answer);
   if (answer === null || answer.trim() === "" || !Number.isFinite(qty) || qty < 0) return;
-  await runBulk(shownSelected.value.map((p) => () => updateBoothProduct(selected.value.get(p.id)!.id, { qty_brought: qty })));
+  await runBulk(
+    shownSelected.value.flatMap((p) => {
+      const bp = selected.value.get(p.id);
+      return bp ? [() => updateBoothProduct(bp.id, { qty_brought: qty })] : [];
+    }),
+  );
 }
 
 async function setQty(bp: BoothProduct, value: string) {

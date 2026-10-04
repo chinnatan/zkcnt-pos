@@ -34,8 +34,10 @@ export function groupByCategory(
   uncategorizedLabel: string,
 ): ProductGroup[] {
   const byCat = new Map<string, Product[]>();
+  const known = new Set(categories.map((c) => c.id));
   for (const p of products) {
-    const key = p.category || "";
+    // a category that was deleted must not hide its products
+    const key = known.has(p.category) ? p.category : "";
     byCat.set(key, [...(byCat.get(key) ?? []), p]);
   }
   const names = new Map(categories.map((c) => [c.id, c.name]));
@@ -48,6 +50,11 @@ export function groupByCategory(
 export function selectionState(products: Product[], selected: Set<string>): "none" | "some" | "all" {
   const n = products.filter((p) => selected.has(p.id)).length;
   return n === 0 ? "none" : n === products.length ? "all" : "some";
+}
+
+/** how many of the listed products are selected (rows of hidden/deleted products do not count) */
+export function selectedCount(products: Product[], selected: Set<string>): number {
+  return products.filter((p) => selected.has(p.id)).length;
 }
 
 /** true when more pieces are brought than the stock on hand (never for untracked products) */
