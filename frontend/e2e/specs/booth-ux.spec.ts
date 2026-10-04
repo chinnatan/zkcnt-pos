@@ -125,4 +125,34 @@ test.describe("booth management UX", () => {
     await page.click('[data-testid="booth-view-calendar"]');
     await expect(page.locator('[data-testid="week-start"]')).toHaveValue("1", { timeout: 30_000 });
   });
+
+  test("picker: select all / clear all keep every checkbox in step with the data", async ({ page }) => {
+    await loginAndOpenBooths(page);
+    await page.click('[data-testid="booth-new-btn"]');
+    await page.fill('[data-testid="booth-create-name"]', `Picker ${stamp}`);
+    await page.click('[data-testid="booth-create-submit"]');
+    await expect(page.locator('[data-testid="booth-detail"]')).toBeVisible({ timeout: 15_000 });
+    await page.click('[data-testid="booth-tab-products"]');
+
+    const rows = page.locator('[data-testid^="booth-product-"]');
+    const checked = page.locator('[data-testid^="booth-product-"] input[type=checkbox]:checked');
+    await expect(rows.first()).toBeVisible();
+    const total = await rows.count();
+
+    await page.click('[data-testid="booth-clear-shown"]');
+    await expect.poll(async () => checked.count()).toBe(0);
+
+    await page.click('[data-testid="booth-select-shown"]');
+    await expect.poll(async () => checked.count()).toBe(total);
+
+    await page.click('[data-testid="booth-clear-shown"]');
+    await expect.poll(async () => checked.count()).toBe(0);
+
+    // one-by-one then "clear" leaves the category box unticked too
+    await rows.first().locator("input[type=checkbox]").check();
+    await expect.poll(async () => checked.count()).toBe(1);
+    await page.click('[data-testid="booth-clear-shown"]');
+    await expect.poll(async () => checked.count()).toBe(0);
+    await expect(page.locator("input[type=checkbox]:checked")).toHaveCount(0);
+  });
 });
