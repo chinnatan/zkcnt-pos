@@ -1,5 +1,27 @@
 [
   {
+    "version": "0.7.2",
+    "date": "2026-10-05",
+    "changes": {
+      "added": {
+        "th": [],
+        "en": []
+      },
+      "fixed": {
+        "th": [],
+        "en": []
+      },
+      "improved": {
+        "th": [
+          "ปรับปรุงความเสถียรของชุดทดสอบอัตโนมัติ เพื่อให้การ deploy ผ่านได้ต่อเนื่อง"
+        ],
+        "en": [
+          "Improved reliability of the automated test suite so deployments pass consistently"
+        ]
+      }
+    }
+  },
+  {
     "version": "0.7.1",
     "date": "2026-10-04",
     "changes": {
