@@ -16,7 +16,7 @@ describe("booth products offline", () => {
   beforeEach(async () => {
     state.online = false;
     state.server = [];
-    Object.assign(useNuxtApp(), { $api: { send: async () => state.server } });
+    Object.defineProperty(useNuxtApp(), "$api", { value: { send: async () => state.server }, configurable: true });
     await db.boothProducts.clear();
     await db.syncQueue.clear();
   });
