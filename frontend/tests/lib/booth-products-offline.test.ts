@@ -7,6 +7,9 @@ import type { BoothProduct } from "~/lib/types";
 const state = vi.hoisted(() => ({ online: false, server: [] as unknown[] }));
 
 mockNuxtImport("useStore", () => () => ({ activeStoreId: { value: "s1" } }));
+// $api may be a getter-only or non-configurable property (depends on whether the plugin booted), so wrap instead of assigning.
+mockNuxtImport("useNuxtApp", (original) => () =>
+  new Proxy(original(), { get: (t, k, r) => (k === "$api" ? { send: async () => state.server } : Reflect.get(t, k, r)) }));
 mockNuxtImport("useOnlineStatus", () => () => ({ isOnline: { get value() { return state.online; } } }));
 
 const rowOf = (id: string, product: string): BoothProduct =>
@@ -16,7 +19,6 @@ describe("booth products offline", () => {
   beforeEach(async () => {
     state.online = false;
     state.server = [];
-    Object.defineProperty(useNuxtApp(), "$api", { value: { send: async () => state.server }, configurable: true });
     await db.boothProducts.clear();
     await db.syncQueue.clear();
   });
