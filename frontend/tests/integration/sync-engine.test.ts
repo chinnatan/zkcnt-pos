@@ -1,5 +1,6 @@
 import { describe, expect, test, vi } from "vitest";
 import { db } from "~/lib/db";
+import type { SyncQueueItem } from "~/lib/types";
 import { SyncEngine } from "~/lib/sync/engine";
 import { addToSyncQueue } from "~/lib/sync/queue";
 
@@ -16,8 +17,11 @@ describe("SyncEngine offline order sync", () => {
       order_number: "OFF-001",
       status: "completed",
       subtotal: 100,
-      discount: 0,
-      tax: 0,
+      discount_amount: 0,
+      discount_type: "",
+      tax_amount: 0,
+      synced_at: "",
+      coupon_code: "",
       total: 100,
       payment_method: "cash",
       payment_received: 100,
@@ -26,7 +30,7 @@ describe("SyncEngine offline order sync", () => {
       cashier: "user-1",
       note: "",
       client_id: "client-1",
-      applied_promotions: "[]",
+      applied_promotions: [],
       created: now,
       updated: now,
     });
@@ -84,8 +88,11 @@ describe("SyncEngine offline order sync", () => {
       order_number: "OFF-002",
       status: "completed",
       subtotal: 50,
-      discount: 0,
-      tax: 0,
+      discount_amount: 0,
+      discount_type: "",
+      tax_amount: 0,
+      synced_at: "",
+      coupon_code: "",
       total: 50,
       payment_method: "cash",
       payment_received: 50,
@@ -94,14 +101,13 @@ describe("SyncEngine offline order sync", () => {
       cashier: "user-1",
       note: "",
       client_id: "client-2",
-      applied_promotions: "[]",
+      applied_promotions: [],
       created: now,
       updated: now,
     });
 
     await db.orderItems.add({
       id: "temp_item_1",
-      store: storeId,
       order: tempOrderId,
       product: "prod-1",
       product_name: "Test",
@@ -110,6 +116,9 @@ describe("SyncEngine offline order sync", () => {
       unit_price: 50,
       discount: 0,
       total: 50,
+      promotion_id: "",
+      free_quantity: 0,
+      note: "",
       created: now,
       updated: now,
     });
@@ -175,8 +184,11 @@ describe("SyncEngine offline order sync", () => {
       order_number: "OFF-003",
       status: "completed",
       subtotal: 30,
-      discount: 0,
-      tax: 0,
+      discount_amount: 0,
+      discount_type: "",
+      tax_amount: 0,
+      synced_at: "",
+      coupon_code: "",
       total: 30,
       payment_method: "cash",
       payment_received: 30,
@@ -185,7 +197,7 @@ describe("SyncEngine offline order sync", () => {
       cashier: "user-1",
       note: "",
       client_id: "client-3",
-      applied_promotions: "[]",
+      applied_promotions: [],
       created: now,
       updated: now,
     });
@@ -247,8 +259,11 @@ describe("SyncEngine offline order sync", () => {
       order_number: "OFF-004",
       status: "completed",
       subtotal: 80,
-      discount: 0,
-      tax: 0,
+      discount_amount: 0,
+      discount_type: "",
+      tax_amount: 0,
+      synced_at: "",
+      coupon_code: "",
       total: 80,
       payment_method: "cash",
       payment_received: 80,
@@ -257,7 +272,7 @@ describe("SyncEngine offline order sync", () => {
       cashier: "user-1",
       note: "",
       client_id: "client-stuck",
-      applied_promotions: "[]",
+      applied_promotions: [],
       created: now,
       updated: now,
     });
@@ -265,7 +280,6 @@ describe("SyncEngine offline order sync", () => {
     await db.orderItems.bulkAdd([
       {
         id: "temp_stuck_item_1",
-        store: storeId,
         order: tempOrderId,
         product: "prod-a",
         product_name: "A",
@@ -274,12 +288,14 @@ describe("SyncEngine offline order sync", () => {
         unit_price: 40,
         discount: 0,
         total: 40,
+        promotion_id: "",
+        free_quantity: 0,
+        note: "",
         created: now,
         updated: now,
       },
       {
         id: "temp_stuck_item_2",
-        store: storeId,
         order: tempOrderId,
         product: "prod-b",
         product_name: "B",
@@ -288,6 +304,9 @@ describe("SyncEngine offline order sync", () => {
         unit_price: 40,
         discount: 0,
         total: 40,
+        promotion_id: "",
+        free_quantity: 0,
+        note: "",
         created: now,
         updated: now,
       },
@@ -303,7 +322,7 @@ describe("SyncEngine offline order sync", () => {
       created_at: now,
       error_message: "",
       data: { store: storeId, client_id: "client-stuck", total: 80 },
-    });
+    } as SyncQueueItem);
 
     await db.syncQueue.add({
       store: storeId,
@@ -315,7 +334,7 @@ describe("SyncEngine offline order sync", () => {
       created_at: now,
       error_message: "Order not found",
       data: { order: tempOrderId, product: "prod-a", quantity: 1, unit_price: 40, discount: 0 },
-    });
+    } as SyncQueueItem);
 
     await db.syncQueue.add({
       store: storeId,
@@ -327,7 +346,7 @@ describe("SyncEngine offline order sync", () => {
       created_at: now,
       error_message: "Order not found",
       data: { order: tempOrderId, product: "prod-b", quantity: 1, unit_price: 40, discount: 0 },
-    });
+    } as SyncQueueItem);
 
     const mockApi = {
       createOrderWithItems: vi.fn(async () => ({
